@@ -1,8 +1,25 @@
 {
   "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": false,
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ES2020",
+    "skipLibCheck": true,
+    "paths": {
+      "@repo/types": ["../types/src"]
+    }
   },
   "include": ["src"],
+  "references": [
+    {
+      "path": "../types"
+    }
+  ],
   "exclude": ["node_modules", "dist"]
 }

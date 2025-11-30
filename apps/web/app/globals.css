@@ -1,3 +1,22 @@
 @import "tailwindcss";
-@import "tw-animate-css";
+@import "@repo/ui/styles.css";
 
+@variant dark (&:where(.dark, .dark *));
+
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-slide-up {
+  animation: fadeSlideUp 2s ease forwards;
+}
+
+@source "../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
+@source "./src/**/*.{js,ts,jsx,tsx}";
