@@ -13,7 +13,7 @@ const Leaderboard = ({students}:LeaderboardProps) => {
           </p>
         </div>
 
-        <div className='overflow-y-auto max-h-[440px]'>
+        <div className='overflow-y-auto max-h-[440px] scrollbar-hide'>
             {
                 students.sort((a, b) => b.studyHours - a.studyHours).map((student,index) => (
                     <div key={student.uid} className='flex justify-between p-2 m-2'>

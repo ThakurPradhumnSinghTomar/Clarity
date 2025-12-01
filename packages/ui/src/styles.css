@@ -2,4 +2,15 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.fade-slide-up {
+  animation: fadeSlideUp 2s ease forwards;
+}
 @source "../src/**/*.{js,ts,jsx,tsx}";
