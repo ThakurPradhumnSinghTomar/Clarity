@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SessionProvider } from "@/lib/components/providers/session-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,9 @@ export default function RootLayout({
       >
        <div className="bg-[#F1F5F9] dark:bg-[#0F172A] min-h-screen dark">
         
-         {children}
+        <SessionProvider>
+          {children}  {/* All your pages render here */}
+        </SessionProvider>
        </div>
       </body>
     </html>
