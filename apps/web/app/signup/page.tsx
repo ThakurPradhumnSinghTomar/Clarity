@@ -1,6 +1,8 @@
-'use client'
-import React, { useState } from 'react';
+"use client" 
+import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff, Upload, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 // ============================================
 // CLOUDINARY CONFIGURATION
@@ -13,6 +15,8 @@ const FALLBACK_IMAGE = process.env.FALLBACK_IMAGE??"";
 
 
 export default function SignupPage() {
+
+      const router = useRouter()
   // ============================================
   // STATE MANAGEMENT
   // ============================================
@@ -40,6 +44,10 @@ export default function SignupPage() {
   // Error and success messages to display to user
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const { data: session, status } = useSession()
+
+    
 
   // ============================================
   // CLOUDINARY UPLOAD FUNCTION
@@ -167,6 +175,27 @@ export default function SignupPage() {
       setLoading(false); // Always stop loading state
     }
   };
+
+  useEffect(() => {
+        // Check if session has finished loading
+        if (status === "loading") {
+          return  // Still loading, do nothing
+        }
+    
+        // If not authenticated, redirect to login
+        if (status === "authenticated") {
+          router.push("/home")
+        }
+      }, [status, router])  // ✅ Dependencies array
+    
+      // Show loading state while checking authentication
+      if (status === "loading") {
+        return (
+          <div className="min-h-[675px] flex items-center justify-center">
+            <p>Loading...</p>
+          </div>
+        )
+      }
 
   // ============================================
   // RENDER UI

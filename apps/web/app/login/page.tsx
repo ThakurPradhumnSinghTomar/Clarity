@@ -5,17 +5,33 @@
 "use client"  // Client component because we need interactivity (forms, state)
 
 import { signIn } from "next-auth/react"  // Function to trigger authentication
-import { useState } from "react"           // React hook for managing state
+import { useEffect, useState } from "react"           // React hook for managing state
 import { useRouter } from "next/navigation"  // Next.js router for navigation
+import { useSession } from "next-auth/react"  // ✅ Hook for client components
+
+
 
 export default function LoginPage() {
+
+// ✅ Use useSession hook to get session in client components
+   
+    // ✅ Proper useEffect without async
+    
+  
+
+  
+  
+
+
   // STATE: Track form inputs and UI state
   const [email, setEmail] = useState("")           // Email input value
   const [password, setPassword] = useState("")     // Password input value
   const [error, setError] = useState("")           // Error message to display
   const [loading, setLoading] = useState(false)    // Loading state for button
   
-  const router = useRouter()  // Router instance for programmatic navigation
+   const { data: session, status } = useSession()
+    const router = useRouter()
+  
 
   // FORM SUBMIT HANDLER: Called when user clicks "Sign in" button
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,6 +71,27 @@ export default function LoginPage() {
       callbackUrl: "/home"  // Where to redirect after successful auth
     })
   }
+
+  useEffect(() => {
+      // Check if session has finished loading
+      if (status === "loading") {
+        return  // Still loading, do nothing
+      }
+  
+      // If not authenticated, redirect to login
+      if (status === "authenticated") {
+        router.push("/home")
+      }
+    }, [status, router])  // ✅ Dependencies array
+  
+    // Show loading state while checking authentication
+    if (status === "loading") {
+      return (
+        <div className="min-h-[675px] flex items-center justify-center">
+          <p>Loading...</p>
+        </div>
+      )
+    }
 
   return (
     // MAIN CONTAINER: Full screen with centered content
