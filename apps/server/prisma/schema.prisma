@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  /**
+   * id is a String but mapped to MongoDB’s ObjectId.
+   * @map("_id") maps Prisma’s id → MongoDB _id.
+   */
+
+  //basic user details
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  email          String         @unique
+  image          String?
+  hashedPassword String?
+  focusSessions  FocusSession[]
+}
+
+model Leaderboard {
+  id        String            @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  members   LeaderboardUser[] // embedded array of { userId, studyHours }
+  createdAt DateTime          @default(now())
+}
+
+type LeaderboardUser {
+  userId     String @db.ObjectId
+  studyHours Int
+}
+
+/**
+ * Line	Simple Meaning
+ * @@unique([userId, weekStart])	Only ONE entry allowed per user per week.
+ * @@index([weekStart, totalSec])	Speed up leaderboards (week + sort by total).
+ * @@index([userId, weekStart])	Speed up fetching a user’s weekly record.
+ */
+
+type DayEntry {
+  weekday    Int // 0 = Sunday .. 6 = Saturday (or choose 1..7)
+  focusedSec Int // seconds focused that day
+}
+
+model WeeklyStudyHours {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String     @db.ObjectId
+  weekStart DateTime
+  days      DayEntry[]
+  totalSec  Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([userId, weekStart], name: "userId_weekStart_wsh")
+  @@index([weekStart, totalSec]) // keep this for weekly leaderboard queries
+}
+
+model FocusSession {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  startTime   DateTime
+  endTime     DateTime
+  durationSec Int // total focused seconds for that session
+  tag         String? // optional label like "coding", "reading"
+  note        String? // optional short note
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, startTime])
+}

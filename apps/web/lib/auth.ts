@@ -40,6 +40,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         
         // Make API call to your backend to verify user credentials
         // Your backend should check email/password against database
+
+        //IMPORTANT : here token coming from bakcend is ignored and nextAuth will amnage its own token
         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
           method: "POST",
           headers: { 
@@ -129,6 +131,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // SESSION STRATEGY: How to store sessions
   session: {
     strategy: "jwt",  // Use JWT (stateless, stored in HTTP-only cookie)
-                      // Alternative: "database" (stores sessions in DB)
+                      // Alternative: "database" (stores sessions in DB) but not for now, can be implemented in future..
   },
 })

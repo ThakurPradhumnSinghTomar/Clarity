@@ -221,7 +221,17 @@ export default function LoginPage() {
         </div>
         
         {/* SIGN UP LINK SECTION - This was causing the error */}
-        {/* Removed the incomplete/malformed JSX that was at the end */}
+         <div className="text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            New user?{" "}
+            <button
+              onClick={() => router.push("/signup")}
+              className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+            >
+              Create account
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   )
