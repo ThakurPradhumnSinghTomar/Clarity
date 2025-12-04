@@ -144,11 +144,96 @@ authRouter.post("/signup", async (req, res) => {
     } catch (error) {
         console.error("Signup error:", error);
         res.status(500).json({ 
-            error: "An error occurred during signup" 
+            error: error
         });
     }
 });
 
-export default authRouter;
+authRouter.post("oauth-user", async (req, res)=>{
+    try{
 
-// i am adding these comment to make code readable for future refrences
+        const { email, name, image, provider, providerId } = req.body;
+     // Validate required fields
+    if (!email || !provider || !providerId) {
+      return res.status(400).json({
+        error: 'Missing required fields: email, provider, and providerId are required'
+      });
+    }
+
+
+     // Check if user already exists by email
+    let user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (user) {
+      // User exists - update their information
+      user = await prisma.user.update({
+        where: { email },
+        data: {
+          name: name || user.name,
+          image: image || user.image,
+          // Update last login or other tracking fields if needed --- no need yaar, jyada complex nhi krna h
+          
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        },
+        message: 'User updated successfully'
+      });
+    }
+
+    // User doesn't exist - create new user
+    user = await prisma.user.create({
+      data: {
+        email,
+        name: name || email.split('@')[0], // Use email prefix if no name provided
+        image,
+        provider,
+        providerId,
+        emailVerified: new Date(), // OAuth users have verified emails
+        // No password field since they're using OAuth
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      },
+      message: 'User created successfully'
+    });
+
+    }
+     catch (error : any) { //yha error.code hona chahiye nhi to gadbad ho jayengi kyunki error ko any kr diya h
+    console.error('OAuth user handler error:', error);
+    
+    // Handle unique constraint violations (duplicate emails)
+    if (error.code === 'P2002') {
+      return res.status(409).json({
+        error: 'User with this email already exists'
+      });
+    }
+
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+
+
+})
+
+
+export default authRouter
+

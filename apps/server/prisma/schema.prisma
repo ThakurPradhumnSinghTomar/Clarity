@@ -26,6 +26,11 @@ model User {
   image          String?
   hashedPassword String?
   focusSessions  FocusSession[]
+
+   // OAuth fields
+  provider      String?   // "google", "github", "credentials"
+  providerId    String?   // ID from OAuth provider
+  emailVerified DateTime? // When email was verified
 }
 
 model Leaderboard {

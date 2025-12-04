@@ -8,9 +8,9 @@ const QuoteBox = () => {
 
   const loadQuote = async () => {
     try {
-      const r = await fetch("https://api.quotable.io/random");
+      const r = await fetch("https://programming-quotes-api.herokuapp.com/quotes/random");
       const d = await r.json();
-      setQuote(d.content);
+      setQuote(d.en);
       setAuthor(d.author);
     } catch (e) {
       setQuote("Be not afraid of greatness: some are born great, some achieve greatness, and some have greatness thrust upon them.");

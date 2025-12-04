@@ -12,6 +12,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string  // Add custom 'id' field to user object
+      provider?: string
     } & DefaultSession["user"]  // Keep all default fields (name, email, image)
   }
 
@@ -21,6 +22,7 @@ declare module "next-auth" {
     id: string       // User's unique ID
     email: string    // User's email address
     name?: string    // User's name (optional - indicated by ?)
+    provider?: string
     // Add more custom fields as needed (role, avatar, etc.)
   }
 }

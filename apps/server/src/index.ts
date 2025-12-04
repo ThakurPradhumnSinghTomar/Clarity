@@ -1,6 +1,14 @@
 import express from "express"
 import authRouter from "./routes/auth.js";
 const app = express()
+import cors from "cors";
+
+app.use(cors({
+  origin: 'http://localhost:3000', // Your Next.js frontend URL
+  credentials: true
+}));
+
+app.use(express.json());
 
 app.get("/", (req, res) => res.send("API running!"));
 

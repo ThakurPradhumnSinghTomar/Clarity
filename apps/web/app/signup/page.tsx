@@ -9,9 +9,9 @@ import { useSession } from 'next-auth/react';
 // ============================================
 // Replace these with your actual Cloudinary credentials
 // Get them from: https://cloudinary.com/console
-const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME??"";
-const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET??"";
-const FALLBACK_IMAGE = process.env.FALLBACK_IMAGE??"";
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME??"";
+const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET??"";
+const FALLBACK_IMAGE = process.env.NEXT_PUBLIC_FALLBACK_IMAGE??"";
 
 
 export default function SignupPage() {
@@ -75,8 +75,11 @@ export default function SignupPage() {
 
       // Check if upload was successful
       if (!response.ok) {
-        throw new Error('Upload failed');
-      }
+      const errorData = await response.json(); // Get error details
+      console.error('Cloudinary error:', errorData); // Log full error
+      setImagePreview(null);
+      throw new Error(`Upload failed: ${errorData.error?.message || 'Unknown error'}`);
+    }
 
       // Parse the response to get the image URL
       const data = await response.json();
@@ -148,7 +151,7 @@ export default function SignupPage() {
 
     try {
       // Send POST request to signup endpoint
-      const response = await fetch('http://localhost:5000/api/auth/signup', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
