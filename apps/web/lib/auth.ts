@@ -1,4 +1,4 @@
-// auth.ts
+// auth.ts ..
 // This file configures NextAuth.js (Auth.js v5) for handling authentication
 // Now includes OAuth user creation in your database
 
