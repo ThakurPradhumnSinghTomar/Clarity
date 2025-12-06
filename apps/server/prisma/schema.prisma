@@ -31,18 +31,8 @@ model User {
   provider      String?   // "google", "github", "credentials"
   providerId    String?   // ID from OAuth provider
   emailVerified DateTime? // When email was verified
-}
 
-model Leaderboard {
-  id        String            @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  members   LeaderboardUser[] // embedded array of { userId, studyHours }
-  createdAt DateTime          @default(now())
-}
-
-type LeaderboardUser {
-  userId     String @db.ObjectId
-  studyHours Int
+  weeklyStudyHours WeeklyStudyHours[]
 }
 
 /**
@@ -60,6 +50,7 @@ type DayEntry {
 model WeeklyStudyHours {
   id        String     @id @default(auto()) @map("_id") @db.ObjectId
   userId    String     @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])  //RELATION  to users table to users id
   weekStart DateTime
   days      DayEntry[]
   totalSec  Int        @default(0)
@@ -84,3 +75,4 @@ model FocusSession {
 
   @@index([userId, startTime])
 }
+  
