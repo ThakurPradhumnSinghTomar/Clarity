@@ -1,6 +1,6 @@
 # 🔐 Authentication Flow Documentation
 
-## Overview
+## Overvieww
 
 Your application uses **NextAuth.js (Auth.js v5)** for authentication with three sign-in methods:
 1. **Credentials** (Email/Password)
