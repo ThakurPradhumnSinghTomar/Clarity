@@ -15,6 +15,6 @@
     "resolveJsonModule": true,
     "composite": true  // Important for project references
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../apps/web/lib/types/next-auth.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
