@@ -149,19 +149,20 @@ authRouter.post("/signup", async (req, res) => {
     }
 });
 
-authRouter.post("oauth-user", async (req, res)=>{
-    try{
 
-        const { email, name, image, provider, providerId } = req.body;
-     // Validate required fields
+
+authRouter.post("/oauth-user", async (req, res) => {
+  try {
+    const { email, name, image, provider, providerId } = req.body;
+    
+    // Validate required fields
     if (!email || !provider || !providerId) {
       return res.status(400).json({
         error: 'Missing required fields: email, provider, and providerId are required'
       });
     }
 
-
-     // Check if user already exists by email
+    // Check if user already exists by email
     let user = await prisma.user.findUnique({
       where: { email }
     });
@@ -173,13 +174,23 @@ authRouter.post("oauth-user", async (req, res)=>{
         data: {
           name: name || user.name,
           image: image || user.image,
-          // Update last login or other tracking fields if needed --- no need yaar, jyada complex nhi krna h
-          
         }
       });
 
+      // Generate JWT token for existing user
+      const token = jwt.sign(
+        { 
+          id: user.id, 
+          email: user.email,
+          name: user.name 
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: '30d' }
+      );
+
       return res.status(200).json({
         success: true,
+        token, // JWT token
         user: {
           id: user.id,
           email: user.email,
@@ -199,12 +210,23 @@ authRouter.post("oauth-user", async (req, res)=>{
         provider,
         providerId,
         emailVerified: new Date(), // OAuth users have verified emails
-        // No password field since they're using OAuth
       }
     });
 
+    // Generate JWT token for new user
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        email: user.email,
+        name: user.name 
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: '30d' }
+    );
+
     return res.status(201).json({
       success: true,
+      token, 
       user: {
         id: user.id,
         email: user.email,
@@ -214,8 +236,7 @@ authRouter.post("oauth-user", async (req, res)=>{
       message: 'User created successfully'
     });
 
-    }
-     catch (error : any) { //yha error.code hona chahiye nhi to gadbad ho jayengi kyunki error ko any kr diya h
+  } catch (error: any) {
     console.error('OAuth user handler error:', error);
     
     // Handle unique constraint violations (duplicate emails)
@@ -230,9 +251,7 @@ authRouter.post("oauth-user", async (req, res)=>{
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-
-
-})
+});
 
 
 export default authRouter

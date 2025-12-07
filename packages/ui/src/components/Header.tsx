@@ -1,5 +1,6 @@
 import React from 'react'
 import { useState } from 'react';
+import { SignOutBtn } from "@repo/ui";
 
 const Header = () => {
     const [isOptions, setisOptions] = useState(false);
@@ -45,6 +46,7 @@ const Header = () => {
                 <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150'>
                   Track Expenses
                 </div>
+                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150'><SignOutBtn></SignOutBtn></div>
               </div>
             </div>
           </div>

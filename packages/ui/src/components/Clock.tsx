@@ -119,6 +119,14 @@ const Clock = () => {
 
         //send cutrrent duration and tag here to backend
         setSessionSaved(true);
+        try{
+            const response = await fetch(`${}`)
+
+        }
+        catch(error){
+
+        }
+
         alert(`congratulations,focus duration of ${focusDuration} saved...`);
         setFocusDuration(0);
         setInitial(3600);

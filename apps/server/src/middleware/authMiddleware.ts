@@ -8,20 +8,25 @@ const BACKEND_JWT_SECRET = process.env.JWT_SECRET!;
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
+  console.log("incoming request has this authorization header : ",authHeader);
+
   // Expecting: Authorization: Bearer <token>
   if (!authHeader) {
-    return res.status(401).json({ message: "No Authorization header" });
+    console.log("No Authorization header, middleware block your reequest");
+    return res.status(401).json({ message: "No Authorization header, middleware block your reequest" });
   }
 
   const parts = authHeader.split(" ");
   if (parts.length !== 2 || parts[0] !== "Bearer") {
-    return res.status(401).json({ message: "Invalid Authorization header" });
+    console.log("Invalid Authorization header, middleware block your reequest");
+    return res.status(401).json({ message: "Invalid Authorization header, middleware block your reequest" });
   }
 
   const token = parts[1];
 
   if(!token){
-    return res.status(401).json({message:"No token in Auth headers"});
+    console.log("No token in Auth headers, middleware block your reequest");
+    return res.status(401).json({message:"No token in Auth headers, middleware block your reequest"});
   }
 
   try {
@@ -33,6 +38,8 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
       id:  decoded.id, // depending on how you sign it
       email: decoded.email,
     };
+
+    console.log("incoming request passed from middleware");
 
     next();
   } catch (err) {
