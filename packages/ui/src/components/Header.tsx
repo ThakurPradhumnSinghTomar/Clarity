@@ -1,9 +1,12 @@
 import React from 'react'
 import { useState } from 'react';
+import { SignOutBtn } from "@repo/ui";
+import { useSession } from "next-auth/react" 
 
 const Header = () => {
-    const [isOptions, setisOptions] = useState(false);
+  const [isOptions, setisOptions] = useState(false);
   const [isMode, setisMode] = useState(false);
+  const { data: session } = useSession()
 
   return (
     <div className=' dark:bg-[#020617] dark:text-white p-4 bg-[#FFFFFF] text-[#020617] flex justify-between border-b-[#020617] border-2 dark:border-0 shadow-xl border-x-0'>
@@ -45,6 +48,7 @@ const Header = () => {
                 <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150'>
                   Track Expenses
                 </div>
+                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150'><SignOutBtn></SignOutBtn></div>
               </div>
             </div>
           </div>
@@ -85,6 +89,7 @@ const Header = () => {
               </div>
             </div>
           </div>
+          <div className='w-10 h-10 rounded-full overflow-hidden mb--6'><img src={session?.user.image||"https://cdn-icons-png.flaticon.com/512/149/149071.png"} alt="profile image of user" /></div>
         </div>
       </div>
   )

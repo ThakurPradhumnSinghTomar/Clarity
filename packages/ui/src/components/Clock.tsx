@@ -1,6 +1,7 @@
 import { ClockProps } from '@repo/types'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button } from '../button';
+import { useSession } from "next-auth/react" 
 
 
 /*
@@ -35,9 +36,14 @@ const Clock = () => {
     const [stopwatchRunning, setStopwatchRunning] = useState(false);
     const [TimerRunning, setTimerRunning] = useState(false);
     const [sessionSaved,setSessionSaved] = useState(false);
+    const [startTime, setStartTime] = useState<Date|null>(null);
+    const [endTime, setEndTime] = useState<Date|null>(null);
     const [timer,setTimer] = useState(0);
     const [edit,setEdit] = useState(false);
     const [tags,setTags] = useState(null);
+    const [isSessionStarted,setIsSessionStarted] = useState<boolean>(false);
+    const { data: session } = useSession()
+    const token = session?.accessToken // Your backend JWT token
 
     useEffect(() => {
         if (initial < 1) {
@@ -58,9 +64,11 @@ const Clock = () => {
   
 
     function handleStartFocusingClick(){
-
-                
-
+        if(!isSessionStarted){
+            setIsSessionStarted(true);
+            const start = new Date();
+            setStartTime(start);
+        }
 
         if(type == "Stopwatch"){
             setStopwatchRunning(true);
@@ -91,6 +99,10 @@ const Clock = () => {
 
     function handleStopFocusingClick(){
 
+        const endtime = new Date();
+
+        setEndTime(endtime);
+
         if(type == "Stopwatch"){
 
              if (intervalRef.current) {
@@ -115,13 +127,54 @@ const Clock = () => {
         
     }
 
-    function handleSaveSessionClick(){
+    
+
+    async function handleSaveSessionClick(){
 
         //send cutrrent duration and tag here to backend
         setSessionSaved(true);
-        alert(`congratulations,focus duration of ${focusDuration} saved...`);
-        setFocusDuration(0);
-        setInitial(3600);
+        setIsSessionStarted(false);
+        const endtime = endTime || new Date();
+        try{
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`,{
+                method : "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${session?.accessToken}`
+                },
+                body : JSON.stringify({
+                    startTime : startTime,
+                    endTime : endTime,
+                    durationSec : focusDuration,
+                    tag : tags,
+                    note : null
+                })
+            });
+
+            if(!response.ok){
+                console.log("unable to save focus session");
+                return ;
+            }
+
+            console.log("focus session saved succesfully...");
+
+
+             alert(`congratulations,focus duration of ${focusDuration} saved...`);
+              setFocusDuration(0);
+             setInitial(3600);
+            setStartTime(null);
+            setSessionSaved(false);
+
+            return true;
+
+        }
+        catch(error){
+            console.log("unable to save focus session, got a error : "+error);
+            return ;
+
+        }
+
+        
     }
 
     function handleReset(){

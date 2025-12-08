@@ -83,6 +83,7 @@ export default function SignupPage() {
 
       // Parse the response to get the image URL
       const data = await response.json();
+      console.log("profile image link is : ",data.secure_url);
       return data.secure_url; // Returns HTTPS URL of uploaded image
     } catch (error) {
       // Log error and return fallback image if upload fails
@@ -116,6 +117,7 @@ export default function SignupPage() {
 
       // ---- STEP 2: Upload to Cloudinary ----
       const cloudinaryUrl = await uploadToCloudinary(file);
+      console.log("cloudinary url is : ",cloudinaryUrl);
       
       // ---- STEP 3: Update form data with the URL ----
       setFormData({ ...formData, imagePath: cloudinaryUrl });

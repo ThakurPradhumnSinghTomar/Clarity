@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { histogramProps } from "@repo/types";
 
 // Days of the week for x-axis labels
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -8,10 +9,7 @@ function formatHours(h: number) {
   return `${h} hr${h !== 1 ? "s" : ""}`;
 }
 
-export default function Histogram({
-  data = [2, 3, 1, 4, 5, 2, 0], // Array of study hours for each day
-  currentDay = 5, // Index of current day (0=Mon, 6=Sun)
-}) {
+export default function Histogram({data,currentDay} : histogramProps ) {
   // State for hover interactions
   const [hovered, setHovered] = useState<number | null>(null);
   // State for click/select interactions
