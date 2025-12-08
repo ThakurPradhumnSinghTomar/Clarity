@@ -124,7 +124,7 @@ authRouter.post("/signup", async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: newUser.id, email: newUser.email },
+            { userId: newUser.id, email: newUser.email, imagePath : imagePath },
             process.env.JWT_SECRET || "your-secret-key",
             { expiresIn: "7d" }
         );
@@ -148,8 +148,6 @@ authRouter.post("/signup", async (req, res) => {
         });
     }
 });
-
-
 
 authRouter.post("/oauth-user", async (req, res) => {
   try {
@@ -180,9 +178,10 @@ authRouter.post("/oauth-user", async (req, res) => {
       // Generate JWT token for existing user
       const token = jwt.sign(
         { 
-          id: user.id, 
+          userId: user.id, 
           email: user.email,
-          name: user.name 
+          name: user.name,
+          imagePath : image
         },
         process.env.JWT_SECRET!,
         { expiresIn: '30d' }
@@ -216,9 +215,10 @@ authRouter.post("/oauth-user", async (req, res) => {
     // Generate JWT token for new user
     const token = jwt.sign(
       { 
-        id: user.id, 
+        userId: user.id, 
         email: user.email,
-        name: user.name 
+        name: user.name,
+        imagePath : image
       },
       process.env.JWT_SECRET!,
       { expiresIn: '30d' }

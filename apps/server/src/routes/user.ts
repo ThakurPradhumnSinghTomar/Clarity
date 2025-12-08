@@ -179,7 +179,7 @@ userRouter.post("/save-focus-sesssion",authMiddleware, async(req,res)=>{
 userRouter.get("/get-current-week-study-hours", authMiddleware, async(req, res) => {
   try {
     console.log("incoming req is : ",req.user);
-    const userId = req.id;
+    const userId = req.user?.id;
     console.log("incoming request has this user id on get weekly study hours : ",userId)
     if (!userId) {
       console.log("Unauthorized - no userId provided,req rejected in api route getting weekly study hours")

@@ -20,7 +20,7 @@ const Leaderboard = ({students}:LeaderboardProps) => {
                         <div className='flex justify-around gap-4'>
                             <div className='pt-2 font-bold'><h1>#{index+1}</h1></div>
                             <img
-                            src={student.profileImg}
+                            src={student.profileImg||"https://cdn-icons-png.flaticon.com/512/149/149071.png"}
                             alt="profileimage"
                             className="h-10 w-10 rounded-full"
                             />

@@ -136,11 +136,11 @@ const Clock = () => {
         setIsSessionStarted(false);
         const endtime = endTime || new Date();
         try{
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/leaderboard`,{
-                method : "GET",
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`,{
+                method : "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${session?.accessToken}`
                 },
                 body : JSON.stringify({
                     startTime : startTime,

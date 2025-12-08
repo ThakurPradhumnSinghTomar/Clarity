@@ -22,7 +22,7 @@ const Home = () => {  // ✅ Component name in PascalCase
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${session?.accessToken}`
         }
       });
 
@@ -34,7 +34,7 @@ const Home = () => {  // ✅ Component name in PascalCase
       const responseData = await response.json(); // ✅ Renamed to avoid conflict
       
       if (!responseData.success) {
-        console.error("Failed to fetch study hours:", responseData.message);
+        console.error("Failed to fetch study hours, but response is ok:", responseData.message);
         return;
       }
 
@@ -49,11 +49,12 @@ const Home = () => {  // ✅ Component name in PascalCase
       const newData = [0, 0, 0, 0, 0, 0, 0]; // Initialize fresh array
       weeklyStudyHours.days.forEach((day: { weekday: number, focusedSec: number }) => {
         if (day.weekday >= 0 && day.weekday <= 6) {
-          newData[day.weekday] = day.focusedSec;
+          newData[day.weekday] = Math.round(day.focusedSec/3600 * 100) / 100;
         }
       });
       
       setData(newData); // ✅ Set state ONCE with complete array
+      console.log("weekly study hours fetched successfully :",data);
 
     } catch (e) {
       console.error("error in getting leaderboard", e);
@@ -66,7 +67,7 @@ const Home = () => {  // ✅ Component name in PascalCase
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${session?.accessToken}`
         }
       });
 

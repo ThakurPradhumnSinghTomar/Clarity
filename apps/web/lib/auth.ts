@@ -133,11 +133,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         
         // CRITICAL: Store the backend JWT token
         token.backendToken = user.backendToken;
+
+        console.log("=== JWT Callback - New Sign In ===");
+      console.log("User ID:", token.id);
+      console.log("User Email:", token.email);
+      console.log("Backend Token:", token.backendToken);
+      console.log("================================");
       }
       
       if (account) {
         token.provider = account.provider;
       }
+
+      console.log("=== JWT Callback - Token Refresh ===");
+      console.log("Current Token ID:", token.id);
+      console.log("Current Token Email:", token.email);
+      console.log("Trigger:", trigger);
+      console.log("===================================");
+
+      
       
       return token;
     },
@@ -148,7 +162,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
-        session.user.image = token.picture as string;
+        session.user.image = token.imagePath as string;
         
         if (token.provider) {
           session.user.provider = token.provider as string;

@@ -34,8 +34,13 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     const decoded = jwt.verify(token, BACKEND_JWT_SECRET) as any;
 
     // Attach to req.user → now all protected routes can use it
+
+    if(decoded.userId===undefined){
+      console.log("No user id in Auth header token, middleware block your reequest",decoded.email);
+      return res.status(401).json({message:"No userid in token in Auth headers, middleware block your reequest"});
+    }
     req.user = {
-      id:  decoded.id, // depending on how you sign it
+      id:  decoded.userId, // depending on how you sign it
       email: decoded.email,
     };
 
