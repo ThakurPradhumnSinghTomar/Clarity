@@ -4,3 +4,4 @@ export {default as Histogram} from "./components/Histogram";
 export {default as Leaderboard} from "./components/Leaderboard";
 export {default as Clock} from "./components/Clock";
 export {default as SignOutBtn} from "./components/SignOutBtn";
+export {default as studentCardProps} from './components/studentCard';

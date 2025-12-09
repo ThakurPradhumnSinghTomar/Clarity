@@ -49,7 +49,7 @@ const Home = () => {  // ✅ Component name in PascalCase
       const newData = [0, 0, 0, 0, 0, 0, 0]; // Initialize fresh array
       weeklyStudyHours.days.forEach((day: { weekday: number, focusedSec: number }) => {
         if (day.weekday >= 0 && day.weekday <= 6) {
-          newData[day.weekday] = Math.round(day.focusedSec/3600 * 100) / 100;
+          newData[day.weekday-1] = Math.round(day.focusedSec/3600 * 100) / 100;
         }
       });
       
@@ -122,6 +122,7 @@ const Home = () => {  // ✅ Component name in PascalCase
 
         <div>
           <Leaderboard students={leaderboard} />
+          
         </div>
       </div>
     </div>

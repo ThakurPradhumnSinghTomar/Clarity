@@ -45,7 +45,7 @@ export default function Histogram({data,currentDay} : histogramProps ) {
           // Calculate height percentage for this bar
           const heightPct = getBarHeight(h);
           // Check if this is the current day
-          const isToday = i === currentDay;
+          const isToday = i === currentDay-1;
           // Check if this bar is being interacted with
           const isActive = hovered === i || selected === i;
 
