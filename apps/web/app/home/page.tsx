@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react'
 import { QuoteBox } from '@repo/ui'
 import { Histogram } from '@repo/ui'
 import { Leaderboard } from '@repo/ui'
-import { dummyStudents } from '@repo/types'
 import { useSession } from "next-auth/react"  // ✅ Hook for client components
 import { useRouter } from "next/navigation"   // ✅ Router for client components
 
