@@ -1,6 +1,6 @@
 export type Student = {
     name: string
-    studyHours: number
+    totalHours: number
     uid: string
     profileImg: string
 };

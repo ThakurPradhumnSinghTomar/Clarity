@@ -21,6 +21,7 @@ const useUnmountClear = (ref: React.MutableRefObject<NodeJS.Timeout | null>) => 
   useEffect(() => {
     return () => {
       if (ref.current) {
+        
         clearInterval(ref.current);
         ref.current = null;
       }
