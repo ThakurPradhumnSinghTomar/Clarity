@@ -1,4 +1,4 @@
-// auth.ts ..
+// auth.ts - FIXED VERSION
 // This file configures NextAuth.js (Auth.js v5) for handling authentication
 // Modified to use JWT tokens returned by your backend
 
@@ -49,7 +49,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             id: data.id || data.user?.id,
             email: data.email || data.user?.email,
             name: data.name || data.user?.name,
-            image: data.image || data.user?.image,
+            image: data.image || data.user?.image, // ✅ This will be the Cloudinary URL
             backendToken: data.token || data.accessToken, // Backend JWT token
           }
         }
@@ -129,16 +129,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.picture = user.image;
+        token.image = user.image; // ✅ FIXED: Changed from token.picture to token.image
         
         // CRITICAL: Store the backend JWT token
         token.backendToken = user.backendToken;
 
         console.log("=== JWT Callback - New Sign In ===");
-      console.log("User ID:", token.id);
-      console.log("User Email:", token.email);
-      console.log("Backend Token:", token.backendToken);
-      console.log("================================");
+        console.log("User ID:", token.id);
+        console.log("User Email:", token.email);
+        console.log("User Image:", token.image); // ✅ Added for debugging
+        console.log("Backend Token:", token.backendToken);
+        console.log("================================");
       }
       
       if (account) {
@@ -148,10 +149,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       console.log("=== JWT Callback - Token Refresh ===");
       console.log("Current Token ID:", token.id);
       console.log("Current Token Email:", token.email);
+      console.log("Current Token Image:", token.image); // ✅ Added for debugging
       console.log("Trigger:", trigger);
       console.log("===================================");
-
-      
       
       return token;
     },
@@ -162,7 +162,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
-        session.user.image = token.imagePath as string;
+        session.user.image = token.image as string; // ✅ FIXED: Changed from token.imagePath to token.image
         
         if (token.provider) {
           session.user.provider = token.provider as string;
@@ -172,6 +172,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // This is the token you'll use in API requests
         session.accessToken = token.backendToken as string;
       }
+      
+      console.log("=== Session Callback ===");
+      console.log("Session User Image:", session.user.image); // ✅ Added for debugging
+      console.log("======================");
       
       return session;
     }

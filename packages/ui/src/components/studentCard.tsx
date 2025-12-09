@@ -27,7 +27,7 @@ const StudentCard = ({ student, index }: studentCardProps) => {
                 {/* Profile Image */}
                 <div className="relative flex shrink-0">
                     <img
-                        src={student.profileImg||"https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                        src={student.image||"https://cdn-icons-png.flaticon.com/512/149/149071.png"}
                         alt={student.name}
                         className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-slate-200 dark:border-slate-600"
                     />

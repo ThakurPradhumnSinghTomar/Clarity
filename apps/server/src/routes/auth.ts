@@ -28,6 +28,12 @@ authRouter.post("/login",async(req,res)=>{
             });
         }
 
+        // 🔍 DEBUG: Check what's in database
+    console.log("🔍 STEP 2 - Backend Login:");
+    console.log("  - User from DB:", JSON.stringify(user, null, 2));
+    console.log("  - User image:", user?.image);
+
+
     // Compare password with hashed password
         const isPasswordValid = await bcrypt.compare(password, user.hashedPassword||"rbbfwrbrfrrrbhrbfbhrbfrbfhrbf");  //dekh le bhai, kebal type error ki vjh s y kiya h, ab jis bhi user k koi password nhi hoga, uska ye hoga
 
@@ -45,15 +51,21 @@ authRouter.post("/login",async(req,res)=>{
         );
 
     // Return success response
-        res.status(200).json({
-            message: "Login successful",
-            token,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name
-            }
-        });
+       const responseData = {
+        message: "Login successful",
+        token,
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            image: user.image  
+        }
+    };
+
+    
+    console.log("  - Login response:", JSON.stringify(responseData, null, 2));
+
+    res.status(200).json(responseData);
 
 
     }
@@ -122,6 +134,12 @@ authRouter.post("/signup", async (req, res) => {
             }
         });
 
+
+    console.log("🔍 STEP 1 - Backend Signup:");
+    console.log("  - Image received:", imagePath);
+    console.log("  - User created with image:", newUser.image);
+    console.log("  - Full user object:", JSON.stringify(newUser, null, 2));
+
         // Generate JWT token
         const token = jwt.sign(
             { userId: newUser.id, email: newUser.email, imagePath : imagePath },
@@ -130,16 +148,21 @@ authRouter.post("/signup", async (req, res) => {
         );
 
         // Return success response (exclude password)
-        res.status(201).json({
-            message: "User created successfully",
-            token,
-            user: {
-                id: newUser.id,
-                name: newUser.name,
-                email: newUser.email,
-                imagePath: newUser.image
-            }
-        });
+       const responseData = {
+        message: "User created successfully",
+        token,
+        user: {
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            image: newUser.image  // ✅ Make sure this is image, not imagePath
+        }
+    };
+
+    // 🔍 DEBUG: Check response being sent
+    console.log("  - Response being sent:", JSON.stringify(responseData, null, 2));
+
+    res.status(201).json(responseData);
 
     } catch (error) {
         console.error("Signup error:", error);

@@ -2,7 +2,7 @@ export type Student = {
     name: string
     totalHours: number
     uid: string
-    profileImg: string
+    image: string
 };
 
 export interface LeaderboardProps {

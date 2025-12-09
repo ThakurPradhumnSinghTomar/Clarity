@@ -8,15 +8,36 @@ import { dummyStudents } from '@repo/types'
 import { useSession } from "next-auth/react"  // ✅ Hook for client components
 import { useRouter } from "next/navigation"   // ✅ Router for client components
 
+// Loading Skeleton Components
+const HistogramSkeleton = () => (
+  <div className="animate-pulse p-4 bg-gray-700/20 h-[400px] w-[650px] rounded-2xl">
+    
+  </div>
+)
+
+const LeaderboardSkeleton = () => (
+  <div className="animate-pulse p-4 md:w-[800px] rounded-2xl">
+    <div className='m-6 w-full h-22 bg-gray-700/20 ml-0 rounded-2xl'></div>
+    <div className="space-y-2">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="h-20 bg-gray-700/20 rounded"></div>
+      ))}
+    </div>
+  </div>
+)
+
 const Home = () => {  // ✅ Component name in PascalCase
   const { data: session } = useSession()
   const token = session?.accessToken // Your backend JWT token
   const [data, setData] = useState([0, 0, 0, 0, 0, 0, 0]);
   const currentDay = new Date().getDay(); // ✅ FIXED: Date.now() returns timestamp, not day
-  const [leaderboard,setLeaderboard] = useState([]);
-  const [currentUser,setCurrentUser] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isLoadingHistogram, setIsLoadingHistogram] = useState(true);
+  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(true);
 
   const loadCurrentWeekStudyHours = async () => {
+    setIsLoadingHistogram(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-week-study-hours`, {
         method: "GET",
@@ -58,10 +79,13 @@ const Home = () => {  // ✅ Component name in PascalCase
 
     } catch (e) {
       console.error("error in getting leaderboard", e);
+    } finally {
+      setIsLoadingHistogram(false);
     }
   };
 
   const loadLeaderboard = async() => {
+    setIsLoadingLeaderboard(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/leaderboard`,{
         method: "GET",
@@ -83,17 +107,17 @@ const Home = () => {  // ✅ Component name in PascalCase
         return;
       }
 
+      console.log("leaderboard data we fetch from backend is : ",responseData.leaderboard);
       setLeaderboard(responseData.leaderboard);
       setCurrentUser(responseData.currentUser);
 
       console.log("leaderboard fetched successfull");
       
-
     }
     catch(error){
-
       console.error("error in fetching leaderboard",error);
-
+    } finally {
+      setIsLoadingLeaderboard(false);
     }
   } 
 
@@ -107,7 +131,6 @@ const Home = () => {  // ✅ Component name in PascalCase
      if (session?.accessToken) {
       loadLeaderboard();
      }
-
   },[session?.accessToken]);
 
   return (
@@ -117,12 +140,19 @@ const Home = () => {  // ✅ Component name in PascalCase
           <div className='min-h-[185px]'>
             <QuoteBox />
           </div>
-          <Histogram data={data} currentDay={currentDay} />
+          {isLoadingHistogram ? (
+            <HistogramSkeleton />
+          ) : (
+            <Histogram data={data} currentDay={currentDay} />
+          )}
         </div>
 
         <div>
-          <Leaderboard students={leaderboard} />
-          
+          {isLoadingLeaderboard ? (
+            <LeaderboardSkeleton />
+          ) : (
+            <Leaderboard students={leaderboard} />
+          )}
         </div>
       </div>
     </div>

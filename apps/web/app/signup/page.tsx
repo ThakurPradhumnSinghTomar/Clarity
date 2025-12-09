@@ -9,9 +9,9 @@ import { useSession } from 'next-auth/react';
 // ============================================
 // Replace these with your actual Cloudinary credentials
 // Get them from: https://cloudinary.com/console
-const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME??"";
-const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET??"";
-const FALLBACK_IMAGE = process.env.NEXT_PUBLIC_FALLBACK_IMAGE??"";
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME as string;
+const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET as string;
+const FALLBACK_IMAGE = process.env.NEXT_PUBLIC_FALLBACK_IMAGE as string;
 
 
 export default function SignupPage() {
@@ -121,6 +121,7 @@ export default function SignupPage() {
       
       // ---- STEP 3: Update form data with the URL ----
       setFormData({ ...formData, imagePath: cloudinaryUrl });
+      setImagePreview(cloudinaryUrl);
       setUploadingImage(false); // Hide loading state
     }
   };
@@ -206,7 +207,7 @@ export default function SignupPage() {
   // RENDER UI
   // ============================================
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
       
       {/* ============================================
           HEADER SECTION

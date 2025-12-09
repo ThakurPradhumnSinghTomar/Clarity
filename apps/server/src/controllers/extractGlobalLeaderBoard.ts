@@ -47,7 +47,8 @@ export async function extractGlobalLeaderBoard() {
     name: row.user?.name,      // from User model
     email: row.user?.email,    // from User model
     totalSec: row.totalSec,    // total seconds studied this week
-    totalHours: +(row.totalSec / 3600).toFixed(2), // optional: for display
+    totalHours: +(row.totalSec / 3600).toFixed(2),
+    image : row.user.image // optional: for display
   }));
 
   // 4) Return array to whoever called this function
