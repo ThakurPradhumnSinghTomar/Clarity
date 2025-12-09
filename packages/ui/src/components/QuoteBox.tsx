@@ -8,7 +8,7 @@ const QuoteBox = () => {
 
   const loadQuote = async () => {
     try {
-      const r = await fetch("https://programming-quotes-api.herokuapp.com/quotes/random");
+      const r = await fetch("https://api.quotable.io/random");
       const d = await r.json();
       setQuote(d.en);
       setAuthor(d.author);

@@ -6,7 +6,8 @@ const app = express()
 import cors from "cors";
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Your Next.js frontend URL
+  origin: 'https://rebuild-with-pradhumn.vercel.app',
+   // Your Next.js frontend URL
   credentials: true
 }));
 
