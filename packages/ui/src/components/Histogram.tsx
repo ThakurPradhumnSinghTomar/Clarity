@@ -5,9 +5,15 @@ import { histogramProps } from "@repo/types";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 // Helper function to format hours with proper plural/singular
-function formatHours(h: number) {
-  return `${h} hr${h !== 1 ? "s" : ""}`;
-}
+ const formatStudyTime = (hours : number) => {
+        const totalMinutes = Math.round(hours * 60);
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+
+        if (h > 0 && m > 0) return `${h} hour ${m} minutes studied`;
+        if (h > 0) return `${h} hours studied`;
+        return `${m} minutes studied`;
+        };
 
 export default function Histogram({data,currentDay} : histogramProps ) {
   // State for hover interactions
@@ -89,7 +95,7 @@ export default function Histogram({data,currentDay} : histogramProps ) {
               {/* Tooltip showing hours count (only visible on hover/select) */}
               {(hovered === i || selected === i) && (
                 <div className="absolute -top--5 px-2 py-1 text-xs rounded-md shadow-md whitespace-nowrap transform -translate-x-1/2 left-1/2 bg-white text-slate-900 border dark:bg-[#0b1724] dark:text-gray-100">
-                  {formatHours(h)}
+                  {formatStudyTime(h)}
                 </div>
               )}
             </div>
