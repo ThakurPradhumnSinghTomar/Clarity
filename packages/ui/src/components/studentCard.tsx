@@ -25,6 +25,7 @@ const StudentCard = ({ student, index }: studentCardProps) => {
         if (h > 0) return `${h} hours studied`;
         return `${m} minutes studied`;
         };
+        
 
     return (
         <div className="bg-white dark:bg-slate-800/50 rounded-xl p-3 sm:p-4 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 hover:shadow-lg">
