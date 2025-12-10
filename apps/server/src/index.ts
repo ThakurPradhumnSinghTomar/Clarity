@@ -5,10 +5,21 @@ import userRouter from "./routes/user.js";
 const app = express()
 import cors from "cors";
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://rebuild-with-pradhumn.vercel.app"
+];
+
 app.use(cors({
-  origin: 'http://localhost:3000',
-   // Your Next.js frontend URL
-  credentials: true
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps / curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
 }));
 
 app.use(express.json());
