@@ -16,6 +16,16 @@ const StudentCard = ({ student, index }: studentCardProps) => {
         return `#${rank + 1}`;
     };
 
+            const formatStudyTime = (hours : number) => {
+        const totalMinutes = Math.round(hours * 60);
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+
+        if (h > 0 && m > 0) return `${h} hour ${m} minutes studied`;
+        if (h > 0) return `${h} hours studied`;
+        return `${m} minutes studied`;
+        };
+
     return (
         <div className="bg-white dark:bg-slate-800/50 rounded-xl p-3 sm:p-4 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 hover:shadow-lg">
             <div className="flex items-center gap-2 sm:gap-4">
@@ -42,7 +52,7 @@ const StudentCard = ({ student, index }: studentCardProps) => {
                         {student.name}
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-                        {student.totalHours} hours studied
+                        {formatStudyTime(student.totalHours)} 
                     </p>
                 </div>
 

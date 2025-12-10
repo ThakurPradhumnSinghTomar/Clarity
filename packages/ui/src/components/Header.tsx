@@ -15,7 +15,7 @@ const Header = () => {
     <div className=' dark:bg-[#020617] dark:text-white p-4 bg-[#FFFFFF] text-[#020617] flex justify-between border-b-[#020617] border-2 dark:border-0 shadow-xl border-x-0'>
         <div className='ml-4 font-bold cursor-pointer text-2xl'>Rebuild</div>
         <div className='flex gap-4 mr-4 pt-2'>
-          <div className='hover:text-orange-600 cursor-pointer mx-2'>Home</div>
+          <div className='hover:text-orange-600 cursor-pointer mx-2' onClick={()=>(router.push("/home"))}>Home</div>
           <div 
             className='relative'
             onMouseEnter={() => setisOptions(true)}

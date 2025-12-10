@@ -129,7 +129,7 @@ userRouter.post("/save-focus-sesssion",authMiddleware, async(req,res)=>{
       let updatedDays;
       if(existingWeekdayIndex!==-1){
         updatedDays = weeklyRecord.days.map((day,index)=>{
-          if(day.weekday === existingWeekdayIndex){
+          if(day.weekday === sessionWeekday){
             return {
               focusedSec : day.focusedSec+durationSec,
               weekday : sessionWeekday

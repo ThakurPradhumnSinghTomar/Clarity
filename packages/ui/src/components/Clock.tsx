@@ -36,7 +36,7 @@ const Clock = () => {
     const [focusDuration,setFocusDuration] = useState(0);
     const [stopwatchRunning, setStopwatchRunning] = useState(false);
     const [TimerRunning, setTimerRunning] = useState(false);
-    const [sessionSaved,setSessionSaved] = useState(false);
+    const [isSavingSession,setisSavingSession] = useState(false);
     const [startTime, setStartTime] = useState<Date|null>(null);
     const [endTime, setEndTime] = useState<Date|null>(null);
     const [timer,setTimer] = useState(0);
@@ -47,8 +47,10 @@ const Clock = () => {
     const token = session?.accessToken // Your backend JWT token
 
     useEffect(() => {
-        if (initial < 1) {
+        if (initial < 1&& TimerRunning) {
             if (intervalRef.current) {
+            setEndTime(new Date());  
+            handleSaveSessionClick();
             setTimerRunning(false)
             clearInterval(intervalRef.current)
             intervalRef.current = null
@@ -133,7 +135,7 @@ const Clock = () => {
     async function handleSaveSessionClick(){
 
         //send cutrrent duration and tag here to backend
-        setSessionSaved(true);
+        setisSavingSession(true);
         setIsSessionStarted(false);
         const endtime = endTime || new Date();
         try{
@@ -145,7 +147,7 @@ const Clock = () => {
                 },
                 body : JSON.stringify({
                     startTime : startTime,
-                    endTime : endTime,
+                    endTime :  endtime,
                     durationSec : focusDuration,
                     tag : tags,
                     note : null
@@ -157,14 +159,16 @@ const Clock = () => {
                 return ;
             }
 
-            console.log("focus session saved succesfully...");
+            const res = await response.json();
+
+            console.log("focus session saved succesfully...",res.data.focusSession);
 
 
              alert(`congratulations,focus duration of ${focusDuration} saved...`);
               setFocusDuration(0);
              setInitial(3600);
             setStartTime(null);
-            setSessionSaved(false);
+            setisSavingSession(false);
 
             return true;
 
@@ -307,10 +311,10 @@ const Clock = () => {
                     disabled:hover:bg-green-500
                     cursor-pointer
                 "
-                disabled={!(focusDuration > 0 && (!stopwatchRunning && !TimerRunning))}
+                disabled={!(focusDuration > 0 && (!stopwatchRunning && !TimerRunning && !isSavingSession))}
                 onClick={handleSaveSessionClick}
                 >
-                Save Session
+                {isSavingSession?"saving session" : "save session"}
                 </button>
             </div>
             </div> 
