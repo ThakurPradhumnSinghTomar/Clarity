@@ -5,17 +5,17 @@ import { histogramProps } from "@repo/types";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 // Helper function to format hours with proper plural/singular
- const formatStudyTime = (hours : number) => {
-        const totalMinutes = Math.round(hours * 60);
-        const h = Math.floor(totalMinutes / 60);
-        const m = totalMinutes % 60;
+const formatStudyTime = (hours: number) => {
+  const totalMinutes = Math.round(hours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
 
-        if (h > 0 && m > 0) return `${h} hour ${m} minutes studied`;
-        if (h > 0) return `${h} hours studied`;
-        return `${m} minutes studied`;
-        };
+  if (h > 0 && m > 0) return `${h} hour ${m} minutes studied`;
+  if (h > 0) return `${h} hours studied`;
+  return `${m} minutes studied`;
+};
 
-export default function Histogram({data,currentDay} : histogramProps ) {
+export default function Histogram({data, currentDay}: histogramProps) {
   // State for hover interactions
   const [hovered, setHovered] = useState<number | null>(null);
   // State for click/select interactions
@@ -33,13 +33,13 @@ export default function Histogram({data,currentDay} : histogramProps ) {
 
   return (
     // Main container with rounded corners and dark mode support
-    <div className="p-6 rounded-2xl w-full max-w-4xl bg-white dark:bg-[#0b1220] text-slate-900 dark:text-gray-200">
+    <div className="p-6 rounded-2xl w-full max-w-4xl bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-white border border-gray-200 dark:border-zinc-800 shadow-lg min-h-[432px]">
       
       {/* Header section with title and subtitle */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-2xl font-semibold">Weekly Study Hours</h3>
-          <p className="text-sm opacity-70 dark:opacity-60">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Track your Weekly study hours easily
           </p>
         </div>
@@ -75,26 +75,26 @@ export default function Histogram({data,currentDay} : histogramProps ) {
                   style={{ height: `${heightPct}%` }} // Dynamic height based on value
                   className={
                     "w-full rounded-t-md transition-all duration-150 " +
-                    // Highlight current day with yellow ring
+                    // Highlight current day with ring
                     (isToday
-                      ? "ring-2 ring-offset-2 ring-blue-950 dark:ring-blue-950 dark:ring-offset-[#0b1220] "
+                      ? "ring-2 ring-offset-2 ring-gray-900 dark:ring-white ring-offset-gray-50 dark:ring-offset-zinc-900 "
                       : "") +
                     // Scale and add shadow on hover/select
                     (isActive ? " scale-105 shadow-lg " : " shadow ") +
-                    // Blue gradient for light mode, gray for dark mode
-                    "bg-linear-to-t from-sky-500 to-sky-400 dark:from-slate-600 dark:to-slate-500"
+                    // Gradient for bars
+                    "bg-gradient-to-t from-gray-800 to-gray-700 dark:from-gray-100 dark:to-white"
                   }
                 />
               </div>
               
               {/* Day label below the bar */}
-              <div className="mt-3 text-xs font-medium opacity-70 dark:opacity-60">
+              <div className="mt-3 text-xs font-medium text-gray-600 dark:text-gray-400">
                 {DAYS[i]}
               </div>
 
               {/* Tooltip showing hours count (only visible on hover/select) */}
               {(hovered === i || selected === i) && (
-                <div className="absolute -top--5 px-2 py-1 text-xs rounded-md shadow-md whitespace-nowrap transform -translate-x-1/2 left-1/2 bg-white text-slate-900 border dark:bg-[#0b1724] dark:text-gray-100">
+                <div className="absolute -top-8 px-2 py-1 text-xs rounded-md shadow-md whitespace-nowrap transform -translate-x-1/2 left-1/2 bg-white text-gray-900 border border-gray-200 dark:bg-zinc-800 dark:text-white dark:border-zinc-700 font-medium">
                   {formatStudyTime(h)}
                 </div>
               )}
@@ -104,9 +104,9 @@ export default function Histogram({data,currentDay} : histogramProps ) {
       </div>
 
       {/* Footer section showing current day indicator */}
-      <div className="mt-6 text-sm opacity-80 flex justify-between items-center">
-        <div className="text-xs opacity-60">
-          Today: <span className="font-semibold">{DAYS[currentDay]}</span>
+      <div className="mt-6 text-sm flex justify-between items-center">
+        <div className="text-xs text-gray-600 dark:text-gray-400">
+          Today: <span className="font-semibold text-gray-900 dark:text-white">{DAYS[currentDay]}</span>
         </div>
       </div>
     </div>

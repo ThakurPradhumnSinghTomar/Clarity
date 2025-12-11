@@ -1,4 +1,3 @@
-import React from 'react'
 import { useState } from 'react';
 import { SignOutBtn } from "@repo/ui";
 import { useSession } from "next-auth/react" 
@@ -10,91 +9,117 @@ const Header = () => {
   const { data: session } = useSession()
   const router = useRouter()
 
-
   return (
-    <div className=' dark:bg-[#020617] dark:text-white p-4 bg-[#FFFFFF] text-[#020617] flex justify-between border-b-[#020617] border-2 dark:border-0 shadow-xl border-x-0'>
-        <div className='ml-4 font-bold cursor-pointer text-2xl'>Rebuild</div>
-        <div className='flex gap-4 mr-4 pt-2'>
-          <div className='hover:text-orange-600 cursor-pointer mx-2' onClick={()=>(router.push("/home"))}>Home</div>
-          <div 
-            className='relative'
-            onMouseEnter={() => setisOptions(true)}
-            onMouseLeave={() => setisOptions(false)}
-          >
-            <div className='dark:hover:text-[#9B350E] hover:text-orange-600 cursor-pointer mx-2 transition-colors duration-200'>
-              Options
-            </div>
-            
-            {/* Dropdown with smooth animation */}
-            <div className={`
-              absolute top-full left-0 min-w-[200px]
-              bg-white dark:bg-[#0F172A] 
-              rounded-xl shadow-xl
-              border border-gray-100 dark:border-gray-800
-              overflow-hidden
-              transition-all duration-300 ease-in-out
-              ${isOptions 
-                ? 'opacity-100 translate-y-0 visible' 
-                : 'opacity-0 -translate-y-2 invisible pointer-events-none'
-              }
-            `}>
-              <div className='py-2'>
-                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150 border-b border-gray-100 dark:border-gray-800' onClick={()=>( router.push("/home/study-session"))}>
-                  Study Session
-                </div>
-                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150 border-b border-gray-100 dark:border-gray-800'>
-                  Weekly Planner
-                </div>
-                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150 border-b border-gray-100 dark:border-gray-800'>
-                  Habbit Building
-                </div>
-                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150'>
-                  Track Expenses
-                </div>
-                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150'><SignOutBtn></SignOutBtn></div>
+    <div className='bg-white dark:bg-black text-gray-900 dark:text-white px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 shadow-sm'>
+      {/* Logo */}
+      <div className='font-bold cursor-pointer text-2xl hover:scale-105 transition-transform duration-200'>Rebuild</div>
+      
+      {/* Navigation */}
+      <div className='flex items-center gap-6'>
+        {/* Home Link */}
+        <div 
+          className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105' 
+          onClick={() => router.push("/home")}
+        >
+          Home
+        </div>
+        
+        {/* Options Dropdown */}
+        <div 
+          className='relative'
+          onMouseEnter={() => setisOptions(true)}
+          onMouseLeave={() => setisOptions(false)}
+        >
+          <div className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105'>
+            Options
+          </div>
+          
+          <div className={`
+            absolute top-full left-0 mt-1 min-w-[200px]
+            bg-white dark:bg-zinc-900 
+            rounded-xl shadow-xl
+            border border-gray-200 dark:border-zinc-800
+            overflow-hidden
+            transition-all duration-300 ease-in-out
+            ${isOptions 
+              ? 'opacity-100 translate-y-0 visible' 
+              : 'opacity-0 -translate-y-2 invisible pointer-events-none'
+            }
+          `}>
+            <div className='py-2'>
+              <div 
+                className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white' 
+                onClick={() => router.push("/home/study-session")}
+              >
+                Study Session
+              </div>
+              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
+                Weekly Planner
+              </div>
+              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
+                Habit Building
+              </div>
+              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
+                Track Expenses
+              </div>
+              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white border-t border-gray-200 dark:border-zinc-800'>
+                <SignOutBtn />
               </div>
             </div>
           </div>
-          <div className='hover:text-orange-600 cursor-pointer mx-2'>Profile</div>
-          <div 
-            className='relative'
-            onMouseEnter={() => setisMode(true)}
-            onMouseLeave={() => setisMode(false)}
-          >
-            <div className='dark:hover:text-[#9B350E] hover:text-orange-600 cursor-pointer mx-2 transition-colors duration-200'>
-              Theme
-            </div>
-            
-            {/* Dropdown with smooth animation */}
-            <div className={`
-              absolute top-full right-0 min-w-[200px]
-              bg-white dark:bg-[#0F172A] 
-              rounded-xl shadow-xl
-              border border-gray-100 dark:border-gray-800
-              overflow-hidden
-              transition-all duration-300 ease-in-out 
-              ${isMode 
-                ? 'opacity-100 translate-y-0 visible' 
-                : 'opacity-0 -translate-y-2 invisible pointer-events-none'
-              }
-            `}>
-              <div className='py-2'>
-                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150 border-b border-gray-100 dark:border-gray-800'>
-                  System
-                </div>
-                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150 border-b border-gray-100 dark:border-gray-800'>
-                  Light
-                </div>
-                <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors duration-150 border-b border-gray-100 dark:border-gray-800'>
-                  Dark
-                </div>
-                
+        </div>
+      
+        {/* Theme Dropdown */}
+        <div 
+          className='relative'
+          onMouseEnter={() => setisMode(true)}
+          onMouseLeave={() => setisMode(false)}
+        >
+          <div className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105'>
+            Theme
+          </div>
+          
+          <div className={`
+            absolute top-full right-0 mt-1 min-w-[100px]
+            bg-white dark:bg-zinc-900 
+            rounded-xl shadow-xl
+            border border-gray-200 dark:border-zinc-800
+            overflow-hidden
+            transition-all duration-300 ease-in-out 
+            ${isMode 
+              ? 'opacity-100 translate-y-0 visible' 
+              : 'opacity-0 -translate-y-2 invisible pointer-events-none'
+            }
+          `}>
+            <div className='py-2'>
+              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
+                System
+              </div>
+              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
+                Light
+              </div>
+              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
+                Dark
               </div>
             </div>
           </div>
-          <div className='w-10 h-10 rounded-full overflow-hidden mb--6'><img src={session?.user.image||"https://cdn-icons-png.flaticon.com/512/149/149071.png"} alt="profile image of user" /></div>
+        </div>
+        
+        {/* Profile Image */}
+        <div className='flex items-center'>
+          <div 
+            className='w-9 h-9 rounded-full overflow-hidden border-2 border-gray-300 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-600 transition-all duration-200 cursor-pointer hover:scale-110'
+            onClick={() => router.push("/home/profile")}
+          >
+            <img 
+              src={session?.user.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
+              alt="profile image of user"
+              className='w-full h-full object-cover'
+            />
+          </div>
         </div>
       </div>
+    </div>
   )
 }
 

@@ -24,22 +24,21 @@ const QuoteBox = () => {
   }, []);
 
   return (
-    <div className="max-w-xl bg-[#F1F5F9] dark:bg-gray-900 p-6 rounded-xl">
-
+    <div className="max-w-xl bg-gray-50 dark:bg-zinc-900 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-lg min-w-[650px]">
       {loading ? (
         <div>
-          <div className="h-6 w-3/4 bg-gray-300 dark:bg-gray-700 animate-pulse rounded"></div>
-          <div className="h-6 w-full bg-gray-300 dark:bg-gray-700 animate-pulse rounded mt-2"></div>
-          <div className="h-4 w-1/3 bg-gray-300 dark:bg-gray-700 animate-pulse rounded mt-4"></div>
+          <div className="h-6 w-3/4 bg-gray-200 dark:bg-zinc-800 animate-pulse rounded"></div>
+          <div className="h-6 w-full bg-gray-200 dark:bg-zinc-800 animate-pulse rounded mt-2"></div>
+          <div className="h-4 w-1/3 bg-gray-200 dark:bg-zinc-800 animate-pulse rounded mt-4"></div>
         </div>
       ) : (
         <>
-          <p className="text-xl font-medium text-gray-800 dark:text-gray-200 fade-slide-up">
+          <p className="text-xl font-medium text-gray-900 dark:text-white fade-slide-up">
             {quote}
           </p>
 
           {author && (
-            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 fade-slide-up">
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 fade-slide-up">
               — {author}
             </p>
           )}

@@ -4,9 +4,9 @@ import { studentCardProps } from '@repo/types';
 const StudentCard = ({ student, index }: studentCardProps) => {
     const getRankColor = (rank: number) => {
         if (rank === 0) return 'text-yellow-500 dark:text-yellow-400';
-        if (rank === 1) return 'text-slate-400 dark:text-slate-300';
+        if (rank === 1) return 'text-gray-400 dark:text-gray-300';
         if (rank === 2) return 'text-amber-600 dark:text-amber-500';
-        return 'text-slate-600 dark:text-slate-400';
+        return 'text-gray-600 dark:text-gray-400';
     };
 
     const getRankBadge = (rank: number) => {
@@ -16,7 +16,7 @@ const StudentCard = ({ student, index }: studentCardProps) => {
         return `#${rank + 1}`;
     };
 
-            const formatStudyTime = (hours : number) => {
+    const formatStudyTime = (hours: number) => {
         const totalMinutes = Math.round(hours * 60);
         const h = Math.floor(totalMinutes / 60);
         const m = totalMinutes % 60;
@@ -24,11 +24,11 @@ const StudentCard = ({ student, index }: studentCardProps) => {
         if (h > 0 && m > 0) return `${h} hour ${m} minutes studied`;
         if (h > 0) return `${h} hours studied`;
         return `${m} minutes studied`;
-        };
+    };
         
 
     return (
-        <div className="bg-white dark:bg-slate-800/50 rounded-xl p-3 sm:p-4 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 hover:shadow-lg">
+        <div className="bg-white dark:bg-zinc-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 transition-all duration-200 hover:shadow-lg">
             <div className="flex items-center gap-2 sm:gap-4">
                 {/* Rank Badge */}
                 <div className={`text-lg sm:text-2xl font-bold ${getRankColor(index)} min-w-9 sm:min-w-12 text-center`}>
@@ -38,21 +38,21 @@ const StudentCard = ({ student, index }: studentCardProps) => {
                 {/* Profile Image */}
                 <div className="relative flex shrink-0">
                     <img
-                        src={student.image||"https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                        src={student.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
                         alt={student.name}
-                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-slate-200 dark:border-slate-600"
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-gray-200 dark:border-zinc-600"
                     />
-                    <div className="absolute -bottom-1 -right-1 bg-blue-500 dark:bg-blue-600 text-white text-xs font-semibold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center border-2 border-white dark:border-slate-800">
+                    <div className="absolute -bottom-1 -right-1 bg-gray-900 dark:bg-white text-white dark:text-black text-xs font-semibold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center border-2 border-white dark:border-zinc-800">
                         {index + 1}
                     </div>
                 </div>
 
                 {/* Student Info */}
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
                         {student.name}
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                         {formatStudyTime(student.totalHours)} 
                     </p>
                 </div>
@@ -61,11 +61,11 @@ const StudentCard = ({ student, index }: studentCardProps) => {
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                     {/* View Profile Button */}
                     <button
-                        className="p-1.5 sm:p-2 rounded-lg bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors group"
+                        className="p-1.5 sm:p-2 rounded-lg bg-gray-100 dark:bg-zinc-700 hover:bg-gray-200 dark:hover:bg-zinc-600 transition-colors group"
                         aria-label="View profile"
                     >
                         <svg
-                            className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200"
+                            className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -87,11 +87,11 @@ const StudentCard = ({ student, index }: studentCardProps) => {
 
                     {/* Follow Button */}
                     <button
-                        className="p-1.5 sm:p-2 rounded-lg bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors group"
+                        className="p-1.5 sm:p-2 rounded-lg bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors group"
                         aria-label="Follow"
                     >
                         <svg
-                            className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                            className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-black"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"

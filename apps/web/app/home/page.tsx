@@ -1,35 +1,34 @@
-"use client"  // Client component - needed for interactivity
+"use client"
 
 import React, { useEffect, useState } from 'react'
 import { QuoteBox } from '@repo/ui'
 import { Histogram } from '@repo/ui'
 import { Leaderboard } from '@repo/ui'
-import { useSession } from "next-auth/react"  // ✅ Hook for client components
-import { useRouter } from "next/navigation"   // ✅ Router for client components
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 
 // Loading Skeleton Components
 const HistogramSkeleton = () => (
-  <div className="animate-pulse p-4 bg-gray-700/20 h-[400px] w-[650px] rounded-2xl">
-    
+  <div className="animate-pulse p-4 bg-gray-100 dark:bg-zinc-800 h-[400px] w-[650px] rounded-2xl border border-gray-200 dark:border-zinc-800">
   </div>
 )
 
 const LeaderboardSkeleton = () => (
   <div className="animate-pulse p-4 md:w-[800px] rounded-2xl">
-    <div className='m-6 w-full h-22 bg-gray-700/20 ml-0 rounded-2xl'></div>
+    <div className='m-6 w-full h-22 bg-gray-100 dark:bg-zinc-800 ml-0 rounded-2xl border border-gray-200 dark:border-zinc-800'></div>
     <div className="space-y-2">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="h-20 bg-gray-700/20 rounded"></div>
+        <div key={i} className="h-20 bg-gray-100 dark:bg-zinc-800 rounded border border-gray-200 dark:border-zinc-800"></div>
       ))}
     </div>
   </div>
 )
 
-const Home = () => {  // ✅ Component name in PascalCase
+const Home = () => {
   const { data: session } = useSession()
-  const token = session?.accessToken // Your backend JWT token
+  const token = session?.accessToken
   const [data, setData] = useState([0, 0, 0, 0, 0, 0, 0]);
-  const currentDay = new Date().getDay(); // ✅ FIXED: Date.now() returns timestamp, not day
+  const currentDay = new Date().getDay();
   const [leaderboard, setLeaderboard] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoadingHistogram, setIsLoadingHistogram] = useState(true);
@@ -48,10 +47,10 @@ const Home = () => {  // ✅ Component name in PascalCase
 
       if (!response.ok) {
         console.error("unable to fetch current week study hours for this user");
-        return; // ✅ Added return to exit early
+        return;
       }
 
-      const responseData = await response.json(); // ✅ Renamed to avoid conflict
+      const responseData = await response.json();
       
       if (!responseData.success) {
         console.error("Failed to fetch study hours, but response is ok:", responseData.message);
@@ -65,15 +64,14 @@ const Home = () => {  // ✅ Component name in PascalCase
         return;
       }
 
-      // ✅ FIXED: Proper mapping and state update
-      const newData = [0, 0, 0, 0, 0, 0, 0]; // Initialize fresh array
+      const newData = [0, 0, 0, 0, 0, 0, 0];
       weeklyStudyHours.days.forEach((day: { weekday: number, focusedSec: number }) => {
         if (day.weekday >= 0 && day.weekday <= 6) {
           newData[day.weekday-1] = Math.round(day.focusedSec/3600 * 100) / 100;
         }
       });
       
-      setData(newData); // ✅ Set state ONCE with complete array
+      setData(newData);
       console.log("weekly study hours fetched successfully :",data);
 
     } catch (e) {
@@ -99,7 +97,7 @@ const Home = () => {  // ✅ Component name in PascalCase
         return ;
       }
 
-      const responseData = await response.json(); // ✅ Renamed to avoid conflict
+      const responseData = await response.json();
       
       if (!responseData.success) {
         console.error("Failed to fetch study hours:", responseData.message);
@@ -121,10 +119,10 @@ const Home = () => {  // ✅ Component name in PascalCase
   } 
 
   useEffect(() => {
-    if (session?.accessToken) { // ✅ Only fetch when session is available
+    if (session?.accessToken) {
       loadCurrentWeekStudyHours();
     }
-  }, [session?.accessToken]); // ✅ Added dependency
+  }, [session?.accessToken]);
 
   useEffect(()=>{
      if (session?.accessToken) {
@@ -136,7 +134,7 @@ const Home = () => {  // ✅ Component name in PascalCase
     <div className='min-h-[675px] pt-10'>
       <div className='md:flex md:justify-around'>
         <div className='p-4 md:min-w-2xl'>
-          <div className='min-h-[185px]'>
+          <div className='min-h-[165px]'>
             <QuoteBox />
           </div>
           {isLoadingHistogram ? (
