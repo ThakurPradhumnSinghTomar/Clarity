@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@repo/context-providers": "file:../../packages/context-providers",
     "@repo/types": "*",
     "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",

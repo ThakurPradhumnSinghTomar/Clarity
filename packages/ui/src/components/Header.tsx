@@ -1,13 +1,24 @@
+// components/Header.tsx
 import { useState } from 'react';
 import { SignOutBtn } from "@repo/ui";
 import { useSession } from "next-auth/react" 
 import { useRouter } from "next/navigation"
+import { ThemeProvider, useTheme } from "@repo/context-providers"; 
 
 const Header = () => {
   const [isOptions, setisOptions] = useState(false);
   const [isMode, setisMode] = useState(false);
   const { data: session } = useSession()
   const router = useRouter()
+  
+  // Get theme context
+  const { mode, setThemeMode } = useTheme();
+
+  // Handler for theme selection
+  const handleThemeChange = (newMode: "system" | "light" | "dark") => {
+    setThemeMode(newMode);
+    setisMode(false); // Close dropdown after selection
+  };
 
   return (
     <div className='bg-white dark:bg-black text-gray-900 dark:text-white px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 shadow-sm'>
@@ -69,18 +80,22 @@ const Header = () => {
           </div>
         </div>
       
-        {/* Theme Dropdown */}
+        {/* Theme Dropdown - UPDATED */}
         <div 
           className='relative'
           onMouseEnter={() => setisMode(true)}
           onMouseLeave={() => setisMode(false)}
         >
-          <div className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105'>
-            Theme
+          <div className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105 flex items-center gap-2'>
+            <span>Theme</span>
+            {/* Show current mode indicator */}
+            <span className='text-xs opacity-60'>
+              ({mode === 'system' ? '💻' : mode === 'light' ? '☀️' : '🌙'})
+            </span>
           </div>
           
           <div className={`
-            absolute top-full right-0 mt-1 min-w-[100px]
+            absolute top-full right-0 mt-1 min-w-[140px]
             bg-white dark:bg-zinc-900 
             rounded-xl shadow-xl
             border border-gray-200 dark:border-zinc-800
@@ -92,14 +107,32 @@ const Header = () => {
             }
           `}>
             <div className='py-2'>
-              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
-                System
+              <div 
+                className={`px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white flex items-center justify-between ${
+                  mode === 'system' ? 'bg-gray-100 dark:bg-zinc-800' : ''
+                }`}
+                onClick={() => handleThemeChange('system')}
+              >
+                <span>System</span>
+                <span>💻</span>
               </div>
-              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
-                Light
+              <div 
+                className={`px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white flex items-center justify-between ${
+                  mode === 'light' ? 'bg-gray-100 dark:bg-zinc-800' : ''
+                }`}
+                onClick={() => handleThemeChange('light')}
+              >
+                <span>Light</span>
+                <span>☀️</span>
               </div>
-              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
-                Dark
+              <div 
+                className={`px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white flex items-center justify-between ${
+                  mode === 'dark' ? 'bg-gray-100 dark:bg-zinc-800' : ''
+                }`}
+                onClick={() => handleThemeChange('dark')}
+              >
+                <span>Dark</span>
+                <span>🌙</span>
               </div>
             </div>
           </div>
