@@ -131,7 +131,7 @@ const Home = () => {
   },[session?.accessToken]);
 
   return (
-    <div className='min-h-[675px] pt-10'>
+    <div className='min-h-[675px] pt-10 pb-4'>
       <div className='md:flex md:justify-around'>
         <div className='p-4 md:min-w-2xl'>
           <div className='min-h-[165px] mb-6 md:mb-0'>

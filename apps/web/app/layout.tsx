@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/lib/components/providers/session-provider";
-import { ThemeProvider } from "@repo/context-providers"; // ← Add this import
+import { ThemeProvider } from "@repo/context-providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,17 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full bg-[#F1F5F9] dark:bg-[#0F172A]`}
       >
-        <ThemeProvider>  {/* ← Wrap with ThemeProvider */}
-          <div className="bg-[#F1F5F9] dark:bg-[#0F172A] min-h-screen">
-            <SessionProvider>
-              {children}
-            </SessionProvider>
-          </div>
-        </ThemeProvider>  {/* ← Close ThemeProvider */}
+        <ThemeProvider>
+          <SessionProvider>
+            {children}
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

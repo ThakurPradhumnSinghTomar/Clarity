@@ -21,7 +21,7 @@ const Header = () => {
   };
 
   return (
-    <div className='bg-white dark:bg-black text-gray-900 dark:text-white px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 shadow-sm'>
+    <div className='bg-white dark:bg-black text-gray-900 dark:text-white px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 shadow-sm' onMouseLeave={()=>{setisOptions(false); setisMode(false); }}>
       {/* Logo */}
       <div className='font-bold cursor-pointer text-2xl hover:scale-105 transition-transform duration-200'>Rebuild</div>
       
@@ -38,8 +38,8 @@ const Header = () => {
         {/* Options Dropdown */}
         <div 
           className='relative'
-          onMouseEnter={() => setisOptions(true)}
-          onMouseLeave={() => setisOptions(false)}
+          onMouseEnter={() => {setisOptions(true);setisMode(false);}}
+          
         >
           <div className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105'>
             Options
@@ -83,8 +83,8 @@ const Header = () => {
         {/* Theme Dropdown - UPDATED */}
         <div 
           className='relative'
-          onMouseEnter={() => setisMode(true)}
-          onMouseLeave={() => setisMode(false)}
+          onMouseEnter={() => {setisMode(true);setisOptions(false)}}
+         
         >
           <div className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105 flex items-center gap-2'>
             <span>Theme</span>

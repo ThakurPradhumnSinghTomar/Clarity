@@ -106,7 +106,7 @@ export default function Histogram({data, currentDay}: histogramProps) {
       {/* Footer section showing current day indicator */}
       <div className="mt-6 text-sm flex justify-between items-center">
         <div className="text-xs text-gray-600 dark:text-gray-400">
-          Today: <span className="font-semibold text-gray-900 dark:text-white">{DAYS[currentDay]}</span>
+          Today: <span className="font-semibold text-gray-900 dark:text-white">{DAYS[currentDay-1]}</span>
         </div>
       </div>
     </div>
