@@ -23,6 +23,9 @@ const ProfilePage = () => {
     joinedDate: 'loading...'
   });
 
+  //why the f when clicking on edit, name changes to loading... and all other field remain correct, isnt it should follow updated profileData in editData...???
+
+  //it happens because it setEdit runs on component mount, change it to it called when edit button is clicked
 
   const [editData, setEditData] = useState<ProfileData>({ ...profileData });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -34,6 +37,11 @@ const ProfilePage = () => {
   useEffect(()=>{
     getProfileData();
   },[]);
+
+  const handleEdit = () => {
+  setEditData({ ...profileData }); // Sync editData with current profileData
+  setIsEditing(true);
+};
 
     const formatStudyTime = (seconds: number) => {
         const totalMinutes = Math.round(seconds / 60);
@@ -104,6 +112,8 @@ const ProfilePage = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  //how to save like if i update user data in backend, still till user not sign out and sign in again, session will not update so not user info like name and image...?
 
   const handleSave = () => {
     setProfileData({ ...editData });
@@ -179,7 +189,8 @@ const ProfilePage = () => {
               <div className="mt-4 sm:mt-0 flex gap-2">
                 {!isEditing ? (
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={() =>{setIsEditing(true);
+                      handleEdit();}}
                     className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors font-medium"
                   >
                     <Edit2 className="w-4 h-4" />
