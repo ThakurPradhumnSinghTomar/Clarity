@@ -3,6 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { Camera, Mail, User, Calendar, Check, X, Edit2, Save } from 'lucide-react';
 import { useSession } from "next-auth/react"
 
+// Cloudinary Configuration
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+const FALLBACK_IMAGE = process.env.NEXT_PUBLIC_FALLBACK_IMAGE as string; // Your fallback image path
+
 interface ProfileData {
   name: string;
   email: string;
@@ -23,39 +28,37 @@ const ProfilePage = () => {
     joinedDate: 'loading...'
   });
 
-  //why the f when clicking on edit, name changes to loading... and all other field remain correct, isnt it should follow updated profileData in editData...???
-
-  //it happens because it setEdit runs on component mount, change it to it called when edit button is clicked
-
   const [editData, setEditData] = useState<ProfileData>({ ...profileData });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [totalStudyHours,setTotalStudyHours] = useState(0);
-  const [totalFocusSessions,setTotalFocusSessions] = useState(0);
-  const { data: session } = useSession()
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [totalStudyHours, setTotalStudyHours] = useState(0);
+  const [totalFocusSessions, setTotalFocusSessions] = useState(0);
+  
+  const { data: session, update } = useSession()
   const token = session?.accessToken
 
-  useEffect(()=>{
+  useEffect(() => {
     getProfileData();
-  },[]);
+  }, []);
 
   const handleEdit = () => {
-  setEditData({ ...profileData }); // Sync editData with current profileData
-  setIsEditing(true);
-};
+    setEditData({ ...profileData }); // Sync editData with current profileData
+    setIsEditing(true);
+  };
 
-    const formatStudyTime = (seconds: number) => {
-        const totalMinutes = Math.round(seconds / 60);
-        const h = Math.floor(totalMinutes / 60);
-        const m = totalMinutes % 60;
+  const formatStudyTime = (seconds: number) => {
+    const totalMinutes = Math.round(seconds / 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
 
-        if (h > 0 && m > 0) return `${h} hour ${m} minutes studied`;
-        if (h > 0) return `${h} hours studied`;
-        return `${m} minutes studied`;
-    };
+    if (h > 0 && m > 0) return `${h} hour ${m} minutes studied`;
+    if (h > 0) return `${h} hours studied`;
+    return `${m} minutes studied`;
+  };
 
-  const getProfileData = async ()=>{
-    try{
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-user-profile`,{
+  const getProfileData = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-user-profile`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -63,62 +66,153 @@ const ProfilePage = () => {
         }
       });
 
-      if(!response.ok){
-        console.log("response is not okay from backend to get currnt user profile");
-        return ;
+      if (!response.ok) {
+        console.log("response is not okay from backend to get current user profile");
+        return;
       }
 
       const data = await response.json();
-      console.log("form data is : "+data);
       const formData = {
-        name : data.response.name,
-        email : data.response.email,
-        image : data.response.image,
-        provider : data.response.provider,
-        emailVerified : data.response.emailVerified,
-        joinedDate : data.response.createdAt
-
+        name: data.response.name,
+        email: data.response.email,
+        image: data.response.image,
+        provider: data.response.provider,
+        emailVerified: data.response.emailVerified,
+        joinedDate: data.response.createdAt
       }
 
       setProfileData(formData);
       setTotalFocusSessions(data.response.focusSessions.length)
-      const totalStudyHours = ()=>{
+      
+      const totalStudyHours = () => {
         let studyHrs = 0;
-        data.response.focusSessions.map((focusSession : any,index :any)=>{
-          studyHrs = studyHrs+focusSession.durationSec;
+        data.response.focusSessions.map((focusSession: any) => {
+          studyHrs = studyHrs + focusSession.durationSec;
         });
         setTotalStudyHours(studyHrs);
       }
 
       totalStudyHours();
-
-
-
     }
-    catch(error){
-      console.log("failedd to get form data",error);
+    catch (error) {
+      console.log("failed to get form data", error);
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ============================================
+  // CLOUDINARY UPLOAD FUNCTION
+  // ============================================
+  const uploadToCloudinary = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET!);
+
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Cloudinary error:', errorData);
+        throw new Error(`Upload failed: ${errorData.error?.message || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      console.log("profile image link is:", data.secure_url);
+      return data.secure_url;
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
+      throw error;
+    }
+  };
+
+  // ============================================
+  // IMAGE UPLOAD HANDLER
+  // ============================================
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      
+      // Show preview immediately
       const reader = new FileReader();
       reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        setEditData({ ...editData, image: result });
+        setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Upload to Cloudinary
+      const cloudinaryUrl = await uploadToCloudinary(file);
+      console.log("cloudinary url is:", cloudinaryUrl);
+      
+      // Update editData with the Cloudinary URL
+      setEditData({ ...editData, image: cloudinaryUrl });
+      setImagePreview(cloudinaryUrl);
+      
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      alert("Failed to upload image. Please try again.");
+      setImagePreview(null);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
-  //how to save like if i update user data in backend, still till user not sign out and sign in again, session will not update so not user info like name and image...?
-
-  const handleSave = () => {
-    setProfileData({ ...editData });
-    setIsEditing(false);
+  // ============================================
+  // REMOVE IMAGE HANDLER
+  // ============================================
+  const removeImage = () => {
     setImagePreview(null);
+    setEditData({ ...editData, image: FALLBACK_IMAGE });
+  };
+
+  // ============================================
+  // SAVE HANDLER
+  // ============================================
+  const handleSave = async () => {
+    try {
+      // 1. Save to backend
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/update-profile`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: editData.name,
+          image: editData.image
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      // 2. Update local state
+      setProfileData({ ...editData });
+      
+      // 3. Update NextAuth session
+      await update({
+        name: editData.name,
+        image: editData.image
+      });
+
+      setIsEditing(false);
+      setImagePreview(null);
+      
+      console.log("Profile updated successfully!");
+      
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+      alert("Failed to save changes. Please try again.");
+    }
   };
 
   const handleCancel = () => {
@@ -147,8 +241,6 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-black pt-4 px-4 pb-8">
       <div className="max-w-4xl mx-auto pt-8">
-      
-
         {/* Main Card */}
         <div className="bg-gray-50 dark:bg-zinc-900 rounded-2xl shadow-lg border border-gray-200 dark:border-zinc-800 overflow-hidden">
           {/* Cover Section */}
@@ -160,9 +252,9 @@ const ProfilePage = () => {
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-16 mb-6">
               <div className="relative">
                 <div className="w-32 h-32 rounded-full border-4 border-gray-50 dark:border-zinc-900 bg-gray-200 dark:bg-zinc-800 overflow-hidden shadow-lg">
-                  {(imagePreview || profileData.image) ? (
+                  {(imagePreview || editData.image || profileData.image) ? (
                     <img
-                      src={imagePreview || profileData.image || undefined}
+                      src={imagePreview || editData.image || profileData.image || undefined}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />
@@ -173,15 +265,21 @@ const ProfilePage = () => {
                   )}
                 </div>
                 {isEditing && (
-                  <label className="absolute bottom-0 right-0 w-10 h-10 bg-gray-900 dark:bg-white rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-lg">
+                  <label className={`absolute bottom-0 right-0 w-10 h-10 bg-gray-900 dark:bg-white rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-lg ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     <Camera className="w-5 h-5 text-white dark:text-black" />
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleImageChange}
                       className="hidden"
+                      disabled={uploadingImage}
                     />
                   </label>
+                )}
+                {uploadingImage && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                    <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
                 )}
               </div>
 
@@ -189,8 +287,7 @@ const ProfilePage = () => {
               <div className="mt-4 sm:mt-0 flex gap-2">
                 {!isEditing ? (
                   <button
-                    onClick={() =>{setIsEditing(true);
-                      handleEdit();}}
+                    onClick={handleEdit}
                     className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors font-medium"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -201,16 +298,18 @@ const ProfilePage = () => {
                     <button
                       onClick={handleCancel}
                       className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-zinc-800 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-zinc-700 transition-colors font-medium"
+                      disabled={uploadingImage}
                     >
                       <X className="w-4 h-4" />
                       Cancel
                     </button>
                     <button
                       onClick={handleSave}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors font-medium"
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={uploadingImage}
                     >
                       <Save className="w-4 h-4" />
-                      Save Changes
+                      {uploadingImage ? 'Uploading...' : 'Save Changes'}
                     </button>
                   </>
                 )}
@@ -296,15 +395,15 @@ const ProfilePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-800 rounded-lg p-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">Total Focus Sessions</p>
-              <p className=" font-semibold text-gray-900 dark:text-white mt-1">{totalFocusSessions}</p>
+              <p className="font-semibold text-gray-900 dark:text-white mt-1">{totalFocusSessions}</p>
             </div>
             <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-800 rounded-lg p-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">Hours Focused</p>
-              <p className=" font-semibold text-gray-900 dark:text-white mt-1">{formatStudyTime(totalStudyHours)}</p>
+              <p className="font-semibold text-gray-900 dark:text-white mt-1">{formatStudyTime(totalStudyHours)}</p>
             </div>
             <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-800 rounded-lg p-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">Current Streak</p>
-              <p className=" font-semibold text-gray-900 dark:text-white mt-1">currently unavailable</p>
+              <p className="font-semibold text-gray-900 dark:text-white mt-1">currently unavailable</p>
             </div>
           </div>
         </div>

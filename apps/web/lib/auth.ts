@@ -123,7 +123,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     
     // JWT CALLBACK: Store backend token in JWT
-    async jwt({ token, user, account, trigger }) {
+    async jwt({ token, user, account, trigger, session }) {
       // On initial sign in, add backend token to NextAuth's token
       if (user) {
         token.id = user.id;
@@ -141,6 +141,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         console.log("Backend Token:", token.backendToken);
         console.log("================================");
       }
+
+       if (trigger === "update" && session) {
+      // When update() is called with new data, merge it into the token
+      if (session.name) token.name = session.name;
+      if (session.image) token.image = session.image;
+      
+      console.log("=== JWT Token Updated ===");
+      console.log("New Name:", token.name);
+      console.log("New Image:", token.image);
+      console.log("========================");
+    }
       
       if (account) {
         token.provider = account.provider;

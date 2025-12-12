@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation"
 
 // Loading Skeleton Components
 const HistogramSkeleton = () => (
-  <div className="animate-pulse p-4 bg-gray-100 dark:bg-zinc-800 h-[400px] w-[650px] rounded-2xl border border-gray-200 dark:border-zinc-800">
+  <div className="animate-pulse p-4 bg-gray-100 dark:bg-zinc-800 h-[400px] md:w-[650px] rounded-2xl border border-gray-200 dark:border-zinc-800">
   </div>
 )
 
@@ -134,7 +134,7 @@ const Home = () => {
     <div className='min-h-[675px] pt-10'>
       <div className='md:flex md:justify-around'>
         <div className='p-4 md:min-w-2xl'>
-          <div className='min-h-[165px]'>
+          <div className='min-h-[165px] mb-6 md:mb-0'>
             <QuoteBox />
           </div>
           {isLoadingHistogram ? (
