@@ -219,4 +219,45 @@ userRouter.get("/get-current-week-study-hours", authMiddleware, async(req, res) 
   }
 });
 
+userRouter.get("/get-current-user-profile",authMiddleware,async (req,res) => {
+  try {
+    const userId = req.user?.id;
+    if(!userId){
+      console.log("please provide userid in param to get user info...");
+      return res.status(500).json({"success":"false","message":"please provide userid in param to get user info..."});
+    }
+
+    const response = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        focusSessions: {
+          select: { durationSec: true } 
+        }
+      }
+    });
+
+    if(!response){
+      return res.status(500).json({"success":"false","message":"unable to fetch user from prisma"});
+    }
+
+    
+
+    return res.status(201).json({"success":"true",response});
+  }
+  catch(error){
+    console.log("error in getting user profile",error);
+    return res.status(500).json({"success":"false","message":"unable to fetch user from prisma",error});
+
+  }
+
+});
+
 export default userRouter;
+
+/*
+❗ Important:
+
+Fields like name, email, image, createdAt, emailVerified are scalar fields, NOT relations.
+Prisma does NOT allow including scalar fields — they always come by default.
+
+*/

@@ -89,9 +89,7 @@ const Header = () => {
           <div className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105 flex items-center gap-2'>
             <span>Theme</span>
             {/* Show current mode indicator */}
-            <span className='text-xs opacity-60'>
-              ({mode === 'system' ? '💻' : mode === 'light' ? '☀️' : '🌙'})
-            </span>
+            
           </div>
           
           <div className={`

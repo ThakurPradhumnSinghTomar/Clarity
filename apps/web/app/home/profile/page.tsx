@@ -1,12 +1,13 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Camera, Mail, User, Calendar, Check, X, Edit2, Save } from 'lucide-react';
+import { useSession } from "next-auth/react"
 
 interface ProfileData {
   name: string;
   email: string;
   image: string | null;
-  provider: 'google' | 'github' | 'credentials';
+  provider: 'google' | 'github' | 'credentials' | "loading...";
   emailVerified: string;
   joinedDate: string;
 }
@@ -14,16 +15,82 @@ interface ProfileData {
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
+    name: 'loading..',
+    email: 'loading..',
     image: null,
-    provider: 'google',
-    emailVerified: '2024-01-15T10:30:00.000Z',
-    joinedDate: '2024-01-15T10:30:00.000Z'
+    provider: 'credentials',
+    emailVerified: 'loading...',
+    joinedDate: 'loading...'
   });
+
 
   const [editData, setEditData] = useState<ProfileData>({ ...profileData });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [totalStudyHours,setTotalStudyHours] = useState(0);
+  const [totalFocusSessions,setTotalFocusSessions] = useState(0);
+  const { data: session } = useSession()
+  const token = session?.accessToken
+
+  useEffect(()=>{
+    getProfileData();
+  },[]);
+
+    const formatStudyTime = (seconds: number) => {
+        const totalMinutes = Math.round(seconds / 60);
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+
+        if (h > 0 && m > 0) return `${h} hour ${m} minutes studied`;
+        if (h > 0) return `${h} hours studied`;
+        return `${m} minutes studied`;
+    };
+
+  const getProfileData = async ()=>{
+    try{
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-user-profile`,{
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if(!response.ok){
+        console.log("response is not okay from backend to get currnt user profile");
+        return ;
+      }
+
+      const data = await response.json();
+      console.log("form data is : "+data);
+      const formData = {
+        name : data.response.name,
+        email : data.response.email,
+        image : data.response.image,
+        provider : data.response.provider,
+        emailVerified : data.response.emailVerified,
+        joinedDate : data.response.createdAt
+
+      }
+
+      setProfileData(formData);
+      setTotalFocusSessions(data.response.focusSessions.length)
+      const totalStudyHours = ()=>{
+        let studyHrs = 0;
+        data.response.focusSessions.map((focusSession : any,index :any)=>{
+          studyHrs = studyHrs+focusSession.durationSec;
+        });
+        setTotalStudyHours(studyHrs);
+      }
+
+      totalStudyHours();
+
+
+
+    }
+    catch(error){
+      console.log("failedd to get form data",error);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -218,15 +285,15 @@ const ProfilePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-800 rounded-lg p-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">Total Focus Sessions</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">0</p>
+              <p className=" font-semibold text-gray-900 dark:text-white mt-1">{totalFocusSessions}</p>
             </div>
             <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-800 rounded-lg p-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">Hours Focused</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">0h</p>
+              <p className=" font-semibold text-gray-900 dark:text-white mt-1">{formatStudyTime(totalStudyHours)}</p>
             </div>
             <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-800 rounded-lg p-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">Current Streak</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">0 days</p>
+              <p className=" font-semibold text-gray-900 dark:text-white mt-1">currently unavailable</p>
             </div>
           </div>
         </div>

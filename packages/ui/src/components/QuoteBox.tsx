@@ -24,7 +24,7 @@ const QuoteBox = () => {
   }, []);
 
   return (
-    <div className="max-w-xl bg-gray-50 dark:bg-zinc-900 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-lg min-w-[650px]">
+    <div className="max-w-xl bg-gray-50 dark:bg-zinc-900 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-lg md:min-w-[650px]">
       {loading ? (
         <div>
           <div className="h-6 w-3/4 bg-gray-200 dark:bg-zinc-800 animate-pulse rounded"></div>
