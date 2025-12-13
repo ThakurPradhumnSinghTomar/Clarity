@@ -64,8 +64,10 @@ const Header = () => {
               >
                 Study Session
               </div>
-              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
-                Weekly Planner
+              <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'
+              onClick={() => router.push("/home/rooms")}
+              >
+                Private Rooms
               </div>
               <div className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white'>
                 Habit Building
