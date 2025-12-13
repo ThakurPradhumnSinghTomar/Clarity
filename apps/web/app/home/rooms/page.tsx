@@ -112,11 +112,42 @@ const RoomsPage = () => {
     }
   };
 
-  const handleJoinRoom = (inviteCode: string) => {
-    console.log('Joining room with code:', inviteCode);
-    // Add your API call here
+  const handleJoinRoom = async (inviteCode: string) => {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/join-room`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.accessToken}`
+      },
+      body: JSON.stringify({
+        roomCode: inviteCode
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to join room');
+    }
+
+    // Check if it's a join request or direct join
+    if (data.joinRequest) {
+      toast.info(data.message); // "Join request sent..."
+    } else {
+      toast.success(`Joined ${data.room.name}!`);
+      // Optionally navigate to the room
+      // router.push(`/rooms/${data.room.id}`);
+    }
+
     setIsJoinModalOpen(false);
-  };
+    await fetchMyRooms(); // Refresh room list
+
+  } catch (error: any) {
+    console.error('Error joining room:', error);
+    toast.error(error.message || 'Failed to join room');
+  }
+};
 
   // Transform API room data to RoomCard format
   const transformRoomData = (room: Room) => ({
