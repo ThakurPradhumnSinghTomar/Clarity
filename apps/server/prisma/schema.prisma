@@ -14,66 +14,131 @@ datasource db {
 }
 
 model User {
-  /**
-   * id is a String but mapped to MongoDB’s ObjectId.
-   * @map("_id") maps Prisma’s id → MongoDB _id.
-   */
-
-  //basic user details
-  id             String         @id @default(auto()) @map("_id") @db.ObjectId
-  name           String
-  email          String         @unique
-  image          String?
-  hashedPassword String?
-  focusSessions  FocusSession[]
-
-   // OAuth fields
-  provider      String?   // "google", "github", "credentials"
-  providerId    String?   // ID from OAuth provider
-  emailVerified DateTime? // When email was verified
-  createdAt DateTime?   @default(now())
-
-  weeklyStudyHours WeeklyStudyHours[]
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  email           String   @unique
+  image           String?
+  hashedPassword  String?
+  
+  // OAuth fields
+  provider        String?
+  providerId      String?
+  emailVerified   DateTime?
+  
+  createdAt       DateTime? @default(now())
+  
+  // Relations
+  focusSessions      FocusSession[]
+  weeklyStudyHours   WeeklyStudyHours[]
+  
+  // Room relations
+  hostedRooms        Room[]              @relation("RoomHost")
+  roomMemberships    RoomMember[]
+  joinRequests       JoinRequest[]
 }
 
-/**
- * Line	Simple Meaning
- * @@unique([userId, weekStart])	Only ONE entry allowed per user per week.
- * @@index([weekStart, totalSec])	Speed up leaderboards (week + sort by total).
- * @@index([userId, weekStart])	Speed up fetching a user’s weekly record.
- */
+model Room {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  roomCode    String   @unique  // unique code to join the room
+  isPublic    Boolean  @default(false)  // true = public, false = private
+  
+  // Host/Owner relation
+  hostId      String   @db.ObjectId
+  host        User     @relation("RoomHost", fields: [hostId], references: [id], onDelete: Cascade)
+  
+  // Members relation (many-to-many through RoomMember)
+  members     RoomMember[]
+  
+  // Join requests for private rooms
+  joinRequests JoinRequest[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  
+  @@index([hostId])
+  @@index([isPublic])
+}
+
+model RoomMember {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // User relation
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Room relation
+  roomId    String   @db.ObjectId
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  // Membership details
+  joinedAt  DateTime @default(now())
+  role      String   @default("member")  // "member", "moderator", etc.
+  
+  @@unique([userId, roomId], name: "userId_roomId")
+  @@index([userId])
+  @@index([roomId])
+}
+
+model JoinRequest {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // User who wants to join
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Room they want to join
+  roomId    String   @db.ObjectId
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  // Request details
+  status    String   @default("pending")  // "pending", "approved", "rejected"
+  message   String?  // optional message from user
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, roomId], name: "userId_roomId_joinRequest")
+  @@index([roomId, status])
+  @@index([userId])
+}
 
 type DayEntry {
-  weekday    Int // 0 = Sunday .. 6 = Saturday (or choose 1..7)
-  focusedSec Int // seconds focused that day
+  weekday    Int  // 0 = Sunday .. 6 = Saturday
+  focusedSec Int  // seconds focused that day
 }
 
 model WeeklyStudyHours {
   id        String     @id @default(auto()) @map("_id") @db.ObjectId
   userId    String     @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id])  //RELATION  to users table to users id
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   weekStart DateTime
   days      DayEntry[]
   totalSec  Int        @default(0)
+  
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-
+  
   @@unique([userId, weekStart], name: "userId_weekStart_wsh")
-  @@index([weekStart, totalSec]) // keep this for weekly leaderboard queries
+  @@index([weekStart, totalSec])
 }
 
 model FocusSession {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String   @db.ObjectId
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   startTime   DateTime
   endTime     DateTime
-  durationSec Int // total focused seconds for that session
-  tag         String? // optional label like "coding", "reading"
-  note        String? // optional short note
+  durationSec Int      // total focused seconds for that session
+  tag         String?  // optional label like "coding", "reading"
+  note        String?  // optional short note
+  
   createdAt   DateTime? @default(now())
-  updatedAt   DateTime @updatedAt
-
+  updatedAt   DateTime  @updatedAt
+  
   @@index([userId, startTime])
 }
-  

@@ -1,3 +1,4 @@
+"use client"
 // components/Header.tsx
 import { useState } from 'react';
 import { SignOutBtn } from "@repo/ui";

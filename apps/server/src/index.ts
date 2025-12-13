@@ -4,6 +4,7 @@ import userRouter from "./routes/user.js";
 
 const app = express()
 import cors from "cors";
+import roomRouter from "./routes/room.js";
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -28,5 +29,6 @@ app.get("/", (req, res) => res.send("API running!"));
 
 app.use("/api/auth",authRouter);
 app.use("/api/user",userRouter);
+app.use("/api/room",roomRouter);
 
 app.listen(4000, () => console.log("Server started on http://localhost:4000"));

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/lib/components/providers/session-provider";
 import { ThemeProvider } from "@repo/context-providers";
+import { ToastProvider } from "@repo/ui"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <SessionProvider>
+            <ToastProvider />
             {children}
           </SessionProvider>
         </ThemeProvider>

@@ -1,31 +1,30 @@
-import React, { useState } from 'react';
-import { X, Lock, Globe, Key } from 'lucide-react';
+"use client"
+import React, { useState } from "react";
+import { X, Lock, Globe, Key, Loader2 } from "lucide-react";
 
 interface CreateRoomModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (roomName: string, isPrivate: boolean) => void;
+  onSubmit: (roomName: string, isPrivate: boolean, roomDiscription : string) => void;
+  isLoading?: boolean; // Add this
+  
 }
 
 export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
   isOpen,
   onClose,
-  onSubmit
+  onSubmit,
+  isLoading
 }) => {
-  const [roomName, setRoomName] = useState('');
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [roomName, setRoomName] = useState("");
+  const [isPrivate, setIsPrivate] = useState(true);
+  const [roomDiscription, setRoomDiscription] = useState("");
 
   const handleSubmit = () => {
     if (roomName.trim()) {
-      onSubmit(roomName.trim(), isPrivate);
-      setRoomName('');
+      onSubmit(roomName.trim(), isPrivate, roomDiscription);
+      setRoomName("");
       setIsPrivate(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSubmit();
     }
   };
 
@@ -58,7 +57,20 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
               type="text"
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
-              onKeyPress={handleKeyPress}
+              placeholder="Enter room name..."
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          {/* Room description Input */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Room Description
+            </label>
+            <input
+              type="text"
+              value={roomDiscription}
+              onChange={(e) => setRoomDiscription(e.target.value)}
               placeholder="Enter room name..."
               className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             />
@@ -76,15 +88,15 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                 onClick={() => setIsPrivate(false)}
                 className={`w-full flex items-start gap-4 p-4 rounded-lg border-2 transition-all ${
                   !isPrivate
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
+                    : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
                 }`}
               >
                 <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                     !isPrivate
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
                   }`}
                 >
                   <Globe size={20} />
@@ -105,15 +117,15 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                 onClick={() => setIsPrivate(true)}
                 className={`w-full flex items-start gap-4 p-4 rounded-lg border-2 transition-all ${
                   isPrivate
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
+                    : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
                 }`}
               >
                 <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                     isPrivate
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
                   }`}
                 >
                   <Lock size={20} />
@@ -144,7 +156,14 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!roomName.trim()}
           >
-            Create Room
+                {isLoading ? (
+        <>
+          <Loader2 className="animate-spin" size={20} />
+          Creating...
+        </>
+      ) : (
+        'Create Room'
+      )}
           </button>
         </div>
       </div>
