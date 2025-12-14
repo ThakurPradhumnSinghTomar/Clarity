@@ -177,43 +177,49 @@ const ProfilePage = () => {
   // SAVE HANDLER
   // ============================================
   const handleSave = async () => {
-    try {
-      // 1. Save to backend
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/update-profile`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: editData.name,
-          image: editData.image
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update profile");
-      }
-
-      // 2. Update local state
-      setProfileData({ ...editData });
-      
-      // 3. Update NextAuth session
-      await update({
+  try {
+    // 1. Save to backend
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/update-profile`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
         name: editData.name,
         image: editData.image
-      });
+      })
+    });
 
-      setIsEditing(false);
-      setImagePreview(null);
-      
-      console.log("Profile updated successfully!");
-      
-    } catch (error) {
-      console.error("Failed to save profile:", error);
-      alert("Failed to save changes. Please try again.");
+    if (!response.ok) {
+      throw new Error("Failed to update profile");
     }
-  };
+
+    // 2. Update local state
+    setProfileData({ ...editData });
+    
+    // 3. Update NextAuth session - FIXED VERSION
+    const result = await update({
+      ...session,
+      user: {
+        ...session?.user,
+        name: editData.name,
+        image: editData.image
+      }
+    });
+
+    console.log("Session update result:", result); // Debug log
+
+    setIsEditing(false);
+    setImagePreview(null);
+    
+    console.log("Profile updated successfully!");
+    
+  } catch (error) {
+    console.error("Failed to save profile:", error);
+    alert("Failed to save changes. Please try again.");
+  }
+};
 
   const handleCancel = () => {
     setEditData({ ...profileData });

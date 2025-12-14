@@ -182,15 +182,7 @@ authRouter.post("/oauth-user", async (req, res) => {
     });
 
     if (user) {
-      // User exists - update their information
-      user = await prisma.user.update({
-        where: { email },
-        data: {
-          name: name || user.name,
-          image: image || user.image,
-        },
-      });
-
+      
       // Generate JWT token for existing user
       const token = jwt.sign(
         {

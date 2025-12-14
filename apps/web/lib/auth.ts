@@ -142,16 +142,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         console.log("================================");
       }
 
-       if (trigger === "update" && session) {
-      // When update() is called with new data, merge it into the token
-      if (session.name) token.name = session.name;
-      if (session.image) token.image = session.image;
-      
-      console.log("=== JWT Token Updated ===");
-      console.log("New Name:", token.name);
-      console.log("New Image:", token.image);
-      console.log("========================");
-    }
+        if (trigger === "update") {
+    if (session?.name) token.name = session.name;
+    if (session?.image) token.image = session.image;
+    
+    // Also check session.user object
+    if (session?.user?.name) token.name = session.user.name;
+    if (session?.user?.image) token.image = session.user.image;
+    
+    console.log("=== JWT Token Updated ===");
+    console.log("New Name:", token.name);
+    console.log("New Image:", token.image);
+    console.log("========================");
+  }
       
       if (account) {
         token.provider = account.provider;
