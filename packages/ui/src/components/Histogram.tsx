@@ -67,7 +67,7 @@ export default function Histogram({ data, currentDay }: HistogramProps) {
           // Calculate height percentage for this bar
           const heightPct = getBarHeight(h);
           // Check if this is the current day
-          const isToday = i === currentDay - 1;
+          const isToday = i === currentDay;
           // Check if this bar is being interacted with
           const isActive = hovered === i || selected === i;
 
@@ -122,7 +122,7 @@ export default function Histogram({ data, currentDay }: HistogramProps) {
       {/* Footer section showing current day indicator and daily average */}
       <div className="mt-6 flex justify-between items-center">
         <div className="text-xs text-gray-600 dark:text-gray-400">
-          Today: <span className="font-semibold text-gray-900 dark:text-white">{DAYS[currentDay - 1]}</span>
+          Today: <span className="font-semibold text-gray-900 dark:text-white">{DAYS[currentDay]}</span>
         </div>
         <div className="text-xs text-gray-600 dark:text-gray-400">
           Daily Avg: <span className="font-semibold text-gray-900 dark:text-white">{avgDailyHours.toFixed(1)}h</span>

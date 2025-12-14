@@ -28,7 +28,7 @@ const Home = () => {
   const { data: session } = useSession()
   const token = session?.accessToken
   const [data, setData] = useState([0, 0, 0, 0, 0, 0, 0]);
-  const currentDay = new Date().getDay();
+  const currentDay = new Date().getDay()==0?6:new Date().getDay()-1; //Sunday is 0
   const [leaderboard, setLeaderboard] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoadingHistogram, setIsLoadingHistogram] = useState(true);
@@ -67,7 +67,8 @@ const Home = () => {
       const newData = [0, 0, 0, 0, 0, 0, 0];
       weeklyStudyHours.days.forEach((day: { weekday: number, focusedSec: number }) => {
         if (day.weekday >= 0 && day.weekday <= 6) {
-          newData[day.weekday-1] = Math.round(day.focusedSec/3600 * 100) / 100;
+          newData[day.weekday] = Math.round(day.focusedSec/3600 * 100) / 100; //yha p bug h isko theek krna like yha p day.weekday-1 nhi hoga. vrna sunday p -1 ho jayega
+          //bug theek kr diya, ab backend s hi shi dayNumber return hoga like monday k liye 0, tues k liy 1 and so on...
         }
       });
       

@@ -60,12 +60,10 @@ userRouter.get("/leaderboard", authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching leaderboard:", err);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Server error while loading leaderboard",
-      });
+    res.status(500).json({
+      success: false,
+      message: "Server error while loading leaderboard",
+    });
   }
 });
 
@@ -101,11 +99,11 @@ userRouter.post("/save-focus-sesssion", authMiddleware, async (req, res) => {
     });
 
     const weekStart = new Date(start);
-    weekStart.setHours(0, 0, 0, 0);
-    const dayOfweek = weekStart.getDay() - 1;
-    weekStart.setDate(weekStart.getDate() - dayOfweek);
+    weekStart.setHours(0, 0, 0, 0); //Reset the time part of this Date to exactly midnight.
+    const dayOfweek = (weekStart.getDay() + 6) % 7; //ye date ho gyi kb tumne focus session start/run kiya tha, and y ab monady based week day dega like 0-monday,1-tuesday,..
+    weekStart.setDate(weekStart.getDate() - dayOfweek); //perfect, ab y weekStart monady s hi set karega..
 
-    const sessionWeekday = start.getDay();
+    const sessionWeekday = (start.getDay()+6)%7; //ab database m sunday k liye 6 jayega n ki 0
 
     let weeklyRecord = await prisma.weeklyStudyHours.findUnique({
       where: {
@@ -172,21 +170,17 @@ userRouter.post("/save-focus-sesssion", authMiddleware, async (req, res) => {
       });
     }
 
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "focus session saved successfully",
-        data: { focusSession, weeklyRecord },
-      });
+    res.status(201).json({
+      success: true,
+      message: "focus session saved successfully",
+      data: { focusSession, weeklyRecord },
+    });
   } catch (error) {
     console.error(error, "error saving focus session");
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "server error while saving focus session",
-      });
+    res.status(500).json({
+      success: false,
+      message: "server error while saving focus session",
+    });
   }
 });
 
@@ -205,12 +199,10 @@ userRouter.get(
         console.log(
           "Unauthorized - no userId provided,req rejected in api route getting weekly study hours"
         );
-        return res
-          .status(401)
-          .json({
-            success: false,
-            message: "Unauthorized - no userId provided",
-          });
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized - no userId provided",
+        });
       }
 
       const currentWeek = getCurrentWeekStart();
@@ -254,12 +246,10 @@ userRouter.get(
       const userId = req.user?.id;
       if (!userId) {
         console.log("please provide userid in param to get user info...");
-        return res
-          .status(500)
-          .json({
-            success: "false",
-            message: "please provide userid in param to get user info...",
-          });
+        return res.status(500).json({
+          success: "false",
+          message: "please provide userid in param to get user info...",
+        });
       }
 
       const response = await prisma.user.findUnique({
@@ -272,24 +262,20 @@ userRouter.get(
       });
 
       if (!response) {
-        return res
-          .status(500)
-          .json({
-            success: "false",
-            message: "unable to fetch user from prisma",
-          });
+        return res.status(500).json({
+          success: "false",
+          message: "unable to fetch user from prisma",
+        });
       }
 
       return res.status(201).json({ success: "true", response });
     } catch (error) {
       console.log("error in getting user profile", error);
-      return res
-        .status(500)
-        .json({
-          success: "false",
-          message: "unable to fetch user from prisma",
-          error,
-        });
+      return res.status(500).json({
+        success: "false",
+        message: "unable to fetch user from prisma",
+        error,
+      });
     }
   }
 );
