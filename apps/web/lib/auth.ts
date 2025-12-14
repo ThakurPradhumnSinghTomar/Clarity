@@ -81,46 +81,57 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     
     // SIGN IN CALLBACK: Runs when user signs in
     async signIn({ user, account, profile }) {
-      
-      // Only process OAuth sign-ins (not credentials)
-      if (account?.provider === "google" || account?.provider === "github") {
-        try {
-          // Call your backend API to create/update user and GET THE TOKEN
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/oauth-user`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              email: user.email,
-              name: user.name,
-              image: user.image,
-              provider: account.provider,
-              providerId: account.providerAccountId,
-            }),
-          });
+  
+  // Only process OAuth sign-ins (not credentials)
+  if (account?.provider === "google" || account?.provider === "github") {
+    try {
+      // Call your backend API to create/update user and GET THE TOKEN
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/oauth-user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          provider: account.provider,
+          providerId: account.providerAccountId,
+        }),
+      });
 
-          const data = await response.json();
+      const data = await response.json();
 
-          if (response.ok && data.success) {
-            // Store the backend token in the user object
-            // This will be available in the jwt callback
-            user.backendToken = data.token || data.accessToken;
-            user.id = data.user?.id || data.id;
-            return true;
-          } else {
-            console.error("Failed to create/update OAuth user:", data.error);
-            return false;
-          }
-          
-        } catch (error) {
-          console.error("Error in signIn callback:", error);
-          return false;
-        }
+      if (response.ok && data.success) {
+        // ✅ FIXED: Update user object with backend data
+        user.backendToken = data.token || data.accessToken;
+        user.id = data.user?.id || data.id;
+        
+        // ✅ CRITICAL FIX: Use the name and image from your database, not from Google
+        user.name = data.user?.name || user.name;
+        user.image = data.user?.image || user.image;
+        
+        console.log("=== OAuth Sign In ===");
+        console.log("Backend returned name:", data.user?.name);
+        console.log("Backend returned image:", data.user?.image);
+        console.log("Using name:", user.name);
+        console.log("Using image:", user.image);
+        console.log("====================");
+        
+        return true;
+      } else {
+        console.error("Failed to create/update OAuth user:", data.error);
+        return false;
       }
       
-      return true;
-    },
+    } catch (error) {
+      console.error("Error in signIn callback:", error);
+      return false;
+    }
+  }
+  
+  return true;
+},
     
     // JWT CALLBACK: Store backend token in JWT
     async jwt({ token, user, account, trigger, session }) {
