@@ -13,7 +13,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider ({ children }: { children: ReactNode }) {
 
-     const [mode, setMode] = useState<ThemeMode>("system");
+     const [mode, setMode] = useState<ThemeMode>("dark");
      const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
 
      // Resolve theme based on mode

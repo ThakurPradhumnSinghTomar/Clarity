@@ -36,6 +36,27 @@ const Clock = () => {
     const minutes = Math.floor((displayTime % 3600) / 60);
     const seconds = displayTime % 60;
 
+
+  async function setUserFocusing(isFocusing: boolean) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      body: JSON.stringify({ isFocusing }),
+    }
+  );
+
+  if (!response.ok) {
+    console.log("Failed to update focusing state");
+    return;
+  }
+
+  console.log("Focusing state updated");
+}
     // Timer completion check
     useEffect(() => {
         if (type === "Timer" && isRunning && currentTime >= timerDuration) {
@@ -80,16 +101,17 @@ const Clock = () => {
         setCurrentTime(totalSeconds);
     };
 
-    function handleStartFocusingClick() {
+    async function handleStartFocusingClick() {
         if (!isRunning) {
             const now = new Date();
             setSessionStartTime(now);
             setPausedAt(null);
             setIsRunning(true);
+            await setUserFocusing(true);
         }
     }
 
-    function handleStopFocusingClick() {
+    async function handleStopFocusingClick() {
         if (isRunning && sessionStartTime) {
             const now = new Date();
             setPausedAt(now);
@@ -100,16 +122,19 @@ const Clock = () => {
             setAccumulatedTime(prev => prev + elapsedSeconds);
             
             setIsRunning(false);
+            await setUserFocusing(false);
             setSessionStartTime(null);
         }
     }
 
     async function handleTimerComplete() {
         setIsRunning(false);
+        
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
         }
+        
         await handleSaveSessionClick();
     }
 
@@ -117,6 +142,7 @@ const Clock = () => {
         if (currentTime === 0) return;
 
         setisSavingSession(true);
+        
         
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`, {
@@ -146,6 +172,8 @@ const Clock = () => {
             
             // Reset everything
             handleReset();
+            await setUserFocusing(false);
+
             setisSavingSession(false);
 
             return true;
@@ -163,6 +191,7 @@ const Clock = () => {
         setAccumulatedTime(0);
         setSessionStartTime(null);
         setPausedAt(null);
+        
         
         if (intervalRef.current) {
             clearInterval(intervalRef.current);

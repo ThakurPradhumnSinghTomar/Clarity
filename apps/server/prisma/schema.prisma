@@ -19,6 +19,7 @@ model User {
   email           String   @unique
   image           String?
   hashedPassword  String?
+  isFocusing Boolean?
   
   // OAuth fields
   provider        String?
@@ -126,6 +127,8 @@ model WeeklyStudyHours {
   @@index([weekStart, totalSec])
 }
 
+
+
 model FocusSession {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String   @db.ObjectId
@@ -142,3 +145,4 @@ model FocusSession {
   
   @@index([userId, startTime])
 }
+

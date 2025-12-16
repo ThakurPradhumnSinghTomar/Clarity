@@ -103,7 +103,7 @@ userRouter.post("/save-focus-sesssion", authMiddleware, async (req, res) => {
     const dayOfweek = (weekStart.getDay() + 6) % 7; //ye date ho gyi kb tumne focus session start/run kiya tha, and y ab monady based week day dega like 0-monday,1-tuesday,..
     weekStart.setDate(weekStart.getDate() - dayOfweek); //perfect, ab y weekStart monady s hi set karega..
 
-    const sessionWeekday = (start.getDay()+6)%7; //ab database m sunday k liye 6 jayega n ki 0
+    const sessionWeekday = (start.getDay() + 6) % 7; //ab database m sunday k liye 6 jayega n ki 0
 
     let weeklyRecord = await prisma.weeklyStudyHours.findUnique({
       where: {
@@ -329,6 +329,45 @@ userRouter.patch("/update-profile", authMiddleware, async (req, res) => {
     });
   }
 });
+
+userRouter.patch("/focusing", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { isFocusing } = req.body;
+
+    if (typeof isFocusing !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isFocusing must be a boolean",
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { isFocusing },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: isFocusing
+        ? "User started focusing"
+        : "User stopped focusing",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
+
 
 export default userRouter;
 

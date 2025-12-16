@@ -8,6 +8,8 @@ import { CreateRoomModal } from '@repo/ui';
 import { JoinRoomModal } from '@repo/ui';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-toastify';
+import { div } from 'framer-motion/client';
+import { useRouter } from "next/navigation"
 
 interface Room {
   id: string;
@@ -28,7 +30,7 @@ const RoomsPage = () => {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [myRooms, setMyRooms] = useState<Room[]>([]);
   const { data: session } = useSession();
-
+  const router = useRouter()
   // Loading states
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
@@ -175,7 +177,7 @@ const RoomsPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#18181B] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="mb-8">
@@ -192,7 +194,7 @@ const RoomsPage = () => {
           <button
             onClick={() => setIsCreateModalOpen(true)}
             disabled={isCreatingRoom}
-            className="flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:border-indigo-600 dark:hover:border-indigo-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
           >
             {isCreatingRoom ? (
               <>
@@ -208,7 +210,7 @@ const RoomsPage = () => {
           </button>
           <button
             onClick={() => setIsJoinModalOpen(true)}
-            className="flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:border-indigo-600 dark:hover:border-indigo-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+            className="flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:border-indigo-600 dark:hover:border-indigo-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
           >
             <LogIn size={24} />
             <span>Join Existing Room</span>
@@ -313,9 +315,18 @@ const RoomsPage = () => {
           {/* Rooms Grid */}
           {!isLoadingRooms && !error && myRooms.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myRooms.map((room) => (
-                <RoomCard key={room.id} {...transformRoomData(room)} />
+             {myRooms.map((room) => (
+                <div
+                  key={room.id}
+                  onClick={() => {
+                    router.push(`/home/rooms/${room.id}`)
+
+                  }}
+                >
+                  <RoomCard {...transformRoomData(room)} />
+                </div>
               ))}
+
             </div>
           )}
         </div>

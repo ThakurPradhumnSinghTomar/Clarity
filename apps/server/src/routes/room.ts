@@ -2,6 +2,7 @@ import express from "express";
 import prisma from "../prismaClient.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { generateRoomCode } from "../controllers/generateRandomNumber.js";
+import { error } from "node:console";
 
 const roomRouter = express.Router();
 
@@ -123,176 +124,310 @@ roomRouter.get("/get-my-rooms", authMiddleware, async (req, res) => {
 });
 
 roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
- try{
-   const userId = req.user?.id;
-  const { roomCode } = req.body;
+  try {
+    const userId = req.user?.id;
+    const { roomCode } = req.body;
 
-  if (!userId) {
-    return res.status(401).json({
-      success: "false",
-      message: "user is not authenticated, no userid in request",
-    });
-  }
+    if (!userId) {
+      return res.status(401).json({
+        success: "false",
+        message: "user is not authenticated, no userid in request",
+      });
+    }
 
-  if (!roomCode) {
-    return res
-      .status(400)
-      .json({ success: "false", message: "please provide room code" });
-  }
+    if (!roomCode) {
+      return res
+        .status(400)
+        .json({ success: "false", message: "please provide room code" });
+    }
 
-  //find the room user want to join
-  const room = await prisma.room.findUnique({
-    where: {
-      roomCode: roomCode,
-    },
-    include: {
-      host: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-
-      _count: {
-        select: {
-          members: true,
-        },
-      },
-    },
-  });
-
-  if (!room) {
-    return res.status(404).json({
-      success: false,
-      message: "Room not found. Please check the room code.",
-    });
-  }
-
-  if (room.hostId === userId) {
-    return res.status(400).json({
-      success: false,
-      message: "You are the host of this room. You cannot join as a member.",
-    });
-  }
-
-  const existingMember = await prisma.roomMember.findUnique({
-    where: {
-      userId_roomId: {
-        userId: userId,
-        roomId: room.id,
-      },
-    },
-  });
-
-  if (existingMember) {
-    return res.status(400).json({
-      success: false,
-      message: "You are already a member of this room",
-    });
-  }
-
-  //two paths, wether joining a private room, or a public room
-
-  //if joining a public room join directly without creating a reqeust to host
-
-  //but if joining in a private room, just create a pending request instead of joining a room, host will deciede it..
-  if (!room.isPublic) {
-    //check krlo khin phle se ho to req nhi daal rakhi h
-    const existingRequest = await prisma.joinRequest.findUnique({
-      //userId_roomId_joinRequest is the index we defined in the schema . prisma of this model
+    //find the room user want to join
+    const room = await prisma.room.findUnique({
       where: {
-        userId_roomId_joinRequest: {
+        roomCode: roomCode,
+      },
+      include: {
+        host: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+
+        _count: {
+          select: {
+            members: true,
+          },
+        },
+      },
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found. Please check the room code.",
+      });
+    }
+
+    if (room.hostId === userId) {
+      return res.status(400).json({
+        success: false,
+        message: "You are the host of this room. You cannot join as a member.",
+      });
+    }
+
+    const existingMember = await prisma.roomMember.findUnique({
+      where: {
+        userId_roomId: {
           userId: userId,
           roomId: room.id,
         },
       },
     });
 
-    if (existingRequest) {
-      if (existingRequest.status === "pending") {
-        return res.status(400).json({
-          success: false,
-          message: "You already have a pending join request for this room",
-        });
-      } else if (existingRequest.status === "rejected") {
-        return res.status(403).json({
-          success: false,
-          message:
-            "Your join request was rejected. Please contact the room host.",
-        });
-      }
+    if (existingMember) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already a member of this room",
+      });
     }
 
-    // Create join request for private room
-    const joinRequest = await prisma.joinRequest.create({
+    //two paths, wether joining a private room, or a public room
+
+    //if joining a public room join directly without creating a reqeust to host
+
+    //but if joining in a private room, just create a pending request instead of joining a room, host will deciede it..
+    if (!room.isPublic) {
+      //check krlo khin phle se ho to req nhi daal rakhi h
+      const existingRequest = await prisma.joinRequest.findUnique({
+        //userId_roomId_joinRequest is the index we defined in the schema . prisma of this model
+        where: {
+          userId_roomId_joinRequest: {
+            userId: userId,
+            roomId: room.id,
+          },
+        },
+      });
+
+      if (existingRequest) {
+        if (existingRequest.status === "pending") {
+          return res.status(400).json({
+            success: false,
+            message: "You already have a pending join request for this room",
+          });
+        } else if (existingRequest.status === "rejected") {
+          return res.status(403).json({
+            success: false,
+            message:
+              "Your join request was rejected. Please contact the room host.",
+          });
+        }
+      }
+
+      // Create join request for private room
+      const joinRequest = await prisma.joinRequest.create({
+        data: {
+          userId: userId,
+          roomId: room.id,
+          status: "pending",
+        },
+      });
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Join request sent to the room host. You'll be notified once approved.",
+        joinRequest: joinRequest,
+      });
+    }
+
+    // If room is public, directly add user as member
+    const roomMember = await prisma.roomMember.create({
+      //include statements are only for returning data, nothing contributing in creation
       data: {
         userId: userId,
         roomId: room.id,
-        status: "pending",
+        role: "member",
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+        room: {
+          select: {
+            id: true,
+            name: true,
+            roomCode: true,
+            isPublic: true,
+          },
+        },
       },
     });
 
     return res.status(200).json({
       success: true,
-      message:
-        "Join request sent to the room host. You'll be notified once approved.",
-      joinRequest: joinRequest,
+      message: "Successfully joined the room!",
+      roomMember: roomMember,
+      room: {
+        id: room.id,
+        name: room.name,
+        description: room.description,
+        roomCode: room.roomCode,
+        isPublic: room.isPublic,
+        memberCount: room._count.members + 1, // +1 for the new member
+        host: room.host,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error joining room:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while joining room",
+      error: error.message,
     });
   }
+});
 
-  // If room is public, directly add user as member
-  const roomMember = await prisma.roomMember.create({
-    //include statements are only for returning data, nothing contributing in creation
-    data: {
-      userId: userId,
-      roomId: room.id,
-      role: "member",
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-        },
-      },
-      room: {
-        select: {
-          id: true,
-          name: true,
-          roomCode: true,
-          isPublic: true,
-        },
-      },
-    },
-  });
+roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const roomId = req.params.roomId;
+    
+    if (!userId) {
+      return res.status(401).json({
+        "success": false,
+        "message": "Unauthorized"
+      });
+    }
 
-  return res.status(200).json({
-    success: true,
-    message: "Successfully joined the room!",
-    roomMember: roomMember,
-    room: {
+    if (!roomId) {
+      return res.status(400).json({
+        "success": false,
+        "message": "Please provide roomId"
+      });
+    }
+
+    const room = await prisma.room.findUnique({
+      where: {
+        id: roomId,
+      },
+      include: {
+        host: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+                isFocusing: true,
+                weeklyStudyHours: {
+                  orderBy: {
+                    weekStart: 'desc'
+                  },
+                  take: 1, // Only get latest week
+                  select: {
+                    totalSec: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        "success": false,
+        "message": "Room not found"
+      });
+    }
+
+    // Verify user is member or host
+    const isMember = room.members.some(m => m.userId === userId);
+    const isHost = room.hostId === userId;
+
+    if (!isMember && !isHost) {
+      return res.status(403).json({
+        "success": false,
+        "message": "You are not a member of this room"
+      });
+    }
+
+    // Transform members data
+    const membersWithStats = room.members.map(member => {
+      const weeklyHours = member.user.weeklyStudyHours[0];
+      const studyTimeSeconds = weeklyHours?.totalSec || 0;
+      
+      return {
+        id: member.id,
+        userId: member.user.id,
+        name: member.user.name,
+        email: member.user.email,
+        avatar: member.user.image || '👤', // Default avatar
+        isFocusing: member.user.isFocusing || false,
+        studyTime: Math.floor(studyTimeSeconds / 60), // Convert to minutes
+        joinedAt: member.joinedAt,
+        role: member.role
+      };
+    });
+
+    // Sort by study time to calculate ranks
+    const sortedMembers = [...membersWithStats].sort((a, b) => b.studyTime - a.studyTime);
+    
+    // Add ranks
+    const membersWithRanks = membersWithStats.map(member => {
+      const rank = sortedMembers.findIndex(m => m.id === member.id) + 1;
+      return { ...member, rank };
+    });
+
+    // Calculate total study time
+    const totalStudyTime = membersWithStats.reduce((sum, m) => sum + m.studyTime, 0);
+
+    // Build response
+    const responseData = {
       id: room.id,
       name: room.name,
       description: room.description,
       roomCode: room.roomCode,
       isPublic: room.isPublic,
-      memberCount: room._count.members + 1, // +1 for the new member
+      isHost: isHost,
+      memberCount: room.members.length,
+      totalStudyTime: totalStudyTime,
       host: room.host,
-    },
-  });
- }
- catch(error : any){
-    console.error("Error joining room:", error);
-    res.status(500).json({
+      members: membersWithRanks,
+      createdAt: room.createdAt,
+      updatedAt: room.updatedAt
+    };
+
+    return res.status(200).json({
+      "success": true,
+      "message": "Room fetched successfully",
+      "room": responseData
+    });
+
+  } catch (error:any) {
+    console.error("Error fetching room:", error);
+    return res.status(500).json({
       "success": false,
-      "message": "Error occurred while joining room",
+      "message": "Error occurred while fetching room",
       "error": error.message
     });
- }
+  }
 });
-
 
 export default roomRouter;
