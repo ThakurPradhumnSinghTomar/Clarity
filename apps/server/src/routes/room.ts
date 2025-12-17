@@ -458,4 +458,80 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
   }
 });
 
+roomRouter.delete("/leave-room/:roomId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const roomId = req.params.roomId;
+    const {isHost,roomCode} = req.body;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    if (!roomId) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide roomId",
+      });
+    }
+
+    if(isHost){
+
+      const room = await prisma.room.delete({
+      where: {
+        roomCode : roomCode
+        },
+      })
+
+       if (!room) {
+      return res
+        .status(500)
+        .json({ success: "failed", message: "failed to delete the room..." });
+    }
+
+    return res
+      .status(201)
+      .json({
+        success: "true",
+        message: "successfully deleted the room...",
+        room,
+      });
+
+
+   
+      
+    }
+
+    const roomMember = await prisma.roomMember.delete({
+      where: {
+        userId_roomId: {
+          userId: userId,
+          roomId: roomId,
+        },
+      },
+    });
+
+    if (!roomMember) {
+      return res
+        .status(500)
+        .json({ success: "failed", message: "failed to leave the room..." });
+    }
+
+    return res
+      .status(201)
+      .json({
+        success: "true",
+        message: "successfully leaved the room...",
+        roomMember,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: "failed", message: "failed to leave the room..." });
+  }
+});
+
 export default roomRouter;

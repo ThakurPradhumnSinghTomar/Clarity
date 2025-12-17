@@ -185,16 +185,13 @@ userRouter.post("/save-focus-sesssion", authMiddleware, async (req, res) => {
 });
 
 userRouter.get(
-  "/get-current-week-study-hours",
+  "/get-current-week-study-hours/:page",
   authMiddleware,
   async (req, res) => {
     try {
-      console.log("incoming req is : ", req.user);
       const userId = req.user?.id;
-      console.log(
-        "incoming request has this user id on get weekly study hours : ",
-        userId
-      );
+      const page = Number(req.params.page);
+
       if (!userId) {
         console.log(
           "Unauthorized - no userId provided,req rejected in api route getting weekly study hours"
@@ -205,14 +202,15 @@ userRouter.get(
         });
       }
 
-      const currentWeek = getCurrentWeekStart();
-      const weeklyStudyHours = await prisma.weeklyStudyHours.findUnique({
+      const weeklyStudyHours = await prisma.weeklyStudyHours.findMany({
         where: {
-          userId_weekStart_wsh: {
-            userId: userId,
-            weekStart: currentWeek,
-          },
+          userId: userId,
         },
+        orderBy: {
+          weekStart: "desc",
+        },
+        skip: page,
+        take: 1,
       });
 
       if (!weeklyStudyHours) {
@@ -356,9 +354,7 @@ userRouter.patch("/focusing", authMiddleware, async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: isFocusing
-        ? "User started focusing"
-        : "User stopped focusing",
+      message: isFocusing ? "User started focusing" : "User stopped focusing",
     });
   } catch (error) {
     return res.status(500).json({
@@ -367,7 +363,6 @@ userRouter.patch("/focusing", authMiddleware, async (req, res) => {
     });
   }
 });
-
 
 export default userRouter;
 

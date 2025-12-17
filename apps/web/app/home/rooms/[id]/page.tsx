@@ -12,34 +12,16 @@ import {
   UserPlus,
   Crown,
   Medal,
+  Delete,
 } from "lucide-react";
 import { Leaderboard } from "@repo/ui";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { leaveRoom } from "@/lib/helpfulFunctions/roomsRelated/leaveRoom";
+import { useRouter } from "next/navigation";
+import { RoomData, RoomMember } from "@repo/types";
+import { div } from "framer-motion/client";
 
- type RoomData = {
-  id: string;
-  name: string;
-  description: string;
-  roomCode: string;
-  isPublic: boolean;
-  isHost: boolean;
-  memberCount: number;
-  totalStudyTime: number;
-  members: RoomMember[];
-};
-
-
-  type RoomMember = {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  isFocusing: boolean;
-  studyTime: number;
-  rank: number;
-};
- 
 
 const RoomPage = () => {
   const [copiedCode, setCopiedCode] = useState(false);
@@ -52,7 +34,12 @@ const [roomData, setRoomData] = useState<RoomData | null>(null);
 
   const params = useParams();
   const roomId = params.id as string;
+  const isHost = roomData?.isHost||false;
+  const roomCode = roomData?.roomCode||null;
   const { data: session } = useSession();
+  const accessToken = session?.accessToken;
+  const router = useRouter();
+  if(!accessToken){throw new Error("no access token...  ")}
 
   const loadRoomData = async () => {
     try {
@@ -205,7 +192,7 @@ const [roomData, setRoomData] = useState<RoomData | null>(null);
                 </button>
               )}
               <button className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors">
-                <LogOut size={20} />
+                {isHost?<Delete size={20} onClick={()=>{leaveRoom({accessToken,roomId,isHost,roomCode}); router.push("/home/rooms")}} />:<LogOut size={20} onClick={()=>{leaveRoom({accessToken,roomId,isHost,roomCode}); router.push("/home/rooms")}} />}
               </button>
             </div>
           </div>
