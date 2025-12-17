@@ -43,7 +43,7 @@ export default function Histogram({ data, currentDay }: HistogramProps) {
 
   return (
     // Main container with rounded corners and dark mode support
-    <div className="p-6 rounded-2xl w-full max-w-4xl bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-white border border-gray-200 dark:border-zinc-800 shadow-lg min-h-[360px]">
+    <div className=" p-6 rounded-2xl w-full max-w-4xl bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-white border border-gray-200 dark:border-zinc-800 shadow-lg min-h-[360px]">
       
       {/* Header section with title and subtitle */}
       <div className="flex items-center justify-between mb-4">

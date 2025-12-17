@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Room } from "@repo/types";
 import { transformRoomData } from "@/lib/helpfulFunctions/transformRoomData";
 import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData";
+import { div } from "framer-motion/client";
 
 // Loading Skeleton Components
 const HistogramSkeleton = () => (
@@ -41,6 +42,7 @@ const Home = () => {
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [myRooms, setMyRooms] = useState<Room[]>([]);
+  const [histogramPage,setHistogramPage] = useState(0);
   const router = useRouter()
     const accessToken = session?.accessToken;
   if(!accessToken){
@@ -57,7 +59,7 @@ const Home = () => {
     setIsLoadingHistogram(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-week-study-hours`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-week-study-hours/${histogramPage}`,
         {
           method: "GET",
           headers: {
@@ -94,8 +96,7 @@ const Home = () => {
         (day: { weekday: number; focusedSec: number }) => {
           if (day.weekday >= 0 && day.weekday <= 6) {
             newData[day.weekday] =
-              Math.round((day.focusedSec / 3600) * 100) / 100; //yha p bug h isko theek krna like yha p day.weekday-1 nhi hoga. vrna sunday p -1 ho jayega
-            //bug theek kr diya, ab backend s hi shi dayNumber return hoga like monday k liye 0, tues k liy 1 and so on...
+              Math.round((day.focusedSec / 3600) * 100) / 100;
           }
         }
       );
@@ -154,7 +155,7 @@ const Home = () => {
     if (session?.accessToken) {
       loadCurrentWeekStudyHours();
     }
-  }, [session?.accessToken]);
+  }, [session?.accessToken,histogramPage]);
 
   useEffect(() => {
     if (session?.accessToken) {
@@ -172,7 +173,17 @@ const Home = () => {
           {isLoadingHistogram ? (
             <HistogramSkeleton />
           ) : (
-            <Histogram data={data} currentDay={currentDay} />
+            <div className="relative flex px-6">
+
+              <div className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-700 absolute mt-40 z-5 left-0 font-bold text-white text-sm flex justify-center items-center" onClick={()=>{
+                setHistogramPage(histogramPage+1);
+              }}>Prev</div>
+              <Histogram data={data} currentDay={currentDay} />
+              {histogramPage>0&&<div className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-700 absolute mt-40 z-5 right-0 font-bold text-white text-sm flex justify-center items-center" onClick={()=>{
+                let temp = histogramPage-1;
+                temp<0?setHistogramPage(0):setHistogramPage(temp);
+              }}>Next</div>}
+            </div>
           )}
         </div>
 
