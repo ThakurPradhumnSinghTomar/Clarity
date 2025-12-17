@@ -298,18 +298,18 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
     const roomId = req.params.roomId;
-    
+
     if (!userId) {
       return res.status(401).json({
-        "success": false,
-        "message": "Unauthorized"
+        success: false,
+        message: "Unauthorized",
       });
     }
 
     if (!roomId) {
       return res.status(400).json({
-        "success": false,
-        "message": "Please provide roomId"
+        success: false,
+        message: "Please provide roomId",
       });
     }
 
@@ -322,8 +322,15 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
           select: {
             id: true,
             name: true,
-            email: true
-          }
+            email: true,
+            image: true,
+            isFocusing: true,
+            weeklyStudyHours: {
+              orderBy: { weekStart: "desc" },
+              take: 1,
+              select: { totalSec: true },
+            },
+          },
         },
         members: {
           include: {
@@ -336,67 +343,89 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
                 isFocusing: true,
                 weeklyStudyHours: {
                   orderBy: {
-                    weekStart: 'desc'
+                    weekStart: "desc",
                   },
                   take: 1, // Only get latest week
                   select: {
-                    totalSec: true
-                  }
-                }
-              }
-            }
-          }
-        }
+                    totalSec: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
     if (!room) {
       return res.status(404).json({
-        "success": false,
-        "message": "Room not found"
+        success: false,
+        message: "Room not found",
       });
     }
 
     // Verify user is member or host
-    const isMember = room.members.some(m => m.userId === userId);
+    const isMember = room.members.some((m) => m.userId === userId);
     const isHost = room.hostId === userId;
 
     if (!isMember && !isHost) {
       return res.status(403).json({
-        "success": false,
-        "message": "You are not a member of this room"
+        success: false,
+        message: "You are not a member of this room",
       });
     }
 
     // Transform members data
-    const membersWithStats = room.members.map(member => {
+    const membersWithStats = room.members.map((member) => {
       const weeklyHours = member.user.weeklyStudyHours[0];
       const studyTimeSeconds = weeklyHours?.totalSec || 0;
-      
+
       return {
         id: member.id,
         userId: member.user.id,
         name: member.user.name,
         email: member.user.email,
-        avatar: member.user.image || '👤', // Default avatar
+        avatar: member.user.image || "👤", // Default avatar
         isFocusing: member.user.isFocusing || false,
         studyTime: Math.floor(studyTimeSeconds / 60), // Convert to minutes
         joinedAt: member.joinedAt,
-        role: member.role
+        role: member.role,
       };
     });
 
+    const hostWeekly = room.host.weeklyStudyHours[0];
+    const hostStudySeconds = hostWeekly?.totalSec || 0;
+
+    const hostAsMember = {
+      id: `host-${room.host.id}`,
+      userId: room.host.id,
+      name: room.host.name,
+      email: room.host.email,
+      avatar: room.host.image || "👑",
+      isFocusing: room.host.isFocusing || false,
+      studyTime: Math.floor(hostStudySeconds / 60),
+      joinedAt: room.createdAt,
+      role: "host",
+    };
+
+    membersWithStats.push(hostAsMember);
+
     // Sort by study time to calculate ranks
-    const sortedMembers = [...membersWithStats].sort((a, b) => b.studyTime - a.studyTime);
-    
+    const sortedMembers = [...membersWithStats].sort(
+      (a, b) => b.studyTime - a.studyTime
+    );
+
     // Add ranks
-    const membersWithRanks = membersWithStats.map(member => {
-      const rank = sortedMembers.findIndex(m => m.id === member.id) + 1;
+    const membersWithRanks = membersWithStats.map((member) => {
+      const rank = sortedMembers.findIndex((m) => m.id === member.id) + 1;
       return { ...member, rank };
     });
 
     // Calculate total study time
-    const totalStudyTime = membersWithStats.reduce((sum, m) => sum + m.studyTime, 0);
+    const totalStudyTime = membersWithStats.reduce(
+      (sum, m) => sum + m.studyTime,
+      0
+    );
 
     // Build response
     const responseData = {
@@ -411,21 +440,20 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
       host: room.host,
       members: membersWithRanks,
       createdAt: room.createdAt,
-      updatedAt: room.updatedAt
+      updatedAt: room.updatedAt,
     };
 
     return res.status(200).json({
-      "success": true,
-      "message": "Room fetched successfully",
-      "room": responseData
+      success: true,
+      message: "Room fetched successfully",
+      room: responseData,
     });
-
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Error fetching room:", error);
     return res.status(500).json({
-      "success": false,
-      "message": "Error occurred while fetching room",
-      "error": error.message
+      success: false,
+      message: "Error occurred while fetching room",
+      error: error.message,
     });
   }
 });
