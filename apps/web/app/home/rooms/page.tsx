@@ -10,18 +10,11 @@ import { useSession } from 'next-auth/react';
 import { toast } from 'react-toastify';
 import { div } from 'framer-motion/client';
 import { useRouter } from "next/navigation"
+import { Room } from '@repo/types';
+import { transformRoomData } from '@/lib/helpfulFunctions/transformRoomData';
+import { fetchMyRooms } from '@/lib/helpfulFunctions/roomsRelated/fetchRoomsData';
 
-interface Room {
-  id: string;
-  name: string;
-  description: string | null;
-  roomCode: string;
-  isPublic: boolean;
-  hostId: string;
-  createdAt: string;
-  updatedAt: string;
-  memberCount : number
-}
+
 
 const RoomsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -33,45 +26,19 @@ const RoomsPage = () => {
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const accessToken = session?.accessToken;
+  if(!accessToken){
+    console.log("no access token in the session..")
+    throw error}
 
   // Fetch rooms on component mount
   useEffect(() => {
     if (session?.accessToken) {
-      fetchMyRooms();
+      fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms });
     }
   }, [session]);
 
-  const fetchMyRooms = async () => {
-    setIsLoadingRooms(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/get-my-rooms`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.accessToken}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch rooms');
-      }
-
-      setMyRooms(data.rooms || []);
-      console.log('Fetched rooms:', data.rooms);
-
-    } catch (error: any) {
-      console.error('Error fetching rooms:', error);
-      setError(error.message);
-      toast.error('Failed to load rooms');
-    } finally {
-      setIsLoadingRooms(false);
-    }
-  };
-
+  
   const handleCreateRoom = async (roomName: string, isPrivate: boolean, roomDiscription: string) => {
     setIsCreatingRoom(true);
 
@@ -102,7 +69,7 @@ const RoomsPage = () => {
       setIsCreateModalOpen(false);
       
       // Refresh the rooms list
-      await fetchMyRooms();
+      await fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms });
 
     } catch (error: any) {
       console.error('Error creating room:', error);
@@ -141,7 +108,7 @@ const RoomsPage = () => {
     }
 
     setIsJoinModalOpen(false);
-    await fetchMyRooms(); // Refresh room list
+    await fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms }); // Refresh room list
 
   } catch (error: any) {
     console.error('Error joining room:', error);
@@ -149,21 +116,9 @@ const RoomsPage = () => {
   }
 };
 
-  // Transform API room data to RoomCard format
-  const transformRoomData = (room: Room) => ({
-    id: room.id,
-    name: room.name,
-    memberCount: room.memberCount|| 0,
-    totalStudyTime: 0, // Will need to add this from your API
-    rank: 0, // Will need to calculate this
-    lastActive: new Date(room.updatedAt).toLocaleDateString(),
-    color: getRandomColor()
-  });
-
-  const getRandomColor = () => {
-    const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444'];
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
+ 
+  
+ 
 
   // Loading skeleton for room cards
   const RoomCardSkeleton = () => (
@@ -275,7 +230,7 @@ const RoomsPage = () => {
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
               <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
               <button
-                onClick={fetchMyRooms}
+                onClick={()=>{fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms })}}
                 className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
               >
                 Try Again
