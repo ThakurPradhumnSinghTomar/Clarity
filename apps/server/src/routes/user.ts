@@ -213,14 +213,18 @@ userRouter.get(
         take: 1,
       });
 
-      if (!weeklyStudyHours) {
-        // This is not an error - user just hasn't studied this week yet
+      if (!weeklyStudyHours || weeklyStudyHours.length === 0) {
         return res.status(200).json({
           success: true,
           message: "No study hours recorded for this week yet",
           weeklyStudyHours: null,
         });
       }
+
+      return res.status(200).json({
+        success: true,
+        weeklyStudyHours: weeklyStudyHours[0], // Return the first (and only) item
+      });
 
       return res.status(200).json({
         success: true, // This was 'false' - should be 'true'
@@ -231,6 +235,7 @@ userRouter.get(
       return res.status(500).json({
         success: false,
         message: "Server error while fetching study hours",
+        err,
       });
     }
   }

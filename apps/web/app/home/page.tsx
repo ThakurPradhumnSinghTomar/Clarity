@@ -42,18 +42,21 @@ const Home = () => {
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [myRooms, setMyRooms] = useState<Room[]>([]);
-  const [histogramPage,setHistogramPage] = useState(0);
-  const router = useRouter()
-    const accessToken = session?.accessToken;
-  if(!accessToken){
-    console.log("no access token in the session..")
-    throw error}
+  const [histogramPage, setHistogramPage] = useState(0);
+  const [stopNow, setStopNow] = useState(false);
+  const [noWeeklyData,setNoWeeklyData]=useState(false);
+  const router = useRouter();
+  const accessToken = session?.accessToken;
+  if (!accessToken) {
+    console.log("no access token in the session..");
+    throw error;
+  }
 
-    useEffect(() => {
-      if (session?.accessToken) {
-        fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms });
-      }
-    }, [session]);
+  useEffect(() => {
+    if (session?.accessToken) {
+      fetchMyRooms({ setIsLoadingRooms, setError, accessToken, setMyRooms });
+    }
+  }, [session]);
 
   const loadCurrentWeekStudyHours = async () => {
     setIsLoadingHistogram(true);
@@ -88,6 +91,8 @@ const Home = () => {
 
       if (!weeklyStudyHours || !weeklyStudyHours.days) {
         console.log("No weekly study hours for this user for current week");
+        setStopNow(true);
+        setNoWeeklyData(true);
         return;
       }
 
@@ -155,7 +160,7 @@ const Home = () => {
     if (session?.accessToken) {
       loadCurrentWeekStudyHours();
     }
-  }, [session?.accessToken,histogramPage]);
+  }, [session?.accessToken, histogramPage]);
 
   useEffect(() => {
     if (session?.accessToken) {
@@ -174,27 +179,42 @@ const Home = () => {
             <HistogramSkeleton />
           ) : (
             <div className="relative flex px-6">
-
-              <div className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-700 absolute mt-40 z-5 left-0 font-bold text-white text-sm flex justify-center items-center" onClick={()=>{
-                setHistogramPage(histogramPage+1);
-              }}>Prev</div>
-              <Histogram data={data} currentDay={currentDay} />
-              {histogramPage>0&&<div className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-700 absolute mt-40 z-5 right-0 font-bold text-white text-sm flex justify-center items-center" onClick={()=>{
-                let temp = histogramPage-1;
-                temp<0?setHistogramPage(0):setHistogramPage(temp);
-              }}>Next</div>}
+              {!stopNow && (
+                <div
+                  className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-700 absolute mt-40 z-5 left-0 font-bold text-white text-sm flex justify-center items-center"
+                  onClick={() => {
+                    setHistogramPage(histogramPage + 1);
+                  }}
+                >
+                  Prev
+                </div>
+              )}
+              {!noWeeklyData?<Histogram data={data} currentDay={currentDay} />:<div className="bg-gray-100 dark:bg-zinc-800 h-[400px] md:w-[600px] rounded-2xl border border-gray-200 dark:border-zinc-800 flex justify-center items-center"><p>No weekly Study hours for this week</p></div>}
+              {histogramPage > 0 && (
+                <div
+                  className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-700 absolute mt-40 z-5 right-0 font-bold text-white text-sm flex justify-center items-center"
+                  onClick={() => {
+                    let temp = histogramPage - 1;
+                    temp < 0 ? setHistogramPage(0) : setHistogramPage(temp);
+                    setStopNow(false);
+                    setNoWeeklyData(false);
+                  }}
+                >
+                  Next
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        <div className="max-w-xl text-gray-900 dark:text-white  bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-zinc-900 dark:to-zinc-800 p-6 rounded-xl border border-indigo-200 dark:border-zinc-700 shadow-lg md:min-w-[750px] relative overflow-hidden mb-4 h-[608px] mt-4" >
+        <div className="max-w-xl text-gray-900 dark:text-white  bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-zinc-900 dark:to-zinc-800 p-6 rounded-xl border border-indigo-200 dark:border-zinc-700 shadow-lg md:min-w-[750px] relative overflow-hidden mb-4 h-[608px] mt-4">
           <h1 className="text-2xl font-semibold">My Rooms : </h1>
 
           {!isLoadingRooms && !error && myRooms.length > 0 && (
             <div className="grid grid-cols-1 gap-2 mt-6  h-[500px] overflow-y-auto w-full scrollbar-hide">
               {myRooms.map((room) => (
                 <div
-                className="mx-2"
+                  className="mx-2"
                   key={room.id}
                   onClick={() => {
                     router.push(`/home/rooms/${room.id}`);
