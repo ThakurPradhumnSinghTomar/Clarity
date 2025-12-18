@@ -22,24 +22,63 @@ import { useRouter } from "next/navigation";
 import { RoomData, RoomMember } from "@repo/types";
 import { div } from "framer-motion/client";
 
-
 const RoomPage = () => {
   const [copiedCode, setCopiedCode] = useState(false);
-  const [activeTab, setActiveTab] = useState<"members" | "leaderboard">(
-    "members"
-  );
-const [members, setMembers] = useState<RoomMember[]>([]);
+  const [activeTab, setActiveTab] = useState<
+    "members" | "leaderboard" | "pending requests"
+  >("members");
+  const [members, setMembers] = useState<RoomMember[]>([]);
 
-const [roomData, setRoomData] = useState<RoomData | null>(null);
-
+  const [roomData, setRoomData] = useState<RoomData | null>(null);
+  const [isReqAccepted, setisReqAccepted] = useState(false);
+  const [isReqRejected, setisReqRejected] = useState(false);
+  const [reqProcessing,setReqProcessing] = useState(false);
+  const [reqIndex,setReqIndex] = useState(0);
   const params = useParams();
   const roomId = params.id as string;
-  const isHost = roomData?.isHost||false;
-  const roomCode = roomData?.roomCode||null;
+  const isHost = roomData?.isHost || false;
+  const roomCode = roomData?.roomCode || null;
   const { data: session } = useSession();
   const accessToken = session?.accessToken;
   const router = useRouter();
-  if(!accessToken){throw new Error("no access token...  ")}
+  if (!accessToken) {
+    throw new Error("no access token...  ");
+  }
+
+  const acceptJoinReq = async () => {
+    try {
+      const RequserId = roomData?.joinRequests[reqIndex].userId
+      setReqProcessing(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/approve-joinroom-req`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: JSON.stringify({ roomCode,roomId,RequserId})
+        }
+      );
+
+      if(!response||!response.ok){
+        console.error("failed to accept the user join request..")
+        setReqProcessing(false);
+        return ;
+      }
+
+      setReqProcessing(false);
+
+      console.log("user successfully joined the room... request accepted..")
+      return ;
+
+    } catch (error) {
+      console.error("failed to accept the user join request..",error);
+      setReqProcessing(false);
+      return ;
+
+    }
+  };
 
   const loadRoomData = async () => {
     try {
@@ -59,14 +98,12 @@ const [roomData, setRoomData] = useState<RoomData | null>(null);
         return;
       }
 
-
       const data = await room.json();
 
       setRoomData(data.room);
       setMembers(data.room.members);
-
     } catch (error) {
-      console.log("failed to lead room data and its members..",error);
+      console.log("failed to lead room data and its members..", error);
     }
   };
 
@@ -79,7 +116,9 @@ const [roomData, setRoomData] = useState<RoomData | null>(null);
   }));
 
   const handleCopyInviteCode = () => {
-    navigator.clipboard.writeText(roomData?.roomCode||"some error in copying..");
+    navigator.clipboard.writeText(
+      roomData?.roomCode || "some error in copying.."
+    );
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
@@ -98,78 +137,77 @@ const [roomData, setRoomData] = useState<RoomData | null>(null);
   };
 
   useEffect(() => {
-  if (session?.accessToken) {
-    loadRoomData();
-  }
-}, [session?.accessToken]);
+    if (session?.accessToken) {
+      loadRoomData();
+    }
+  }, [session?.accessToken]);
 
   function RoomSkeleton() {
-  return (
-    <div className="min-h-screen bg-black text-white p-8">
-      {/* Header Skeleton */}
-      <div className="mb-8">
-        <div className="h-10 w-64 bg-gray-800 rounded-lg animate-pulse mb-4"></div>
-        <div className="h-4 w-48 bg-gray-800 rounded animate-pulse"></div>
-      </div>
+    return (
+      <div className="min-h-screen bg-black text-white p-8">
+        {/* Header Skeleton */}
+        <div className="mb-8">
+          <div className="h-10 w-64 bg-gray-800 rounded-lg animate-pulse mb-4"></div>
+          <div className="h-4 w-48 bg-gray-800 rounded animate-pulse"></div>
+        </div>
 
-      {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="bg-gray-900 rounded-xl p-6 border border-gray-800"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-800 rounded-full animate-pulse"></div>
-              <div className="flex-1">
-                <div className="h-3 w-20 bg-gray-800 rounded animate-pulse mb-2"></div>
-                <div className="h-6 w-24 bg-gray-800 rounded animate-pulse"></div>
+        {/* Stats Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-gray-900 rounded-xl p-6 border border-gray-800"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-800 rounded-full animate-pulse"></div>
+                <div className="flex-1">
+                  <div className="h-3 w-20 bg-gray-800 rounded animate-pulse mb-2"></div>
+                  <div className="h-6 w-24 bg-gray-800 rounded animate-pulse"></div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Tabs Skeleton */}
-      <div className="flex gap-6 mb-6 border-b border-gray-800">
-        <div className="h-8 w-24 bg-gray-800 rounded-t animate-pulse"></div>
-        <div className="h-8 w-32 bg-gray-800 rounded-t animate-pulse"></div>
-      </div>
+        {/* Tabs Skeleton */}
+        <div className="flex gap-6 mb-6 border-b border-gray-800">
+          <div className="h-8 w-24 bg-gray-800 rounded-t animate-pulse"></div>
+          <div className="h-8 w-32 bg-gray-800 rounded-t animate-pulse"></div>
+        </div>
 
-      {/* Members Section */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="h-8 w-40 bg-gray-800 rounded animate-pulse"></div>
-        <div className="h-10 w-24 bg-indigo-900 rounded-lg animate-pulse"></div>
-      </div>
+        {/* Members Section */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-8 w-40 bg-gray-800 rounded animate-pulse"></div>
+          <div className="h-10 w-24 bg-indigo-900 rounded-lg animate-pulse"></div>
+        </div>
 
-      {/* Member Cards */}
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="bg-gray-900 rounded-xl p-4 border border-gray-800 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gray-800 rounded-full animate-pulse"></div>
-              <div>
-                <div className="h-5 w-32 bg-gray-800 rounded animate-pulse mb-2"></div>
-                <div className="h-3 w-16 bg-gray-800 rounded animate-pulse"></div>
+        {/* Member Cards */}
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-gray-900 rounded-xl p-4 border border-gray-800 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gray-800 rounded-full animate-pulse"></div>
+                <div>
+                  <div className="h-5 w-32 bg-gray-800 rounded animate-pulse mb-2"></div>
+                  <div className="h-3 w-16 bg-gray-800 rounded animate-pulse"></div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="h-4 w-16 bg-gray-800 rounded animate-pulse mb-2"></div>
+                <div className="h-3 w-12 bg-gray-800 rounded animate-pulse"></div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="h-4 w-16 bg-gray-800 rounded animate-pulse mb-2"></div>
-              <div className="h-3 w-12 bg-gray-800 rounded animate-pulse"></div>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  );
-}
-  if (!roomData) {
-  return <div className="text-4xl dark:text-white">{RoomSkeleton()}</div>;
+    );
   }
-
+  if (!roomData) {
+    return <div className="text-4xl dark:text-white">{RoomSkeleton()}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#000000] py-8 px-4 sm:px-6 lg:px-8">
@@ -192,7 +230,23 @@ const [roomData, setRoomData] = useState<RoomData | null>(null);
                 </button>
               )}
               <button className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors">
-                {isHost?<Delete size={20} onClick={()=>{leaveRoom({accessToken,roomId,isHost,roomCode}); router.push("/home/rooms")}} />:<LogOut size={20} onClick={()=>{leaveRoom({accessToken,roomId,isHost,roomCode}); router.push("/home/rooms")}} />}
+                {isHost ? (
+                  <Delete
+                    size={20}
+                    onClick={() => {
+                      leaveRoom({ accessToken, roomId, isHost, roomCode });
+                      router.push("/home/rooms");
+                    }}
+                  />
+                ) : (
+                  <LogOut
+                    size={20}
+                    onClick={() => {
+                      leaveRoom({ accessToken, roomId, isHost, roomCode });
+                      router.push("/home/rooms");
+                    }}
+                  />
+                )}
               </button>
             </div>
           </div>
@@ -310,6 +364,19 @@ const [roomData, setRoomData] = useState<RoomData | null>(null);
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400" />
               )}
             </button>
+            <button
+              onClick={() => setActiveTab("pending requests")}
+              className={`pb-4 px-2 font-semibold transition-colors relative ${
+                activeTab === "pending requests"
+                  ? "text-indigo-600 dark:text-indigo-400"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+              }`}
+            >
+              Pending requests..
+              {activeTab === "pending requests" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -337,7 +404,11 @@ const [roomData, setRoomData] = useState<RoomData | null>(null);
                     <div className="flex items-center gap-4">
                       <div className="relative">
                         <div className="w-14 h-14  flex items-center justify-center text-2xl shadow-md overflow-hidden rounded-full">
-                          <img src={member.avatar} alt="user profile" className="" />
+                          <img
+                            src={member.avatar}
+                            alt="user profile"
+                            className=""
+                          />
                         </div>
                         {member.isFocusing && (
                           <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white dark:border-[#18181B] rounded-full animate-pulse" />
@@ -385,9 +456,51 @@ const [roomData, setRoomData] = useState<RoomData | null>(null);
               ))}
             </div>
           </div>
-        ) : (
-          <div className="flex justify-center">
+        ) : activeTab === "leaderboard" ? (
+          <div className="flex justify-center ">
             <Leaderboard students={leaderboardStudents} />
+          </div>
+        ) : (
+          <div className="bg-white dark:bg-[#18181B] rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-700 transition-all duration-300">
+            {roomData.joinRequests && roomData.joinRequests.length <= 0 ? (
+              <p>No pending join request for this room...</p>
+            ) : (
+              <div className="flex-col gap-2 w-full h-[500px] overflow-y-auto scrollbar-hide">
+                {roomData.joinRequests &&
+                  roomData.joinRequests.map((joinRequest, index) => (
+                    <div
+                      key={index}
+                      className=" m-4 rounded-2xl p-2 px-4 flex justify-between bg-gray-50 dark:bg-gray-700"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 overflow-hidden rounded-full">
+                          <img
+                            src={joinRequest.user.image}
+                            alt="user profile image"
+                          />
+                        </div>
+                        <div className="font-semibold text-md text-black dark:text-white">
+                          <div>
+                            <p>{joinRequest.user.name}</p>
+                          </div>
+                        </div>
+                        <div></div>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <div className="bg-green-400 rounded-2xl p-2 m-2 px-4" onClick={()=>{
+                          setReqIndex(index);
+                          acceptJoinReq();
+                        }}>
+                          <p>{reqProcessing?"loading..": "Accept"}</p>
+                        </div>
+                        <div className="bg-red-400 rounded-2xl p-2 m-2 px-4">
+                          <p>{reqProcessing?"loading..": "Reject"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         )}
       </div>

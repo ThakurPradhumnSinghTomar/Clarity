@@ -7,10 +7,10 @@ export interface Room {
   hostId: string;
   createdAt: string;
   updatedAt: string;
-  memberCount : number
+  memberCount: number;
 }
 
- export type RoomMember = {
+export type RoomMember = {
   id: string;
   name: string;
   email: string;
@@ -20,7 +20,17 @@ export interface Room {
   rank: number;
 };
 
-export  type RoomData = {
+type joinRequest = {
+  id: string;
+  userId: string;
+  roomId: string;
+  status: string;
+  createdAt: string;
+  room: { roomCode: string };
+  user: { name: string; image: string };
+};
+
+export type RoomData = {
   id: string;
   name: string;
   description: string;
@@ -30,4 +40,5 @@ export  type RoomData = {
   memberCount: number;
   totalStudyTime: number;
   members: RoomMember[];
+  joinRequests: joinRequest[];
 };

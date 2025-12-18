@@ -123,6 +123,82 @@ roomRouter.get("/get-my-rooms", authMiddleware, async (req, res) => {
   }
 });
 
+roomRouter.post("/approve-joinroom-req", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const { roomCode, roomId, RequserId } = req.body;
+
+    if (!RequserId) {
+      return res.status(401).json({
+        success: "false",
+        message: "provide the user id of user that made this request of room join",
+      });
+    }
+
+    if (!roomCode) {
+      return res
+        .status(400)
+        .json({ success: "false", message: "please provide room code" });
+    }
+
+    const existingMember = await prisma.roomMember.findUnique({
+      where: {
+        userId_roomId: {
+          userId: RequserId,
+          roomId: roomId,
+        },
+      },
+    });
+
+    if (existingMember) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already a member of this room",
+      });
+    }
+
+    const roomMember = await prisma.roomMember.create({
+      //include statements are only for returning data, nothing contributing in creation
+      data: {
+        userId: RequserId,
+        roomId: roomId,
+        role: "member",
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+        room: {
+          select: {
+            id: true,
+            name: true,
+            roomCode: true,
+            isPublic: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "user successfully joined the room!",
+      roomMember: roomMember,
+    });
+  } catch (error: any) {
+    console.error("Error joining room:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while accepting joining room request of this user..",
+      error: error.message,
+    });
+  }
+});
+
 roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -354,6 +430,22 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
             },
           },
         },
+
+        joinRequests: {
+          include: {
+            room: {
+              select: {
+                roomCode: true,
+              },
+            },
+            user: {
+              select: {
+                name: true,
+                image: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -441,6 +533,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
       members: membersWithRanks,
       createdAt: room.createdAt,
       updatedAt: room.updatedAt,
+      joinRequests: room.joinRequests,
     };
 
     return res.status(200).json({
@@ -462,7 +555,7 @@ roomRouter.delete("/leave-room/:roomId", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
     const roomId = req.params.roomId;
-    const {isHost,roomCode} = req.body;
+    const { isHost, roomCode } = req.body;
 
     if (!userId) {
       return res.status(401).json({
@@ -478,31 +571,24 @@ roomRouter.delete("/leave-room/:roomId", authMiddleware, async (req, res) => {
       });
     }
 
-    if(isHost){
-
+    if (isHost) {
       const room = await prisma.room.delete({
-      where: {
-        roomCode : roomCode
+        where: {
+          roomCode: roomCode,
         },
-      })
+      });
 
-       if (!room) {
-      return res
-        .status(500)
-        .json({ success: "failed", message: "failed to delete the room..." });
-    }
+      if (!room) {
+        return res
+          .status(500)
+          .json({ success: "failed", message: "failed to delete the room..." });
+      }
 
-    return res
-      .status(201)
-      .json({
+      return res.status(201).json({
         success: "true",
         message: "successfully deleted the room...",
         room,
       });
-
-
-   
-      
     }
 
     const roomMember = await prisma.roomMember.delete({
@@ -520,13 +606,11 @@ roomRouter.delete("/leave-room/:roomId", authMiddleware, async (req, res) => {
         .json({ success: "failed", message: "failed to leave the room..." });
     }
 
-    return res
-      .status(201)
-      .json({
-        success: "true",
-        message: "successfully leaved the room...",
-        roomMember,
-      });
+    return res.status(201).json({
+      success: "true",
+      message: "successfully leaved the room...",
+      roomMember,
+    });
   } catch (error) {
     return res
       .status(500)

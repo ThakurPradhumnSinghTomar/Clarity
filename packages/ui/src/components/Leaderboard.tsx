@@ -52,7 +52,7 @@ const Leaderboard = ({ students }: LeaderboardProps) => {
   const sortedStudents = [...students].sort((a, b) => b.totalHours - a.totalHours);
 
   return (
-    <div className='min-h-[608px] md:min-w-[800px] bg-white dark:bg-[#1F1F22] text-gray-900 dark:text-white rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden mt-4 w-full'>
+    <div className='min-h-[608px] md:min-w-[800px] bg-white dark:bg-[#1F1F22] text-gray-900 dark:text-white rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden mt-4 w-full transition-all duration-300'>
       
       {/* Header */}
       <div className='dark:bg-[#18181B] bg-[#B1B6A6] p-6'>
