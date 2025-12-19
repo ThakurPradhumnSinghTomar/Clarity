@@ -80,6 +80,41 @@ const RoomPage = () => {
     }
   };
 
+  const rejectJoinReq = async () => {
+   try {
+      const RequserId = roomData?.joinRequests[reqIndex].userId
+      setReqProcessing(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/reject-joinroom-req`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: JSON.stringify({ roomCode,roomId,RequserId})
+        }
+      );
+
+      if(!response||!response.ok){
+        console.error("failed to reject the user join request..")
+        setReqProcessing(false);
+        return ;
+      }
+
+      setReqProcessing(false);
+
+      console.log("user respectfully rejected to join the room... request rejected..")
+      return ;
+
+    } catch (error) {
+      console.error("failed to reject the user join request..",error);
+      setReqProcessing(false);
+      return ;
+
+    }
+  };
+
   const loadRoomData = async () => {
     try {
       const room = await fetch(
@@ -486,17 +521,22 @@ const RoomPage = () => {
                         </div>
                         <div></div>
                       </div>
-                      <div className="flex gap-2 items-center">
+                      {
+                        joinRequest.status=="pending"?<div className="flex gap-2 items-center">
                         <div className="bg-green-400 rounded-2xl p-2 m-2 px-4" onClick={()=>{
                           setReqIndex(index);
                           acceptJoinReq();
                         }}>
                           <p>{reqProcessing?"loading..": "Accept"}</p>
                         </div>
-                        <div className="bg-red-400 rounded-2xl p-2 m-2 px-4">
+                        <div onClick={()=>{
+                           setReqIndex(index);
+                          rejectJoinReq();
+                        }} className="bg-red-400 rounded-2xl p-2 m-2 px-4">
                           <p>{reqProcessing?"loading..": "Reject"}</p>
                         </div>
-                      </div>
+                      </div>:<div className="bg-yellow-400 rounded-2xl p-2 m-2 px-4">{joinRequest.status}</div>
+                      }
                     </div>
                   ))}
               </div>

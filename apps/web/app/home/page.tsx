@@ -207,11 +207,11 @@ const Home = () => {
           )}
         </div>
 
-        <div className="max-w-xl text-gray-900 dark:text-white  bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-zinc-900 dark:to-zinc-800 p-6 rounded-xl border border-indigo-200 dark:border-zinc-700 shadow-lg md:min-w-[750px] relative overflow-hidden mb-4 h-[608px] mt-4">
+        <div className="max-w-xl text-gray-900 dark:text-white  bg-linear-to-br from-indigo-50 to-purple-50 dark:from-zinc-900 dark:to-zinc-800 p-6 rounded-xl border border-indigo-200 dark:border-zinc-700 shadow-lg md:min-w-[750px] relative overflow-hidden mb-4 h-[608px] mt-4">
           <h1 className="text-2xl font-semibold">My Rooms : </h1>
 
           {!isLoadingRooms && !error && myRooms.length > 0 && (
-            <div className="grid grid-cols-1 gap-2 mt-6  h-[500px] overflow-y-auto w-full scrollbar-hide">
+            <div className="grid grid-cols-1 gap-2 mt-6  overflow-y-auto w-full scrollbar-hide py-4">
               {myRooms.map((room) => (
                 <div
                   className="mx-2"

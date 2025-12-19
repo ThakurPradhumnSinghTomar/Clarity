@@ -23,7 +23,7 @@ roomRouter.post("/create-room", authMiddleware, async (req, res) => {
       });
     }
 
-    const { name, description, isPublic } = req.body; // No roomCode needed!
+    const { name, description, isPublic } = req.body;
 
     // Proper validation
     if (!name || isPublic === undefined) {
@@ -40,7 +40,7 @@ roomRouter.post("/create-room", authMiddleware, async (req, res) => {
       data: {
         name: name,
         description: description || null,
-        roomCode: roomCode, // Auto-generated code
+        roomCode: roomCode,
         isPublic: isPublic,
         hostId: userId,
       },
@@ -76,10 +76,9 @@ roomRouter.get("/get-my-rooms", authMiddleware, async (req, res) => {
     const myRooms = await prisma.room.findMany({
       where: {
         OR: [
-          { hostId: userId }, // Rooms I created
+          { hostId: userId },
           {
             members: {
-              // Rooms I joined (if you have this relation)
               some: {
                 userId: userId,
               },
@@ -98,7 +97,6 @@ roomRouter.get("/get-my-rooms", authMiddleware, async (req, res) => {
             email: true,
           },
         },
-        // Include participant count if needed
         _count: {
           select: {
             members: true,
@@ -125,20 +123,20 @@ roomRouter.get("/get-my-rooms", authMiddleware, async (req, res) => {
 
 roomRouter.post("/approve-joinroom-req", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.id;
     const { roomCode, roomId, RequserId } = req.body;
 
     if (!RequserId) {
       return res.status(401).json({
-        success: "false",
-        message: "provide the user id of user that made this request of room join",
+        success: false,
+        message:
+          "provide the user id of user that made this request of room join",
       });
     }
 
     if (!roomCode) {
       return res
         .status(400)
-        .json({ success: "false", message: "please provide room code" });
+        .json({ success: false, message: "please provide room code" });
     }
 
     const existingMember = await prisma.roomMember.findUnique({
@@ -153,47 +151,114 @@ roomRouter.post("/approve-joinroom-req", authMiddleware, async (req, res) => {
     if (existingMember) {
       return res.status(400).json({
         success: false,
-        message: "You are already a member of this room",
+        message: "User is already a member of this room",
       });
     }
 
-    const roomMember = await prisma.roomMember.create({
-      //include statements are only for returning data, nothing contributing in creation
-      data: {
-        userId: RequserId,
-        roomId: roomId,
-        role: "member",
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
+    // Use a transaction to ensure both operations succeed or fail together
+    const result = await prisma.$transaction(async (tx) => {
+      // Create room member
+      const roomMember = await tx.roomMember.create({
+        data: {
+          userId: RequserId,
+          roomId: roomId,
+          role: "member",
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+          room: {
+            select: {
+              id: true,
+              name: true,
+              roomCode: true,
+              isPublic: true,
+            },
           },
         },
-        room: {
-          select: {
-            id: true,
-            name: true,
-            roomCode: true,
-            isPublic: true,
+      });
+
+      // Delete the join request after approval
+      await tx.joinRequest.delete({
+        where: {
+          userId_roomId_joinRequest: {
+            userId: RequserId,
+            roomId: roomId,
           },
         },
-      },
+      });
+
+      return roomMember;
     });
 
     return res.status(200).json({
       success: true,
-      message: "user successfully joined the room!",
-      roomMember: roomMember,
+      message: "User successfully joined the room!",
+      roomMember: result,
     });
   } catch (error: any) {
-    console.error("Error joining room:", error);
+    console.error("Error approving join request:", error);
     res.status(500).json({
       success: false,
-      message: "Error occurred while accepting joining room request of this user..",
+      message:
+        "Error occurred while accepting joining room request of this user..",
+      error: error.message,
+    });
+  }
+});
+
+roomRouter.post("/reject-joinroom-req", authMiddleware, async (req, res) => {
+  try {
+    const { roomCode, roomId, RequserId } = req.body;
+
+    if (!RequserId) {
+      return res.status(401).json({
+        success: false,
+        message:
+          "provide the user id of user that made this request of room join",
+      });
+    }
+
+    if (!roomCode) {
+      return res
+        .status(400)
+        .json({ success: false, message: "please provide room code" });
+    }
+
+    const response = await prisma.joinRequest.update({
+      where: {
+        userId_roomId_joinRequest: {
+          userId: RequserId,
+          roomId: roomId,
+        },
+      },
+      data: {
+        status: "REJECTED",
+      },
+    });
+
+    if (!response) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to reject the request",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Request is respectfully rejected",
+    });
+  } catch (error: any) {
+    console.error("Error rejecting join request:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reject the request",
       error: error.message,
     });
   }
@@ -206,7 +271,7 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
 
     if (!userId) {
       return res.status(401).json({
-        success: "false",
+        success: false,
         message: "user is not authenticated, no userid in request",
       });
     }
@@ -214,10 +279,10 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
     if (!roomCode) {
       return res
         .status(400)
-        .json({ success: "false", message: "please provide room code" });
+        .json({ success: false, message: "please provide room code" });
     }
 
-    //find the room user want to join
+    // Find the room user wants to join
     const room = await prisma.room.findUnique({
       where: {
         roomCode: roomCode,
@@ -230,7 +295,6 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
             email: true,
           },
         },
-
         _count: {
           select: {
             members: true,
@@ -269,15 +333,10 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
       });
     }
 
-    //two paths, wether joining a private room, or a public room
-
-    //if joining a public room join directly without creating a reqeust to host
-
-    //but if joining in a private room, just create a pending request instead of joining a room, host will deciede it..
+    // Two paths: joining a public room or a private room
     if (!room.isPublic) {
-      //check krlo khin phle se ho to req nhi daal rakhi h
+      // Check if there's an existing request
       const existingRequest = await prisma.joinRequest.findUnique({
-        //userId_roomId_joinRequest is the index we defined in the schema . prisma of this model
         where: {
           userId_roomId_joinRequest: {
             userId: userId,
@@ -292,11 +351,25 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
             success: false,
             message: "You already have a pending join request for this room",
           });
-        } else if (existingRequest.status === "rejected") {
-          return res.status(403).json({
-            success: false,
+        } else if (existingRequest.status === "REJECTED") {
+          // Update the rejected request back to pending
+          const updatedRequest = await prisma.joinRequest.update({
+            where: {
+              userId_roomId_joinRequest: {
+                userId: userId,
+                roomId: room.id,
+              },
+            },
+            data: {
+              status: "pending",
+            },
+          });
+
+          return res.status(200).json({
+            success: true,
             message:
-              "Your join request was rejected. Please contact the room host.",
+              "Join request re-sent to the room host. You'll be notified once approved.",
+            joinRequest: updatedRequest,
           });
         }
       }
@@ -320,7 +393,6 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
 
     // If room is public, directly add user as member
     const roomMember = await prisma.roomMember.create({
-      //include statements are only for returning data, nothing contributing in creation
       data: {
         userId: userId,
         roomId: room.id,
@@ -356,7 +428,7 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
         description: room.description,
         roomCode: room.roomCode,
         isPublic: room.isPublic,
-        memberCount: room._count.members + 1, // +1 for the new member
+        memberCount: room._count.members + 1,
         host: room.host,
       },
     });
@@ -421,7 +493,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
                   orderBy: {
                     weekStart: "desc",
                   },
-                  take: 1, // Only get latest week
+                  take: 1,
                   select: {
                     totalSec: true,
                   },
@@ -430,7 +502,6 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
             },
           },
         },
-
         joinRequests: {
           include: {
             room: {
@@ -477,9 +548,9 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
         userId: member.user.id,
         name: member.user.name,
         email: member.user.email,
-        avatar: member.user.image || "👤", // Default avatar
+        avatar: member.user.image || "👤",
         isFocusing: member.user.isFocusing || false,
-        studyTime: Math.floor(studyTimeSeconds / 60), // Convert to minutes
+        studyTime: Math.floor(studyTimeSeconds / 60),
         joinedAt: member.joinedAt,
         role: member.role,
       };
@@ -579,14 +650,15 @@ roomRouter.delete("/leave-room/:roomId", authMiddleware, async (req, res) => {
       });
 
       if (!room) {
-        return res
-          .status(500)
-          .json({ success: "failed", message: "failed to delete the room..." });
+        return res.status(500).json({
+          success: false,
+          message: "Failed to delete the room",
+        });
       }
 
-      return res.status(201).json({
-        success: "true",
-        message: "successfully deleted the room...",
+      return res.status(200).json({
+        success: true,
+        message: "Successfully deleted the room",
         room,
       });
     }
@@ -601,20 +673,24 @@ roomRouter.delete("/leave-room/:roomId", authMiddleware, async (req, res) => {
     });
 
     if (!roomMember) {
-      return res
-        .status(500)
-        .json({ success: "failed", message: "failed to leave the room..." });
+      return res.status(500).json({
+        success: false,
+        message: "Failed to leave the room",
+      });
     }
 
-    return res.status(201).json({
-      success: "true",
-      message: "successfully leaved the room...",
+    return res.status(200).json({
+      success: true,
+      message: "Successfully left the room",
       roomMember,
     });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: "failed", message: "failed to leave the room..." });
+  } catch (error: any) {
+    console.error("Error leaving room:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to leave the room",
+      error: error.message,
+    });
   }
 });
 

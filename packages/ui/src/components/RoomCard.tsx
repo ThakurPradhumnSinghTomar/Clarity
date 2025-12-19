@@ -29,7 +29,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-[#27272A] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+    <div className="bg-white dark:bg-[#27272A] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer mb-0">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div 
