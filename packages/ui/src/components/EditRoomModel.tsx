@@ -35,6 +35,7 @@ export const EditRoomModel = ({
 async function updateRoom() {
   setIsUpdating(true);
   try {
+    console.log("membersToDelete Are : ",memToRemove)
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/update-room`,
       {
@@ -47,7 +48,8 @@ async function updateRoom() {
           name: roomName,
           description: roomDes,
           isPublic: !isPrivate,
-          membersToRemove: memToRemove.map(m => m.id),
+          roomId :roomData.id,
+          membersToRemove: memToRemove.map(m => m.userId),
         }),
       }
     );
@@ -218,7 +220,7 @@ async function updateRoom() {
               </div>
 
               <div className="space-y-2">
-                {roomData.members.map((member) => (
+                {roomData.members.filter(m=>m.userId!==roomData.hostId).map((member) => (
                   <div
                     key={member.id}
                     className="bg-white dark:bg-[#18181B] p-4 rounded-lg border dark:border-gray-700"
@@ -254,7 +256,7 @@ async function updateRoom() {
             </div>
 
             <div className="mt-6 flex justify-center">
-              <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+              <button disabled={isUpdating} onClick={()=>{updateRoom();}} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                 Update
               </button>
             </div>

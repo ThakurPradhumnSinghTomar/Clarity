@@ -12,6 +12,7 @@ export interface Room {
 
 export type RoomMember = {
   id: string;
+  userId : string;
   name: string;
   email: string;
   avatar: string;
@@ -37,6 +38,7 @@ export type RoomData = {
   roomCode: string;
   isPublic: boolean;
   isHost: boolean;
+  hostId : string;
   memberCount: number;
   totalStudyTime: number;
   members: RoomMember[];

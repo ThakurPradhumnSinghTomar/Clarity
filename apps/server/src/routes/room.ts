@@ -598,6 +598,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
       roomCode: room.roomCode,
       isPublic: room.isPublic,
       isHost: isHost,
+      hostId : room.hostId,
       memberCount: room.members.length,
       totalStudyTime: totalStudyTime,
       host: room.host,
@@ -694,8 +695,76 @@ roomRouter.delete("/leave-room/:roomId", authMiddleware, async (req, res) => {
   }
 });
 
-roomRouter.patch("/update-room",authMiddleware,async (req,res)=>{
-  
-})
+roomRouter.patch("/update-room", authMiddleware, async (req, res) => {
+  try {
+    const { name, description, membersToRemove, roomId, isPublic } = req.body;
+    const userId = req.user?.id;
+
+    if (
+      !name ||
+      !description ||
+      !roomId ||
+      !Array.isArray(membersToRemove) ||
+      typeof isPublic !== "boolean"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request payload",
+      });
+    }
+
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      select: { hostId: true },
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
+    if (room.hostId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Only host can update the room",
+      });
+    }
+
+    console.log("membersToDelete Are : ",membersToRemove)
+
+    await prisma.roomMember.deleteMany({
+      where: {
+        roomId,
+        userId: {
+          in: membersToRemove,
+        },
+      },
+    });
+
+    await prisma.room.update({
+      where: { id: roomId },
+      data: {
+        name,
+        description,
+        isPublic,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Room updated successfully",
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update room",
+      error,
+    });
+  }
+});
+
 
 export default roomRouter;

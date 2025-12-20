@@ -421,10 +421,7 @@ const RoomPage = () => {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Room Members
               </h2>
-              <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                <UserPlus size={20} />
-                <span>Invite</span>
-              </button>
+             
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
