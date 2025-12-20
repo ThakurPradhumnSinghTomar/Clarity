@@ -21,6 +21,8 @@ import { leaveRoom } from "@/lib/helpfulFunctions/roomsRelated/leaveRoom";
 import { useRouter } from "next/navigation";
 import { RoomData, RoomMember } from "@repo/types";
 import { div } from "framer-motion/client";
+import {EditRoomModel} from "@repo/ui";
+import { formatStudyTime } from "@/lib/helpfulFunctions/formatStudyTime";
 
 const RoomPage = () => {
   const [copiedCode, setCopiedCode] = useState(false);
@@ -33,6 +35,7 @@ const RoomPage = () => {
   const [isReqAccepted, setisReqAccepted] = useState(false);
   const [isReqRejected, setisReqRejected] = useState(false);
   const [reqProcessing,setReqProcessing] = useState(false);
+  const [isRoomEditModelOpen,setIsEditModelOpen] = useState(false);
   const [reqIndex,setReqIndex] = useState(0);
   const params = useParams();
   const roomId = params.id as string;
@@ -158,11 +161,7 @@ const RoomPage = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const formatStudyTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
-  };
+
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Crown className="text-yellow-500" size={20} />;
@@ -260,7 +259,7 @@ const RoomPage = () => {
             </div>
             <div className="flex gap-3">
               {roomData.isHost && (
-                <button className="p-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-700">
+                <button onClick={()=>{setIsEditModelOpen(true)}} className="p-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-700">
                   <Settings size={20} />
                 </button>
               )}
@@ -544,6 +543,11 @@ const RoomPage = () => {
           </div>
         )}
       </div>
+
+      
+       <div className="flex justify-center items-center w-full"><EditRoomModel isOpen={isRoomEditModelOpen} roomData={roomData} setIsOpen={setIsEditModelOpen}></EditRoomModel></div>
+      
+
     </div>
   );
 };

@@ -694,4 +694,8 @@ roomRouter.delete("/leave-room/:roomId", authMiddleware, async (req, res) => {
   }
 });
 
+roomRouter.patch("/update-room",authMiddleware,async (req,res)=>{
+  
+})
+
 export default roomRouter;
