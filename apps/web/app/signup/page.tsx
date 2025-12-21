@@ -92,15 +92,6 @@ export default function SignupPage() {
     }
   };
 
-  // ============================================
-  // IMAGE UPLOAD HANDLER
-  // ============================================
-  /**
-   * Handles image selection and upload process
-   * 1. Shows preview immediately (for better UX)
-   * 2. Uploads to Cloudinary in background
-   * 3. Updates form data with Cloudinary URL
-   */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; // Get the first selected file
     if (file) {
