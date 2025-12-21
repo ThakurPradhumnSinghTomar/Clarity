@@ -105,26 +105,7 @@ beforeunload fires
 → returns early
 */
 
-  async function setUserFocusing(isFocusing: boolean) {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({ isFocusing }),
-      }
-    );
 
-    if (!response.ok) {
-      console.log("Failed to update focusing state");
-      return;
-    }
-
-    console.log("Focusing state updated");
-  }
   // Timer completion check
   useEffect(() => {
     if (type === "Timer" && isRunning && currentTime >= timerDuration) {
@@ -195,7 +176,6 @@ beforeunload fires
       setSessionStartTime(now);
       setPausedAt(null);
       setIsRunning(true);
-      await setUserFocusing(true);
     }
   }
 
@@ -210,7 +190,6 @@ beforeunload fires
       setAccumulatedTime((prev) => prev + elapsedSeconds);
 
       setIsRunning(false);
-      await setUserFocusing(false);
       setSessionStartTime(null);
     }
   }
@@ -271,7 +250,6 @@ beforeunload fires
 
       // Reset everything
       handleReset();
-      await setUserFocusing(false);
 
       setisSavingSession(false);
 
@@ -296,6 +274,30 @@ beforeunload fires
       intervalRef.current = null;
     }
   }
+
+
+  useEffect(() => {
+  if (!isRunning || !session?.accessToken) return;
+
+  const sendHeartbeat = () => {
+    fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing/heartbeat`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+      }
+    ).catch(() => {});
+  };
+
+  sendHeartbeat(); // immediate ping when focusing starts
+
+  const intervalId = setInterval(sendHeartbeat, 30_000); // every 30s
+
+  return () => clearInterval(intervalId);
+}, [isRunning, session?.accessToken]);
+
 
   return (
     <div className="min-h-screen flex justify-center bg-white dark:bg-black">

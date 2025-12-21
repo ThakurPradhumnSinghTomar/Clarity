@@ -6,6 +6,12 @@ import { error } from "node:console";
 
 const roomRouter = express.Router();
 
+const isUserFocusing = (lastPinged: Date | null) => {
+  if (!lastPinged) return false;
+  return Date.now() - new Date(lastPinged).getTime() < 60_000; // 60s window
+};
+
+
 roomRouter.get("/", (req, res) => {
   return res
     .status(201)
@@ -442,6 +448,8 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
   }
 });
 
+
+
 roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -472,7 +480,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
             name: true,
             email: true,
             image: true,
-            isFocusing: true,
+            lastPinged: true,
             weeklyStudyHours: {
               orderBy: { weekStart: "desc" },
               take: 1,
@@ -488,7 +496,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
                 name: true,
                 email: true,
                 image: true,
-                isFocusing: true,
+                lastPinged: true,
                 weeklyStudyHours: {
                   orderBy: {
                     weekStart: "desc",
@@ -549,7 +557,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
         name: member.user.name,
         email: member.user.email,
         avatar: member.user.image || "👤",
-        isFocusing: member.user.isFocusing || false,
+       isFocusing: isUserFocusing(member.user.lastPinged),
         studyTime: Math.floor(studyTimeSeconds / 60),
         joinedAt: member.joinedAt,
         role: member.role,
@@ -565,7 +573,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
       name: room.host.name,
       email: room.host.email,
       avatar: room.host.image || "👑",
-      isFocusing: room.host.isFocusing || false,
+      isFocusing: isUserFocusing(room.host.lastPinged),
       studyTime: Math.floor(hostStudySeconds / 60),
       joinedAt: room.createdAt,
       role: "host",

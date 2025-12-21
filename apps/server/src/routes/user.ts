@@ -333,9 +333,10 @@ userRouter.patch("/update-profile", authMiddleware, async (req, res) => {
   }
 });
 
-userRouter.patch("/focusing", authMiddleware, async (req, res) => {
+userRouter.post("/focusing/heartbeat", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
+
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -343,28 +344,23 @@ userRouter.patch("/focusing", authMiddleware, async (req, res) => {
       });
     }
 
-    const { isFocusing } = req.body;
-
-    if (typeof isFocusing !== "boolean") {
-      return res.status(400).json({
-        success: false,
-        message: "isFocusing must be a boolean",
-      });
-    }
-
-    const updatedUser = await prisma.user.update({
+    await prisma.user.update({
       where: { id: userId },
-      data: { isFocusing },
+      data: {
+        lastPinged: new Date(),
+      },
     });
 
     return res.status(200).json({
       success: true,
-      message: isFocusing ? "User started focusing" : "User stopped focusing",
+      message: "Focusing heartbeat recorded",
     });
   } catch (error) {
+    console.error("Error in focusing heartbeat:", error);
+
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Failed to record focusing heartbeat",
     });
   }
 });
