@@ -33,7 +33,7 @@ const layout = ({children} : { children: React.ReactNode }) => {
   }
 
   return (
-    <div className='min-h-screen bg-white dark:bg-black'>
+    <div className='min-h-screen bg-white dark:bg-[#232630]'>
       <div className='fixed top-0 left-0 w-full z-50'>
         <Header />
       </div>

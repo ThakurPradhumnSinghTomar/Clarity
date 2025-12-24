@@ -39,7 +39,7 @@ const RoomsPage = () => {
   }, [session]);
 
   
-  const handleCreateRoom = async (roomName: string, isPrivate: boolean, roomDiscription: string) => {
+  const handleCreateRoom = async (roomName: string, isPrivate: boolean, roomDiscription: string, setIsCreatingRoom : React.Dispatch<React.SetStateAction<boolean>> ) => {
     setIsCreatingRoom(true);
 
     try {

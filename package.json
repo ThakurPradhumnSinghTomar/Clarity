@@ -24,6 +24,7 @@
     "packages/*"
   ],
   "dependencies": {
+    "framer-motion": "^12.23.26",
     "mongodb": "^7.0.0"
   }
 }

@@ -11,3 +11,4 @@ export {CreateRoomModal} from "./components/createRoomModal";
 export {JoinRoomModal} from "./components/joinRoomModel";
 export {ToastProvider} from "./components/toastProvider";
 export {EditRoomModel} from "./components/EditRoomModel";
+export {default as RoomTabs} from "./components/RoomTabs"

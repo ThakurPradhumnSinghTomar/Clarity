@@ -14,7 +14,7 @@ const QuoteBox = () => {
       setQuote(d.content);
       setAuthor(d.author);
     } catch (e) {
-      setQuote("Be not afraid of greatness: some are born great, some achieve greatness, and some have greatness thrust upon them.");
+      setQuote("Working towards your dreams is hard. Not reaching them is harder.");
       setAuthor("William Shakespeare");
     }
     setLoading(false);

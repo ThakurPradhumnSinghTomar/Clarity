@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { QuoteBox, RoomCard } from "@repo/ui";
+import { CreateRoomModal, QuoteBox, RoomCard, RoomTabs } from "@repo/ui";
 import { Histogram } from "@repo/ui";
 import { Leaderboard } from "@repo/ui";
 import { useSession } from "next-auth/react";
@@ -10,6 +10,10 @@ import { Room } from "@repo/types";
 import { transformRoomData } from "@/lib/helpfulFunctions/transformRoomData";
 import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData";
 import { div } from "framer-motion/client";
+import { motion } from "framer-motion";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AnimatePresence } from "framer-motion";
 
 // Loading Skeleton Components
 const HistogramSkeleton = () => (
@@ -44,7 +48,8 @@ const Home = () => {
   const [myRooms, setMyRooms] = useState<Room[]>([]);
   const [histogramPage, setHistogramPage] = useState(0);
   const [stopNow, setStopNow] = useState(false);
-  const [noWeeklyData,setNoWeeklyData]=useState(false);
+  const [noWeeklyData, setNoWeeklyData] = useState(false);
+  const [roomSelection, setRoomSelection] = useState("My Rooms");
   const router = useRouter();
   const accessToken = session?.accessToken;
   if (!accessToken) {
@@ -169,12 +174,124 @@ const Home = () => {
   }, [session?.accessToken]);
 
   return (
-    <div className="min-h-[675px] pt-10 pb-4">
+    <div className="flex-col pb-10">
+      <div className="flex flex-col items-center justify-center text-center px-4 gap-6 mt-10 ">
+        {/* FOCUSING / ONLINE BADGE */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="
+          flex items-center gap-2
+          px-4 py-1.5
+          rounded-full
+          bg-neutral-800/80
+          text-sm
+          text-white
+        "
+        >
+          <span className="h-2 w-2 rounded-full bg-green-500" />
+          <span className="font-medium tracking-wide">167 FOCUSING NOW</span>
+        </motion.div>
+
+        {/* MAIN HEADING */}
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+          className="
+          font-poppins
+          font-semibold
+          text-[40px]
+          sm:text-[48px]
+          md:text-[56px]
+          lg:text-[64px]
+          leading-tight
+          tracking-[-0.02em]
+          text-neutral-900
+          dark:text-white
+          max-w-[900px]
+        "
+        >
+          Working towards your dreams is hard.
+          <br />
+          Not reaching them is harder.
+        </motion.h1>
+
+        {/* SUBTEXT */}
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+          className="
+          text-neutral-600
+          dark:text-white/70
+          text-base
+          md:text-lg
+        "
+        >
+          Get work done with others from around the 🌍
+        </motion.p>
+
+        {/* CTA BUTTON */}
+        <motion.button
+          initial={{ opacity: 0, y: 0 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+          className="
+          mt-2
+          px-6 py-3
+          rounded-full
+          bg-white
+          text-black
+          font-medium
+          text-sm
+          hover:bg-neutral-200
+          transition
+        "
+        >
+          Start Focusing Now
+        </motion.button>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 26 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, delay: 0.6 }}
+        className="dark:bg-[#272A34] border border-[#272A34] mx-30 min-h-[400px] mt-30 rounded-2xl"
+      >
+        <div className="flex justify-center items-center">
+          <RoomTabs
+            roomSelection={roomSelection}
+            setRoomSelection={setRoomSelection}
+            tabs={["Create Rooms", "My Rooms", "Join Rooms"]}
+          />
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={roomSelection}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.35, ease: "easeInOut" }}
+          >
+            {roomSelection === "Create Rooms" && <CreateRoomModal></CreateRoomModal>}
+            {roomSelection === "My Rooms" && <MyRooms />}
+            {roomSelection === "Join Rooms" && <JoinRooms />}
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  );
+};
+
+export default Home;
+
+/*
+<div className="min-h-[675px] pt-10 pb-4">
       <div className="md:flex md:justify-center gap-4">
         <div className="p-4 md:min-w-2xl">
-          <div className="min-h-[165px] mb-6 md:mb-0">
-            <QuoteBox />
-          </div>
           {isLoadingHistogram ? (
             <HistogramSkeleton />
           ) : (
@@ -228,7 +345,4 @@ const Home = () => {
         </div>
       </div>
     </div>
-  );
-};
-
-export default Home;
+    */
