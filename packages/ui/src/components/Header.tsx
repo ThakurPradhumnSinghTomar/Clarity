@@ -22,7 +22,7 @@ const Header = () => {
   };
 
   return (
-    <div className='bg-white dark:bg-[#232630] text-gray-900 dark:text-white px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 shadow-sm' onMouseLeave={()=>{setisOptions(false); setisMode(false); }}>
+    <div className='bg-white dark:bg-[#232630] text-gray-900 dark:text-white px-6 py-2 flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 shadow-sm' onMouseLeave={()=>{setisOptions(false); setisMode(false); }}>
       {/* Logo */}
       <div className='font-bold cursor-pointer text-2xl hover:scale-105 transition-transform duration-200'>Rebuild</div>
       

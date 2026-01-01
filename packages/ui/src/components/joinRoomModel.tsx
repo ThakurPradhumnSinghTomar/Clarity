@@ -1,106 +1,122 @@
 "use client"
-import React, { useState } from 'react';
-import { X, Lock, Globe, Key } from 'lucide-react';
+
+import React, { useState } from "react"
+import { motion } from "framer-motion"
+import { Key } from "lucide-react"
 
 interface JoinRoomModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (inviteCode: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (inviteCode: string) => void
 }
 
 export const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
   isOpen,
   onClose,
-  onSubmit
+  onSubmit,
 }) => {
-  const [inviteCode, setInviteCode] = useState('');
+  const [inviteCode, setInviteCode] = useState("")
 
   const handleSubmit = () => {
-    if (inviteCode.trim()) {
-      onSubmit(inviteCode.trim());
-      setInviteCode('');
-    }
-  };
+    if (!inviteCode.trim()) return
+    onSubmit(inviteCode.trim())
+    setInviteCode("")
+  }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSubmit();
-    }
-  };
-
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Join Room
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -24 }}
+      transition={{ duration: 0.35, ease: "easeInOut" }}
+      className="
+        w-full max-w-xl mx-auto
+        rounded-2xl
+        border border-neutral-200 dark:border-neutral-700
+        bg-neutral-50 dark:bg-[#272A34]
+      "
+    >
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-neutral-200 dark:border-neutral-700">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
+          Join a Room
+        </h2>
+      </div>
 
-        {/* Body */}
-        <div className="p-6 space-y-4">
-          {/* Info Card */}
-          <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Key size={20} className="text-white" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                  Need an Invite Code?
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Ask the room creator or an existing member to share their invite code with you.
-                </p>
-              </div>
+      {/* Body */}
+      <div className="p-6 space-y-6">
+        {/* Info card */}
+        <div className="
+          flex gap-4 p-4 rounded-xl
+          border border-neutral-200 dark:border-neutral-700
+          bg-white dark:bg-neutral-800
+        ">
+          <div className="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+            <Key size={18} />
+          </div>
+          <div>
+            <div className="font-medium text-neutral-900 dark:text-white">
+              Invite Code Required
+            </div>
+            <div className="text-sm text-neutral-600 dark:text-neutral-400">
+              Ask the room creator or a member to share the invite code.
             </div>
           </div>
-
-          {/* Invite Code Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Invite Code
-            </label>
-            <input
-              type="text"
-              value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter invite code..."
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-mono text-lg tracking-wider"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Invite codes are case-insensitive and usually 6-8 characters long
-            </p>
-          </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!inviteCode.trim()}
-          >
-            Join Room
-          </button>
+        {/* Invite Code Input */}
+        <div>
+          <label className="block text-sm font-medium mb-2 text-neutral-700 dark:text-neutral-300">
+            Invite Code
+          </label>
+          <input
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+            placeholder="ENTER CODE"
+            className="
+              w-full px-4 py-3 rounded-xl
+              bg-white dark:bg-neutral-800
+              border border-neutral-300 dark:border-neutral-600
+              text-neutral-900 dark:text-white
+              font-mono tracking-widest
+              focus:outline-none focus:ring-2 focus:ring-indigo-500
+            "
+          />
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            Codes are usually 6–8 characters
+          </p>
         </div>
       </div>
-    </div>
-  );
-};
+
+      {/* Footer */}
+      <div className="px-6 py-5 flex justify-end gap-3 border-t border-neutral-200 dark:border-neutral-700">
+        <button
+          onClick={onClose}
+          className="
+            px-5 py-2 rounded-xl
+            text-neutral-700 dark:text-neutral-300
+            hover:bg-neutral-200 dark:hover:bg-neutral-700
+            transition
+          "
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleSubmit}
+          disabled={!inviteCode.trim()}
+          className="
+            px-6 py-2 rounded-xl
+            bg-indigo-600 text-white
+            hover:bg-indigo-700
+            disabled:opacity-50
+          "
+        >
+          Join Room
+        </button>
+      </div>
+    </motion.div>
+  )
+}

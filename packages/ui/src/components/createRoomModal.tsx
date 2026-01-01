@@ -42,18 +42,13 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
       exit={{ opacity: 0, y: -24 }}
       transition={{ duration: 0.35, ease: "easeInOut" }}
       className="
-        w-full max-w-xl mx-auto
+        w-full mx-auto max-w-xl
         rounded-2xl
         border border-neutral-200 dark:border-neutral-700
         bg-neutral-50 dark:bg-[#272A34]
       "
     >
-      {/* Header */}
-      <div className="px-6 py-5 border-b border-neutral-200 dark:border-neutral-700">
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
-          Create New Room
-        </h2>
-      </div>
+     
 
       {/* Body */}
       <div className="p-6 space-y-6">

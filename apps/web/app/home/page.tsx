@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { CreateRoomModal, QuoteBox, RoomCard, RoomTabs } from "@repo/ui";
+import {
+  CreateRoomModal,
+  Footer,
+  JoinRoomModal,
+  MyRoomsPanel,
+  QuoteBox,
+  RoomCard,
+  RoomTabs,
+} from "@repo/ui";
 import { Histogram } from "@repo/ui";
 import { Leaderboard } from "@repo/ui";
 import { useSession } from "next-auth/react";
@@ -14,6 +22,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence } from "framer-motion";
+import { handleCreateRoom } from "@/lib/helpfulFunctions/roomsRelated/handleCreateRoom";
+import { handleJoinRoom } from "@/lib/helpfulFunctions/roomsRelated/handleJoinRoom";
 
 // Loading Skeleton Components
 const HistogramSkeleton = () => (
@@ -50,6 +60,7 @@ const Home = () => {
   const [stopNow, setStopNow] = useState(false);
   const [noWeeklyData, setNoWeeklyData] = useState(false);
   const [roomSelection, setRoomSelection] = useState("My Rooms");
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const router = useRouter();
   const accessToken = session?.accessToken;
   if (!accessToken) {
@@ -173,8 +184,39 @@ const Home = () => {
     }
   }, [session?.accessToken]);
 
+  const onCreateRoom = (
+    roomName: string,
+    isPrivate: boolean,
+    roomDiscription: string
+  ) => {
+    if (!accessToken) return;
+
+    handleCreateRoom(
+      roomName,
+      isPrivate,
+      roomDiscription,
+      setIsCreatingRoom,
+      setIsLoadingRooms,
+      setError,
+      accessToken,
+      setMyRooms
+    );
+  };
+
+  const onJoinRoom = (inviteCode: string) => {
+    if (!accessToken) return;
+
+    handleJoinRoom(
+      inviteCode,
+      setIsLoadingRooms,
+      setError,
+      accessToken,
+      setMyRooms
+    );
+  };
+
   return (
-    <div className="flex-col pb-10">
+    <div className="flex-col">
       <div className="flex flex-col items-center justify-center text-center px-4 gap-6 mt-10 ">
         {/* FOCUSING / ONLINE BADGE */}
         <motion.div
@@ -254,34 +296,8 @@ const Home = () => {
         </motion.button>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 26 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 0.6 }}
-        className="dark:bg-[#272A34] border border-[#272A34] mx-30 min-h-[400px] mt-30 rounded-2xl"
-      >
-        <div className="flex justify-center items-center">
-          <RoomTabs
-            roomSelection={roomSelection}
-            setRoomSelection={setRoomSelection}
-            tabs={["Create Rooms", "My Rooms", "Join Rooms"]}
-          />
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={roomSelection}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.35, ease: "easeInOut" }}
-          >
-            {roomSelection === "Create Rooms" && <CreateRoomModal></CreateRoomModal>}
-            {roomSelection === "My Rooms" && <MyRooms />}
-            {roomSelection === "Join Rooms" && <JoinRooms />}
-          </motion.div>
-        </AnimatePresence>
-      </motion.div>
+      
+   
     </div>
   );
 };

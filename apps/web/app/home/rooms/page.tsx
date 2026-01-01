@@ -39,86 +39,6 @@ const RoomsPage = () => {
   }, [session]);
 
   
-  const handleCreateRoom = async (roomName: string, isPrivate: boolean, roomDiscription: string, setIsCreatingRoom : React.Dispatch<React.SetStateAction<boolean>> ) => {
-    setIsCreatingRoom(true);
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/create-room`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.accessToken}`
-        },
-        body: JSON.stringify({
-          name: roomName,
-          description: roomDiscription,
-          isPublic: !isPrivate
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create room');
-      }
-
-      console.log('Room created successfully:', data.room);
-      toast.success(`Room created! Code: ${data.room.roomCode}`);
-      
-      // Close modal
-      setIsCreateModalOpen(false);
-      
-      // Refresh the rooms list
-      await fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms });
-
-    } catch (error: any) {
-      console.error('Error creating room:', error);
-      toast.error(error.message || 'Failed to create room');
-    } finally {
-      setIsCreatingRoom(false);
-    }
-  };
-
-  const handleJoinRoom = async (inviteCode: string) => {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/join-room`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.accessToken}`
-      },
-      body: JSON.stringify({
-        roomCode: inviteCode
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to join room');
-    }
-
-    // Check if it's a join request or direct join
-    if (data.joinRequest) {
-      toast.info(data.message); // "Join request sent..."
-    } else {
-      toast.success(`Joined ${data.room.name}!`);
-      // Optionally navigate to the room
-      // router.push(`/rooms/${data.room.id}`);
-    }
-
-    setIsJoinModalOpen(false);
-    await fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms }); // Refresh room list
-
-  } catch (error: any) {
-    console.error('Error joining room:', error);
-    toast.error(error.message || 'Failed to join room');
-  }
-};
-
- 
-  
- 
 
   // Loading skeleton for room cards
   const RoomCardSkeleton = () => (
@@ -130,7 +50,7 @@ const RoomsPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#18181B] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#232630] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="mb-8">
@@ -286,17 +206,8 @@ const RoomsPage = () => {
       </div>
 
       {/* Modals */}
-      <CreateRoomModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateRoom}
-        isLoading={isCreatingRoom}
-      />
-      <JoinRoomModal
-        isOpen={isJoinModalOpen}
-        onClose={() => setIsJoinModalOpen(false)}
-        onSubmit={handleJoinRoom}
-      />
+     
+     
     </div>
   );
 };

@@ -504,7 +504,7 @@ const Clock = () => {
   }, [isRunningRef.current, session?.accessToken]);
 
   return (
-    <div className="min-h-screen flex justify-center bg-white dark:bg-black">
+    <div className="min-h-screen flex justify-center bg-white dark:bg-[#232630]">
       <div className="flex-col">
         <div className="md:w-100 md:h-100 w-80 h-80 rounded-full bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-white flex items-center justify-center shadow-2xl border-2 border-gray-300 dark:border-zinc-800 mt-10 m-8">
           <div className="flex-col justify-between">
