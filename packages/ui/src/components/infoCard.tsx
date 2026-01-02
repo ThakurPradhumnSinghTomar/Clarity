@@ -1,8 +1,7 @@
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
 
 interface InfoCardProps {
-  icon: LucideIcon;
+  icon: any;
   title: string;
   description: string;
   color?: string;
@@ -12,20 +11,27 @@ export const InfoCard: React.FC<InfoCardProps> = ({
   icon: Icon,
   title,
   description,
-  color = '#6366f1'
+  color = '#10b981'
 }) => {
   return (
-    <div className="bg-white dark:bg-[#27272A] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <div 
-        className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
-        style={{ backgroundColor: `${color}20` }}
-      >
-        <Icon size={24} style={{ color }} />
+    <div className="relative bg-white dark:bg-[#1a1a1a] rounded-2xl p-7 shadow-md border-2 border-gray-100 dark:border-gray-800 hover:shadow-xl hover:border-gray-200 dark:hover:border-gray-700 transition-all duration-300">
+      
+      <div className="flex items-start gap-4 mb-4">
+        <div 
+          className="flex-shrink-0 w-16 h-16 rounded-xl flex items-center justify-center"
+          style={{ backgroundColor: color }}
+        >
+          <Icon size={28} className="text-white" strokeWidth={2.5} />
+        </div>
+        
+        <div className="flex-1 pt-1">
+          <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-2">
+            {title}
+          </h3>
+        </div>
       </div>
-      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">
-        {title}
-      </h3>
-      <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+      
+      <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed pl-0">
         {description}
       </p>
     </div>

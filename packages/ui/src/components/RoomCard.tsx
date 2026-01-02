@@ -1,5 +1,4 @@
 import React from 'react';
-import { Users, Clock, Trophy } from 'lucide-react';
 
 interface RoomCardProps {
   id: string;
@@ -29,41 +28,37 @@ export const RoomCard: React.FC<RoomCardProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-[#27272A] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer mb-0">
+    <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm rounded-xl p-5 border border-neutral-200/60 dark:border-neutral-800/60 hover:bg-white dark:hover:bg-neutral-900 transition-all duration-200 hover:shadow-sm cursor-pointer">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div 
-            className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg"
-            style={{ backgroundColor: color }}
+            className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-semibold text-base"
           >
             {name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+            <h3 className="font-semibold text-base text-neutral-900 dark:text-neutral-100 tracking-tight">
               {name}
             </h3>
             {lastActive && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
                 Active {lastActive}
               </p>
             )}
           </div>
         </div>
         {rank && (
-          <div className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-3 py-1 rounded-full">
-            <Trophy size={16} />
-            <span className="text-sm font-medium">#{rank}</span>
+          <div className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-medium">#{rank}</span>
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-6 text-sm">
-        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-          <Users size={18} />
+      <div className="flex items-center gap-5 text-xs text-neutral-600 dark:text-neutral-400">
+        <div className="flex items-center gap-1.5">
           <span>{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
         </div>
-        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-          <Clock size={18} />
+        <div className="flex items-center gap-1.5">
           <span>{formatStudyTime(totalStudyTime)} studied</span>
         </div>
       </div>

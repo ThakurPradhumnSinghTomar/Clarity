@@ -1,16 +1,16 @@
-"use client"
+"use client";
 import React, { useState, useMemo } from "react";
-import { TrendingUp } from 'lucide-react';
+import { useTheme } from "@repo/context-providers";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 interface HistogramProps {
   data: number[];
   currentDay: number;
 }
 
-// Days of the week for x-axis labels
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-// Helper function to format hours with proper plural/singular
 const formatStudyTime = (hours: number) => {
   const totalMinutes = Math.round(hours * 60);
   const h = Math.floor(totalMinutes / 60);
@@ -21,111 +21,219 @@ const formatStudyTime = (hours: number) => {
   return `${m}m studied`;
 };
 
+/* ===== Framer Motion Variants ===== */
+
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+
+
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.06,
+    },
+  },
+};
+
+const barVariants = {
+  hidden: { scaleY: 0, opacity: 0 },
+  show: {
+    scaleY: 1,
+    opacity: 1,
+    transition: {
+      duration: 0.4,
+      ease: EASE,
+    },
+  },
+};
+
+
 export default function Histogram({ data, currentDay }: HistogramProps) {
-  // State for hover interactions
   const [hovered, setHovered] = useState<number | null>(null);
-  // State for click/select interactions
   const [selected, setSelected] = useState<number | null>(null);
-  // Calculate maximum value from data for scaling bars
+
+  const { mode } = useTheme();
+  const isDark = mode === "dark";
+
   const max = useMemo(() => Math.max(...data, 10), [data]);
-  
-  // Calculate total and average study hours
-  const totalWeekHours = useMemo(() => data.reduce((sum, h) => sum + h, 0), [data]);
-  const avgDailyHours = useMemo(() => totalWeekHours / 7, [totalWeekHours]);
-  
-  // Calculate bar height with intelligent scaling for visibility
+  const totalWeekHours = useMemo(
+    () => data.reduce((sum, h) => sum + h, 0),
+    [data]
+  );
+  const avgDailyHours = useMemo(
+    () => totalWeekHours / 7,
+    [totalWeekHours]
+  );
+
   const getBarHeight = (value: number) => {
-    if (value === 0) return 0; 
-    const percentage = (value / (max + 2)) * 100; // Calculate proportional height
-    
+    if (value === 0) return 0;
+    const percentage = (value / (max + 2)) * 100;
     return Math.max(percentage, 8);
   };
 
   return (
-    // Main container with rounded corners and dark mode support
-    <div className=" p-6 rounded-2xl w-full max-w-4xl bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-white border border-gray-200 dark:border-zinc-800 shadow-lg min-h-[360px]">
-      
-      {/* Header section with title and subtitle */}
-      <div className="flex items-center justify-between mb-4">
+    <div
+      className="w-full max-w-4xl min-h-[360px] rounded-2xl border backdrop-blur-xl shadow-sm p-8"
+      style={{
+        backgroundColor: isDark
+          ? "rgba(54, 57, 70, 0.55)" // Gunmetal
+          : "rgba(242, 245, 240, 0.7)", // soft-linen
+        borderColor: isDark
+          ? "rgba(129, 149, 149, 0.45)" // Cool Steel
+          : "rgba(202, 207, 201, 0.6)",
+      }}
+    >
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-2xl font-semibold">Weekly Study Hours</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <h3
+            className="text-xl font-semibold tracking-tight"
+            style={{ color: isDark ? "#B1B6A6" : "#313630" }}
+          >
+            Weekly Study Hours
+          </h3>
+          <p
+            className="text-sm mt-1"
+            style={{ color: isDark ? "#819595" : "#626b61" }}
+          >
             Track your weekly study progress
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-          <TrendingUp size={18} className="text-indigo-600 dark:text-indigo-400" />
-          <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-            {totalWeekHours.toFixed(1)}h total
-          </span>
+
+        <div
+          className="px-4 py-2 rounded-full text-sm font-medium"
+          style={{
+            backgroundColor: isDark
+              ? "rgba(105, 103, 115, 0.55)" // Dim Grey
+              : "rgba(229, 234, 225, 0.8)",
+            color: isDark ? "#B1B6A6" : "#495049",
+          }}
+        >
+          {totalWeekHours.toFixed(1)}h total
         </div>
       </div>
 
-      {/* Chart container - 256px height with bottom alignment for bars */}
-      <div className="w-full h-64 flex items-end gap-4 pb-8">
+      {/* CHART */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="w-full h-64 flex items-end gap-3 pb-8"
+      >
         {data.map((h, i) => {
-          // Calculate height percentage for this bar
           const heightPct = getBarHeight(h);
-          // Check if this is the current day
           const isToday = i === currentDay;
-          // Check if this bar is being interacted with
           const isActive = hovered === i || selected === i;
 
           return (
-            // Outer container for each day column (takes full height)
             <div
               key={i}
-              className="relative flex-1 flex flex-col items-center justify-end transition-all duration-200 h-full"
+              className="relative flex-1 flex flex-col items-center justify-end h-full"
             >
-              {/* Interactive button wrapper for the bar */}
               <div
                 role="button"
                 aria-label={`${DAYS[i]}: ${h} hours`}
-                onMouseEnter={() => setHovered(i)} // Show tooltip on hover
-                onMouseLeave={() => setHovered(null)} // Hide tooltip on leave
-                onClick={() => setSelected(selected === i ? null : i)} // Toggle selection
-                className="w-full h-full flex flex-col items-center justify-end cursor-pointer select-none"
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => setSelected(selected === i ? null : i)}
+                className="w-full h-full flex items-end justify-center cursor-pointer select-none"
               >
-                {/* The actual bar with dynamic height and styling */}
-                <div
-                  style={{ height: `${heightPct}%` }} // Dynamic height based on value
-                  className={
-                    "w-full rounded-t-lg transition-all duration-150 " +
-                    // Highlight current day with ring
-                    (isToday
-                      ? "ring-2 ring-offset-2 ring-indigo-600 dark:ring-indigo-400 ring-offset-gray-50 dark:ring-offset-zinc-900 "
-                      : "") +
-                    // Scale and add shadow on hover/select
-                    (isActive ? " scale-105 shadow-lg " : " shadow ") +
-                    // Gradient for bars
-                    "bg-gradient-to-t from-indigo-600 to-indigo-400 dark:from-indigo-500 dark:to-indigo-300"
-                  }
+                <motion.div
+                  variants={barVariants}
+                  style={{
+                    height: `${heightPct}%`,
+                    transformOrigin: "bottom",
+                    backgroundColor: isDark
+                      ? isToday
+                        ? "#B1B6A6" // Ash Grey (today)
+                        : "#819595" // Cool Steel
+                      : "#7a8679", // ebony
+                    boxShadow: isActive
+                      ? "0 6px 18px rgba(0,0,0,0.15)"
+                      : "none",
+                  }}
+                  className="w-full rounded-t-xl"
                 />
               </div>
-              
-              {/* Day label below the bar */}
-              <div className={`mt-3 text-xs font-medium ${isToday ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-600 dark:text-gray-400'}`}>
+
+              {/* DAY LABEL */}
+              <div
+                className="mt-3 text-xs font-medium"
+                style={{
+                  color: isToday
+                    ? isDark
+                      ? "#B1B6A6"
+                      : "#313630"
+                    : isDark
+                    ? "#696773"
+                    : "#7a8679",
+                }}
+              >
                 {DAYS[i]}
               </div>
 
-              {/* Tooltip showing hours count (only visible on hover/select) */}
-              {(hovered === i || selected === i) && (
-                <div className="absolute -top-8 px-2 py-1 text-xs rounded-md shadow-md whitespace-nowrap transform -translate-x-1/2 left-1/2 bg-white text-gray-900 border border-gray-200 dark:bg-zinc-800 dark:text-white dark:border-zinc-700 font-medium">
-                  {formatStudyTime(h)}
-                </div>
-              )}
+              {/* TOOLTIP */}
+              <AnimatePresence>
+                {(hovered === i || selected === i) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.18 }}
+                    className="absolute -top-2 px-3 py-1.5 text-xs rounded-lg shadow-lg whitespace-nowrap -translate-x-1/2 left-1/2"
+                    style={{
+                      backgroundColor: isDark
+                        ? "#363946"
+                        : "#f2f3f2",
+                      color: isDark ? "#B1B6A6" : "#313630",
+                      border: `1px solid ${
+                        isDark ? "#819595" : "#cacfc9"
+                      }`,
+                    }}
+                  >
+                    {formatStudyTime(h)}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}
-      </div>
+      </motion.div>
 
-      {/* Footer section showing current day indicator and daily average */}
-      <div className="mt-6 flex justify-between items-center">
-        <div className="text-xs text-gray-600 dark:text-gray-400">
-          Today: <span className="font-semibold text-gray-900 dark:text-white">{DAYS[currentDay]}</span>
+      {/* FOOTER */}
+      <div
+        className="mt-6 pt-4 flex justify-between items-center border-t"
+        style={{
+          borderColor: isDark
+            ? "rgba(129, 149, 149, 0.45)"
+            : "rgba(202, 207, 201, 0.6)",
+        }}
+      >
+        <div
+          className="text-xs"
+          style={{ color: isDark ? "#819595" : "#626b61" }}
+        >
+          Today:{" "}
+          <span
+            className="font-semibold"
+            style={{ color: isDark ? "#B1B6A6" : "#313630" }}
+          >
+            {DAYS[currentDay]}
+          </span>
         </div>
-        <div className="text-xs text-gray-600 dark:text-gray-400">
-          Daily Avg: <span className="font-semibold text-gray-900 dark:text-white">{avgDailyHours.toFixed(1)}h</span>
+
+        <div
+          className="text-xs"
+          style={{ color: isDark ? "#819595" : "#626b61" }}
+        >
+          Daily Avg:{" "}
+          <span
+            className="font-semibold"
+            style={{ color: isDark ? "#B1B6A6" : "#313630" }}
+          >
+            {avgDailyHours.toFixed(1)}h
+          </span>
         </div>
       </div>
     </div>

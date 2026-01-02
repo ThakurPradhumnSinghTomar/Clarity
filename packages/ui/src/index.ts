@@ -11,3 +11,5 @@ export {CreateRoomModal} from "./components/createRoomModal";
 export {JoinRoomModal} from "./components/joinRoomModel";
 export {ToastProvider} from "./components/toastProvider";
 export {EditRoomModel} from "./components/EditRoomModel";
+export {ThemeToggle} from "./components/themeToggel";
+export {default as RebuildHero} from "./components/RebuildHero"

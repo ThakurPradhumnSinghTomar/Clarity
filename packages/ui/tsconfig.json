@@ -11,8 +11,10 @@
     "module": "ESNext",
     "target": "ES2020",
     "skipLibCheck": true,
-    "paths": {
-      "@repo/types": ["../types/src"]
+    "baseUrl": ".",                  // Add this
+    "paths": {                       // Add this
+      "@/*": ["./src/*"],
+      "@/lib/utils": ["./src/lib/utils"]  // Optional: direct mapping for utils (helps some tools)
     }
   },
   "include": ["src"],

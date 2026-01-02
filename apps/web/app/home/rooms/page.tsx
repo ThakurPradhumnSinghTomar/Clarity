@@ -51,6 +51,7 @@ const RoomsPage = () => {
         },
         body: JSON.stringify({
           name: roomName,
+          
           description: roomDiscription,
           isPublic: !isPrivate
         })
