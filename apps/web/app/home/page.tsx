@@ -1,22 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { QuoteBox, RebuildHero, RoomCard } from "@repo/ui";
-import { Histogram } from "@repo/ui";
-import { Leaderboard } from "@repo/ui";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+
+import { Histogram, ClassicLoader, RoomCard } from "@repo/ui";
+import { OrbitalClock } from "@repo/ui";
 import { Room } from "@repo/types";
+
 import { transformRoomData } from "@/lib/helpfulFunctions/transformRoomData";
 import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData";
-import { div } from "framer-motion/client";
 
-
-/* ---------------- Skeletons ---------------- */
+/* ---------------- Skeleton ---------------- */
 
 const HistogramSkeleton = () => (
-  <div className="h-[360px] rounded-2xl border animate-pulse" />
+  <div className="h-[450px] rounded-2xl border animate-pulse bg-[#F6F8F4] flex items-center justify-center"><ClassicLoader></ClassicLoader></div>
 );
+
+type PanelTab = "overview" | "rooms" | "session";
 
 /* ---------------- Page ---------------- */
 
@@ -24,21 +26,26 @@ export default function Home() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  /* ---------- State ---------- */
+  const accessToken = session?.accessToken;
+
+  /* ---------- UI State ---------- */
+
+  const [activeTab, setActiveTab] = useState<PanelTab>("overview");
+
+  /* ---------- Histogram State ---------- */
 
   const [data, setData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
   const currentDay = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
 
-  const [myRooms, setMyRooms] = useState<Room[]>([]);
-  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const [isLoadingHistogram, setIsLoadingHistogram] = useState(true);
+  const [noWeeklyData, setNoWeeklyData] = useState(false);
   const [histogramPage, setHistogramPage] = useState(0);
   const [stopNow, setStopNow] = useState(false);
-  const [noWeeklyData, setNoWeeklyData] = useState(false);
 
-  const accessToken = session?.accessToken;
+  /* ---------- Rooms State ---------- */
+
+  const [myRooms, setMyRooms] = useState<Room[]>([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
 
   /* ---------- Fetch Rooms ---------- */
 
@@ -47,155 +54,221 @@ export default function Home() {
 
     fetchMyRooms({
       setIsLoadingRooms,
-      setError,
       accessToken,
       setMyRooms,
+      setError: () => {},
     });
   }, [accessToken]);
 
   /* ---------- Fetch Histogram ---------- */
 
-  const loadCurrentWeekStudyHours = async () => {
+  useEffect(() => {
     if (!accessToken) return;
 
-    setIsLoadingHistogram(true);
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-week-study-hours/${histogramPage}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+    const load = async () => {
+      setIsLoadingHistogram(true);
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-week-study-hours/${histogramPage}`,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+
+        const json = await res.json();
+
+        if (!json?.weeklyStudyHours?.days?.length) {
+          setStopNow(true);
+          setNoWeeklyData(true);
+          return;
         }
-      );
 
-      const json = await response.json();
+        const newData = [0, 0, 0, 0, 0, 0, 0];
+        json.weeklyStudyHours.days.forEach(
+          (d: { weekday: number; focusedSec: number }) => {
+            newData[d.weekday] =
+              Math.round((d.focusedSec / 3600) * 100) / 100;
+          }
+        );
 
-      if (!json?.success || !json.weeklyStudyHours?.days) {
-        setStopNow(true);
+        setData(newData);
+        setNoWeeklyData(false);
+        setStopNow(false);
+      } catch {
         setNoWeeklyData(true);
-        return;
+      } finally {
+        setIsLoadingHistogram(false);
       }
+    };
 
-      const newData = [0, 0, 0, 0, 0, 0, 0];
-      json.weeklyStudyHours.days.forEach(
-        (d: { weekday: number; focusedSec: number }) => {
-          newData[d.weekday] =
-            Math.round((d.focusedSec / 3600) * 100) / 100;
-        }
-      );
-
-      setData(newData);
-    } catch {
-      setNoWeeklyData(true);
-    } finally {
-      setIsLoadingHistogram(false);
-    }
-  };
-
-  useEffect(() => {
-    loadCurrentWeekStudyHours();
+    load();
   }, [accessToken, histogramPage]);
 
   /* ---------------- Render ---------------- */
 
   return (
-    <div className="min-h-screen">
+    <main className="max-w-8xl mx-auto px-6 pb-24">
+      <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-14 items-start">
 
-      {/* DASHBOARD */}
-      <main className="max-w-7xl mx-auto px-6 pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-start">
+        {/* ---------- LEFT : CLOCK ---------- */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col items-center justify-center min-h-[520px]"
+        >
+          <p className="mb-6 text-[10px] uppercase tracking-[0.4em] text-muted-foreground font-mono">
+            Local Time
+          </p>
 
-          {/* ---------- LEFT COLUMN ---------- */}
-          <section className="space-y-10">
-            {/* INSIGHTS CARD */}
-            <div className="rounded-3xl border backdrop-blur-xl p-8 space-y-10">
-              <QuoteBox />
+          <OrbitalClock />
 
-              {isLoadingHistogram ? (
-                <HistogramSkeleton />
-              ) : (
-                <div className="relative">
-                  {!stopNow && (
-                    <button
-                      className="
-                        absolute -left-6 top-1/2 -translate-y-1/2
-                        h-9 w-9 rounded-full border
-                        backdrop-blur-md text-sm
-                      "
-                      onClick={() => setHistogramPage(histogramPage + 1)}
-                    >
-                      ←
-                    </button>
-                  )}
+          <p className="mt-12 text-xs font-mono tracking-wide text-muted-foreground">
+            [ focus matters ]
+          </p>
+        </motion.section>
 
-                  {!noWeeklyData ? (
-                    <Histogram data={data} currentDay={currentDay} />
-                  ) : (
-                    <div className="h-[360px] rounded-2xl border flex items-center justify-center">
-                      <p className="text-sm opacity-70">
-                        No study data for this week
-                      </p>
-                    </div>
-                  )}
+        {/* ---------- RIGHT : PANEL ---------- */}
+        <motion.section
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="
+            rounded-3xl border
+            bg-white/70 dark:bg-card/70
+            backdrop-blur-xl
+            shadow-xl
+            p-8 mr-8 min-h-[560]
+          "
+        >
+          {/* Tabs */}
+          <div className="flex gap-2 mb-8">
+            {[
+              { id: "overview", label: "Overview" },
+              { id: "rooms", label: "My Rooms" },
+              { id: "session", label: "Session" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as PanelTab)}
+                className={`
+                  px-4 py-2 rounded-full text-sm transition
+                  ${
+                    activeTab === tab.id
+                      ? "bg-neutral-900 text-white"
+                      : "border hover:bg-neutral-100 dark:hover:bg-muted"
+                  }
+                `}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-                  {histogramPage > 0 && (
-                    <button
-                      className="
-                        absolute -right-6 top-1/2 -translate-y-1/2
-                        h-9 w-9 rounded-full border
-                        backdrop-blur-md text-sm
-                      "
-                      onClick={() => {
-                        setHistogramPage(Math.max(0, histogramPage - 1));
-                        setStopNow(false);
-                        setNoWeeklyData(false);
-                      }}
-                    >
-                      →
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* ---------- RIGHT COLUMN (ROOMS) ---------- */}
-          <aside className="rounded-3xl border p-6 h-[520px] flex flex-col">
-            <div className="mb-4 pb-3 border-b">
-              <h2 className="text-lg font-semibold">My Rooms</h2>
-              <p className="text-sm opacity-70">
-                Rooms you’re currently part of
-              </p>
-            </div>
-
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-              {!isLoadingRooms && myRooms.length > 0 ? (
-                myRooms.map((room) => (
-                  <div
-                    key={room.id}
-                    onClick={() =>
-                      router.push(`/home/rooms/${room.id}`)
-                    }
-                    className="cursor-pointer"
+          {/* Content */}
+          <div className="min-h-[360px]">
+            {activeTab === "overview" && (
+              <div className="relative">
+                {!stopNow && (
+                  <button
+                    onClick={() => setHistogramPage((p) => p + 1)}
+                    className="
+                      absolute -left-5 top-1/2 -translate-y-1/2
+                      h-9 w-9 rounded-full border
+                      bg-white/70 dark:bg-card/70
+                      backdrop-blur-md
+                      hover:bg-neutral-100 dark:hover:bg-muted
+                      transition z-10
+                    "
                   >
-                    <RoomCard {...transformRoomData(room)} />
-                  </div>
-                ))
-              ) : isLoadingRooms ? (
-                <p className="text-sm opacity-60 text-center mt-10">
-                  Loading rooms…
-                </p>
-              ) : (
-                <p className="text-sm opacity-60 text-center mt-10">
-                  No rooms joined yet
-                </p>
-              )}
-            </div>
-          </aside>
+                    ←
+                  </button>
+                )}
 
-        </div>
-      </main>
-    </div>
+                {isLoadingHistogram ? (
+                  <HistogramSkeleton />
+                ) : noWeeklyData ? (
+                  <div className="h-[320px] flex items-center justify-center text-sm opacity-70">
+                    No study data this week
+                  </div>
+                ) : (
+                  <Histogram data={data} currentDay={currentDay} />
+                )}
+
+                {histogramPage > 0 && (
+                  <button
+                    onClick={() =>
+                      setHistogramPage((p) => Math.max(0, p - 1))
+                    }
+                    className="
+                      absolute -right-5 top-1/2 -translate-y-1/2
+                      h-9 w-9 rounded-full border
+                      bg-white/70 dark:bg-card/70
+                      backdrop-blur-md
+                      hover:bg-neutral-100 dark:hover:bg-muted
+                      transition
+                    "
+                  >
+                    →
+                  </button>
+                )}
+              </div>
+            )}
+
+            {activeTab === "rooms" && (
+              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+                {isLoadingRooms ? (
+                  <p className="text-sm opacity-60 text-center mt-10">
+                    Loading rooms…
+                  </p>
+                ) : myRooms.length > 0 ? (
+                  myRooms.map((room) => (
+                    <div
+                      key={room.id}
+                      onClick={() =>
+                        router.push(`/home/rooms/${room.id}`)
+                      }
+                      className="cursor-pointer"
+                    >
+                      <RoomCard {...transformRoomData(room)} />
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm opacity-60 text-center mt-10">
+                    No rooms joined yet
+                  </p>
+                )}
+              </div>
+            )}
+
+            {activeTab === "session" && (
+              <div className="h-[320px] flex flex-col items-center justify-center text-center">
+                <h3 className="text-xl font-semibold mb-4">
+                  Ready to focus?
+                </h3>
+                <p className="text-sm opacity-70 mb-6 max-w-sm">
+                  Start a focused study session and track your progress in real time.
+                </p>
+                <button
+                  onClick={() => router.push("/session")}
+                  className="
+                    h-12 px-6 rounded-full
+                    bg-neutral-900 text-white
+                    hover:bg-neutral-800 transition
+                  "
+                >
+                  Start Study Session
+                </button>
+              </div>
+            )}
+          </div>
+        </motion.section>
+      </div>
+
+       {/* FOOTER */}
+      <footer className="text-center text-xs text-neutral-500 pt-30">
+        © {new Date().getFullYear()} Rebuild — Built for focused minds.
+      </footer>
+    </main>
   );
 }

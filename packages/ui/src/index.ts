@@ -14,4 +14,6 @@ export {EditRoomModel} from "./components/EditRoomModel";
 export {ThemeToggle} from "./components/themeToggel";
 export {default as RebuildHero} from "./components/RebuildHero";
 export {Hero} from "./components/helix-hero";
-export {LoginPage} from "./components/animated-characters-login-page"
+export {LoginPage} from "./components/animated-characters-login-page";
+export {OrbitalClock} from "./components/orbital-clock";
+export {default as ClassicLoader} from "./components/loader"
