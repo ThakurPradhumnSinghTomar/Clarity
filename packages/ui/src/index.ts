@@ -12,4 +12,6 @@ export {JoinRoomModal} from "./components/joinRoomModel";
 export {ToastProvider} from "./components/toastProvider";
 export {EditRoomModel} from "./components/EditRoomModel";
 export {ThemeToggle} from "./components/themeToggel";
-export {default as RebuildHero} from "./components/RebuildHero"
+export {default as RebuildHero} from "./components/RebuildHero";
+export {Hero} from "./components/helix-hero";
+export {LoginPage} from "./components/animated-characters-login-page"

@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full bg-[#F1F5F9] dark:bg-[#0F172A]`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full bg-[#F1F5F9] dark:bg-[#0F172A] overflow-x-hidden`}
       >
         <ThemeProvider>
           <SessionProvider>
