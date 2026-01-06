@@ -1,4 +1,5 @@
-import React from 'react';
+import React from "react";
+import { useTheme } from "@repo/context-providers";
 
 interface RoomCardProps {
   id: string;
@@ -16,52 +17,89 @@ export const RoomCard: React.FC<RoomCardProps> = ({
   totalStudyTime,
   rank,
   lastActive,
-  color = '#6366f1'
+  color = "#7C9AFF",
 }) => {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   const formatStudyTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
+    if (hours > 0 && mins > 0) return `${hours}h ${mins}m`;
+    if (hours > 0) return `${hours}h`;
     return `${mins}m`;
   };
 
   return (
-    <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm rounded-xl p-5 border border-neutral-200/60 dark:border-neutral-800/60 hover:bg-white dark:hover:bg-neutral-900 transition-all duration-200 hover:shadow-sm cursor-pointer">
+    <div
+      className="group rounded-2xl p-5 border backdrop-blur-xl transition-all duration-300 cursor-pointer"
+      style={{
+        background: isDark
+          ? "rgba(21,27,34,0.65)"
+          : "rgba(242,245,240,0.75)",
+        borderColor: isDark
+          ? "rgba(129,149,149,0.45)"
+          : "rgba(202,207,201,0.6)",
+      }}
+    >
+      {/* HEADER */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div 
-            className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-semibold text-base"
+          {/* AVATAR */}
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center font-semibold text-sm"
+            style={{
+              background: isDark ? "rgba(125,211,252,0.15)" : "rgba(59,130,246,0.12)",
+              color: isDark ? "#E5E7EB" : "#0F172A",
+            }}
           >
             {name.charAt(0).toUpperCase()}
           </div>
+
           <div>
-            <h3 className="font-semibold text-base text-neutral-900 dark:text-neutral-100 tracking-tight">
+            <h3
+              className="font-semibold tracking-tight"
+              style={{ color: isDark ? "#E5E7EB" : "#0F172A" }}
+            >
               {name}
             </h3>
+
             {lastActive && (
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+              <p
+                className="text-xs mt-0.5"
+                style={{ color: isDark ? "#819595" : "#626b61" }}
+              >
                 Active {lastActive}
               </p>
             )}
           </div>
         </div>
-        {rank && (
-          <div className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2.5 py-1 rounded-lg">
-            <span className="text-xs font-medium">#{rank}</span>
-          </div>
-        )}
+
       </div>
 
-      <div className="flex items-center gap-5 text-xs text-neutral-600 dark:text-neutral-400">
-        <div className="flex items-center gap-1.5">
-          <span>{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
+      {/* STATS */}
+      <div className="flex items-center justify-between text-xs">
+        <div
+          style={{ color: isDark ? "#819595" : "#626b61" }}
+        >
+          {memberCount} {memberCount === 1 ? "member" : "members"}
         </div>
-        <div className="flex items-center gap-1.5">
-          <span>{formatStudyTime(totalStudyTime)} studied</span>
+
+        <div
+          style={{ color: isDark ? "#819595" : "#626b61" }}
+        >
+          {formatStudyTime(totalStudyTime)} studied
         </div>
       </div>
+
+      {/* SUBTLE HOVER ACCENT */}
+      <div
+        className="mt-4 h-[2px] rounded-full transition-all duration-300"
+        style={{
+          background: color,
+          opacity: 0.25,
+        }}
+      />
     </div>
   );
 };

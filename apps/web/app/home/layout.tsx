@@ -41,7 +41,7 @@ const layout = ({children} : { children: React.ReactNode }) => {
         {children}
       </div>
          {/* FOOTER */}
-      <footer className="text-center text-xs text-neutral-500 pb-6">
+      <footer className="text-center text-xs text-neutral-500 pb-6 pt-4">
         © {new Date().getFullYear()} Rebuild — Built for focused minds.
       </footer>
     </div>

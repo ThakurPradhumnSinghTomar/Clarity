@@ -180,7 +180,7 @@ export default function Home() {
                 No study data this week
               </div>
             ) : (
-              <Histogram data={data} currentDay={currentDay} />
+              <Histogram data={data} currentDay={currentDay} isCurrentWeek={histogramPage === 0} />
             )}
           </div>
 

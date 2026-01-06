@@ -23,6 +23,7 @@ import { RoomData, RoomMember } from "@repo/types";
 import { div } from "framer-motion/client";
 import {EditRoomModel} from "@repo/ui";
 import { formatStudyTime } from "@/lib/helpfulFunctions/formatStudyTime";
+import { motion } from "framer-motion";
 
 const RoomPage = () => {
   const [copiedCode, setCopiedCode] = useState(false);
@@ -244,7 +245,13 @@ const RoomPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#ffffff] dark:bg-[#000000] py-8 px-4 sm:px-6 lg:px-8">
+    <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: 0.5,
+          ease: [0.16, 1, 0.3, 1], // same calm easing you use elsewhere
+        }} className="min-h-screen bg-[#ffffff] dark:bg-[#181E2B] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="mb-8">
@@ -545,7 +552,7 @@ const RoomPage = () => {
        <div className="flex justify-center items-center w-full"><EditRoomModel isOpen={isRoomEditModelOpen} roomData={roomData} setIsOpen={setIsEditModelOpen}></EditRoomModel></div>
       
 
-    </div>
+    </motion.div>
   );
 };
 

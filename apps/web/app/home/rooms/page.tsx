@@ -1,292 +1,258 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Plus, LogIn, Users, Target, TrendingUp, Shield, Loader2 } from 'lucide-react';
-import { RoomCard } from '@repo/ui';
-import { InfoCard } from '@repo/ui';
-import { CreateRoomModal } from '@repo/ui';
-import { JoinRoomModal } from '@repo/ui';
-import { useSession } from 'next-auth/react';
-import { toast } from 'react-toastify';
-import { div } from 'framer-motion/client';
-import { useRouter } from "next/navigation"
-import { Room } from '@repo/types';
-import { transformRoomData } from '@/lib/helpfulFunctions/transformRoomData';
-import { fetchMyRooms } from '@/lib/helpfulFunctions/roomsRelated/fetchRoomsData';
+import React, { useState, useEffect } from "react";
+import {
+  Plus,
+  LogIn,
+  Users,
+  Target,
+  TrendingUp,
+  Shield,
+  Loader2,
+} from "lucide-react";
+import { RoomCard, InfoCard, CreateRoomModal, JoinRoomModal } from "@repo/ui";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+import { Room } from "@repo/types";
+import { transformRoomData } from "@/lib/helpfulFunctions/transformRoomData";
+import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData";
+import { motion } from "framer-motion";
 
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
+const container = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.06,
+    },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: EASE },
+  },
+};
 
 const RoomsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [myRooms, setMyRooms] = useState<Room[]>([]);
-  const { data: session } = useSession();
-  const router = useRouter()
-  // Loading states
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { data: session } = useSession();
+  const router = useRouter();
   const accessToken = session?.accessToken;
-  if(!accessToken){
-    console.log("no access token in the session..")
-    throw error}
 
-  // Fetch rooms on component mount
+  if (!accessToken) {
+    throw error;
+  }
+
   useEffect(() => {
-    if (session?.accessToken) {
-      fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms });
-    }
-  }, [session]);
+    fetchMyRooms({ setIsLoadingRooms, setError, accessToken, setMyRooms });
+  }, [accessToken]);
 
-  
-  const handleCreateRoom = async (roomName: string, isPrivate: boolean, roomDiscription: string) => {
+  /* ================= ACTIONS ================= */
+
+  const handleCreateRoom = async (
+    roomName: string,
+    isPrivate: boolean,
+    roomDescription: string
+  ) => {
     setIsCreatingRoom(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/create-room`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.accessToken}`
-        },
-        body: JSON.stringify({
-          name: roomName,
-          
-          description: roomDiscription,
-          isPublic: !isPrivate
-        })
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/create-room`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            name: roomName,
+            description: roomDescription,
+            isPublic: !isPrivate,
+          }),
+        }
+      );
 
-      const data = await response.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create room');
-      }
-
-      console.log('Room created successfully:', data.room);
-      toast.success(`Room created! Code: ${data.room.roomCode}`);
-      
-      // Close modal
+      toast.success(`Room created · Code: ${data.room.roomCode}`);
       setIsCreateModalOpen(false);
-      
-      // Refresh the rooms list
-      await fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms });
-
-    } catch (error: any) {
-      console.error('Error creating room:', error);
-      toast.error(error.message || 'Failed to create room');
+      await fetchMyRooms({
+        setIsLoadingRooms,
+        setError,
+        accessToken,
+        setMyRooms,
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create room");
     } finally {
       setIsCreatingRoom(false);
     }
   };
 
   const handleJoinRoom = async (inviteCode: string) => {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/join-room`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.accessToken}`
-      },
-      body: JSON.stringify({
-        roomCode: inviteCode
-      })
-    });
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/join-room`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ roomCode: inviteCode }),
+        }
+      );
 
-    const data = await response.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
 
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to join room');
+      data.joinRequest
+        ? toast.info(data.message)
+        : toast.success(`Joined ${data.room.name}`);
+
+      setIsJoinModalOpen(false);
+      await fetchMyRooms({
+        setIsLoadingRooms,
+        setError,
+        accessToken,
+        setMyRooms,
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to join room");
     }
+  };
 
-    // Check if it's a join request or direct join
-    if (data.joinRequest) {
-      toast.info(data.message); // "Join request sent..."
-    } else {
-      toast.success(`Joined ${data.room.name}!`);
-      // Optionally navigate to the room
-      // router.push(`/rooms/${data.room.id}`);
-    }
-
-    setIsJoinModalOpen(false);
-    await fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms }); // Refresh room list
-
-  } catch (error: any) {
-    console.error('Error joining room:', error);
-    toast.error(error.message || 'Failed to join room');
-  }
-};
-
- 
-  
- 
-
-  // Loading skeleton for room cards
-  const RoomCardSkeleton = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 animate-pulse">
-      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
-    </div>
-  );
+  /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#18181B] py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
+    <main className="min-h-screen bg-[#F4F6F8] dark:bg-[#171C28] transition-colors">
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="max-w-7xl mx-auto px-6 py-12 space-y-16"
+      >
+        {/* HEADER */}
+        <motion.section variants={item} className="space-y-3">
+          <h1 className="text-3xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
             Study Rooms
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Collaborate with peers, track progress, and stay motivated together
+          <p className="text-[#64748B] dark:text-[#9FB0C0] max-w-xl">
+            Stay consistent together. Track focus, share progress, and build
+            momentum with peers.
           </p>
-        </div>
+        </motion.section>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
-          <button
+        {/* ACTIONS */}
+        <motion.section
+          variants={item}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+        >
+          <ActionButton
+            loading={isCreatingRoom}
+            icon={Plus}
+            label="Create room"
             onClick={() => setIsCreateModalOpen(true)}
-            disabled={isCreatingRoom}
-            className="flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:border-indigo-600 dark:hover:border-indigo-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
-          >
-            {isCreatingRoom ? (
-              <>
-                <Loader2 size={24} className="animate-spin" />
-                <span>Creating...</span>
-              </>
-            ) : (
-              <>
-                <Plus size={24} />
-                <span>Create New Room</span>
-              </>
-            )}
-          </button>
-          <button
+          />
+          <ActionButton
+            icon={LogIn}
+            label="Join room"
             onClick={() => setIsJoinModalOpen(true)}
-            className="flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:border-indigo-600 dark:hover:border-indigo-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
-          >
-            <LogIn size={24} />
-            <span>Join Existing Room</span>
-          </button>
-        </div>
+          />
+        </motion.section>
 
-        {/* Info Cards */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Why Study Rooms?
+        {/* INFO */}
+        <motion.section variants={item} className="space-y-6">
+          <h2 className="text-xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
+            Why rooms work
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <InfoCard
-              icon={Users}
-              title="Collaborative Learning"
-              description="Study together with friends and peers who share similar goals"
-              color="#6366f1"
-            />
-            <InfoCard
-              icon={Target}
-              title="Track Progress"
-              description="Monitor your study time and compare with room members"
-              color="#8b5cf6"
-            />
-            <InfoCard
-              icon={TrendingUp}
-              title="Stay Motivated"
-              description="Compete on leaderboards and celebrate achievements together"
-              color="#ec4899"
-            />
-            <InfoCard
-              icon={Shield}
-              title="Private & Secure"
-              description="Create private rooms with invite-only access for your group"
-              color="#10b981"
-            />
-          </div>
-        </div>
+          <motion.div
+            variants={container}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {[Users, Target, TrendingUp, Shield].map((Icon, i) => (
+              <motion.div key={i} variants={item}>
+                <InfoCard
+                  icon={Icon}
+                  title={
+                    ["Accountability", "Clarity", "Momentum", "Privacy"][i]
+                  }
+                  description={
+                    [
+                      "Stay consistent by studying with others",
+                      "Know exactly where your time goes daily",
+                      "Consistency compounds faster together",
+                      "Invite-only rooms when you need focus",
+                    ][i]
+                  }
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.section>
 
-        {/* My Rooms Section */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              My Rooms
+        {/* ROOMS */}
+        <motion.section variants={item} className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
+              My rooms
             </h2>
             {!isLoadingRooms && (
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                {myRooms.length} {myRooms.length === 1 ? 'room' : 'rooms'}
+              <span className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+                {myRooms.length} rooms
               </span>
             )}
           </div>
 
-          {/* Loading State */}
           {isLoadingRooms && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <RoomCardSkeleton />
-              <RoomCardSkeleton />
-              <RoomCardSkeleton />
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && !isLoadingRooms && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-              <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-              <button
-                onClick={()=>{fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms })}}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoadingRooms && !error && myRooms.length === 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border-2 border-dashed border-gray-300 dark:border-gray-700">
-              <Users size={48} className="mx-auto mb-4 text-gray-400 dark:text-gray-600" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                No Rooms Yet
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Create a new room or join an existing one to get started
-              </p>
-              <div className="flex items-center justify-center gap-4">
-                <button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-                >
-                  Create Room
-                </button>
-                <button
-                  onClick={() => setIsJoinModalOpen(true)}
-                  className="px-6 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Join Room
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Rooms Grid */}
-          {!isLoadingRooms && !error && myRooms.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-             {myRooms.map((room) => (
+              {[1, 2, 3].map((i) => (
                 <div
-                  key={room.id}
-                  onClick={() => {
-                    router.push(`/home/rooms/${room.id}`)
+                  key={i}
+                  className="h-32 rounded-2xl bg-white/60 dark:bg-[#151B22]/60 animate-pulse"
+                />
+              ))}
+            </div>
+          )}
 
-                  }}
+          {!isLoadingRooms && !error && myRooms.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: EASE }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {myRooms.map((room) => (
+                <motion.div
+                  key={room.id}
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.25, ease: EASE }}
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/home/rooms/${room.id}`)}
                 >
                   <RoomCard {...transformRoomData(room)} />
-                </div>
+                </motion.div>
               ))}
-
-            </div>
+            </motion.div>
           )}
-        </div>
-      </div>
+        </motion.section>
+      </motion.div>
 
-      {/* Modals */}
+      {/* MODALS */}
       <CreateRoomModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
@@ -298,8 +264,42 @@ const RoomsPage = () => {
         onClose={() => setIsJoinModalOpen(false)}
         onSubmit={handleJoinRoom}
       />
-    </div>
+    </main>
   );
 };
 
 export default RoomsPage;
+
+/* ================= SUB ================= */
+
+function ActionButton({
+  icon: Icon,
+  label,
+  onClick,
+  loading,
+}: {
+  icon: any;
+  label: string;
+  onClick: () => void;
+  loading?: boolean;
+}) {
+  return (
+    <motion.button
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: EASE }}
+      onClick={onClick}
+      disabled={loading}
+      className="
+        flex items-center justify-center gap-3 px-6 py-4 rounded-2xl border
+        bg-white/70 dark:bg-[#151B22]/70
+        border-[#CBD5E1] dark:border-[#334155]
+        text-[#0F172A] dark:text-[#E6EDF3]
+        disabled:opacity-60
+      "
+    >
+      {loading ? <Loader2 className="animate-spin" /> : <Icon size={20} />}
+      {label}
+    </motion.button>
+  );
+}

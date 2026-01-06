@@ -1,9 +1,15 @@
-"use client"
-import React, { useEffect, useRef, useState } from 'react'
-import { Button } from '../button';
-import { useSession } from "next-auth/react" 
+"use client";
 
-const useUnmountClear = (ref: React.MutableRefObject<NodeJS.Timeout | null>) => {
+import React, { useEffect, useRef, useState } from "react";
+import { useAnimate } from "framer-motion";
+import { useSession } from "next-auth/react";
+
+const HOUR = 3600;
+const MINUTE = 60;
+
+const useUnmountClear = (
+  ref: React.MutableRefObject<NodeJS.Timeout | null>
+) => {
   useEffect(() => {
     return () => {
       if (ref.current) {
@@ -14,304 +20,331 @@ const useUnmountClear = (ref: React.MutableRefObject<NodeJS.Timeout | null>) => 
   }, [ref]);
 };
 
-const Clock = () => {
-    const [type, setType] = useState("Stopwatch");
-    const [timerDuration, setTimerDuration] = useState(3600); // Target duration for timer
-    const [isRunning, setIsRunning] = useState(false);
-    const [isSavingSession, setisSavingSession] = useState(false);
-    const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
-    const [pausedAt, setPausedAt] = useState<Date | null>(null);
-    const [accumulatedTime, setAccumulatedTime] = useState(0); // Time accumulated before pause
-    const [currentTime, setCurrentTime] = useState(0); // Current elapsed/remaining time
-    const [edit, setEdit] = useState(false);
-    const [tags, setTags] = useState<string | null>(null);
-    const { data: session } = useSession()
+/* ===================== Animated Digit ===================== */
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    useUnmountClear(intervalRef);
+function AnimatedDigit({ value }: { value: number }) {
+  const [ref, animate] = useAnimate();
+  const prev = useRef<number>(value);
 
-    // Calculate display time
-    const displayTime = type === "Stopwatch" ? currentTime : Math.max(0, timerDuration - currentTime);
-    const hours = Math.floor(displayTime / 3600);
-    const minutes = Math.floor((displayTime % 3600) / 60);
-    const seconds = displayTime % 60;
+  useEffect(() => {
+    if (prev.current === value) return;
 
+    const run = async () => {
+      await animate(
+        ref.current,
+        { y: ["0%", "-50%"], opacity: [1, 0] },
+        { duration: 0.25 }
+      );
+      prev.current = value;
+      await animate(
+        ref.current,
+        { y: ["50%", "0%"], opacity: [0, 1] },
+        { duration: 0.25 }
+      );
+    };
+
+    run();
+  }, [value, animate]);
+
+  return (
+    <span
+      ref={ref}
+      className="block font-mono text-4xl md:text-6xl font-semibold
+             text-[#0F172A] dark:text-[#E6EDF3]"
+    >
+      {String(value).padStart(2, "0")}
+    </span>
+  );
+}
+
+/* ===================== Clock ===================== */
+
+export default function Clock() {
+  const [type, setType] = useState<"Stopwatch" | "Timer">("Stopwatch");
+  const [timerDuration, setTimerDuration] = useState(3600);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isSavingSession, setIsSavingSession] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [pausedAt, setPausedAt] = useState<Date | null>(null);
+  const [accumulatedTime, setAccumulatedTime] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [edit, setEdit] = useState(false);
+  const [tags, setTags] = useState<string | null>(null);
+
+  const { data: session } = useSession();
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  useUnmountClear(intervalRef);
+
+  const displayTime =
+    type === "Stopwatch"
+      ? currentTime
+      : Math.max(0, timerDuration - currentTime);
+
+  const hours = Math.floor(displayTime / HOUR);
+  const minutes = Math.floor((displayTime % HOUR) / MINUTE);
+  const seconds = displayTime % MINUTE;
+
+  /* ===================== Time updates ===================== */
+
+  useEffect(() => {
+    if (!isRunning || !sessionStartTime) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      return;
+    }
+
+    const update = () => {
+      const now = new Date();
+      const elapsed =
+        Math.floor((now.getTime() - sessionStartTime.getTime()) / 1000) +
+        accumulatedTime;
+      setCurrentTime(elapsed);
+    };
+
+    update();
+    intervalRef.current = setInterval(update, 200);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isRunning, sessionStartTime, accumulatedTime]);
+
+  useEffect(() => {
+    if (type === "Timer" && isRunning && currentTime >= timerDuration) {
+      handleTimerComplete();
+    }
+  }, [currentTime, timerDuration, isRunning, type]);
+
+  /* ===================== Backend ===================== */
 
   async function setUserFocusing(isFocusing: boolean) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`,
-    {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session?.accessToken}`,
       },
       body: JSON.stringify({ isFocusing }),
-    }
-  );
-
-  if (!response.ok) {
-    console.log("Failed to update focusing state");
-    return;
+    });
   }
 
-  console.log("Focusing state updated");
+  async function handleStart() {
+    if (isRunning) return;
+    setSessionStartTime(new Date());
+    setPausedAt(null);
+    setIsRunning(true);
+    await setUserFocusing(true);
+  }
+
+  async function handleStop() {
+    if (!isRunning || !sessionStartTime) return;
+    const now = new Date();
+    const elapsed = Math.floor(
+      (now.getTime() - sessionStartTime.getTime()) / 1000
+    );
+    setAccumulatedTime((p) => p + elapsed);
+    setPausedAt(now);
+    setIsRunning(false);
+    setSessionStartTime(null);
+    await setUserFocusing(false);
+  }
+
+  async function handleTimerComplete() {
+    setIsRunning(false);
+    await handleSave();
+  }
+
+ async function handleSave() {
+  if (!currentTime) return;
+  setIsSavingSession(true);
+
+  await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    body: JSON.stringify({
+      startTime: sessionStartTime || pausedAt,
+      endTime: new Date(),
+      durationSec: currentTime,
+      tag: tags,
+      note: null,
+    }),
+  });
+
+  alert(
+    `Congratulations! Focus session of ${Math.floor(currentTime / 60)} minutes saved 🎉`
+  );
+
+  handleReset();
+  await setUserFocusing(false);
+  setIsSavingSession(false);
 }
-    // Timer completion check
-    useEffect(() => {
-        if (type === "Timer" && isRunning && currentTime >= timerDuration) {
-            handleTimerComplete();
-        }
-    }, [currentTime, timerDuration, isRunning, type]);
 
-    // Update current time based on actual elapsed time
-    useEffect(() => {
-        if (!isRunning || !sessionStartTime) {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-            return;
-        }
 
-        // Update immediately
-        updateCurrentTime();
+  function handleReset() {
+    setIsRunning(false);
+    setCurrentTime(0);
+    setAccumulatedTime(0);
+    setSessionStartTime(null);
+    setPausedAt(null);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  }
 
-        // Then update every 100ms for smooth display
-        intervalRef.current = setInterval(() => {
-            updateCurrentTime();
-        }, 100);
+  /* ===================== UI ===================== */
 
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-        };
-    }, [isRunning, sessionStartTime, accumulatedTime]);
+  return (
+    <section className=" pt-30 flex flex-col items-center justify-center bg-[#F4F6F8] dark:bg-[#0F1419] px-4">
+      <div className="mb-6 text-center">
+        <h2 className="text-xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
+          {type}
+        </h2>
+      </div>
 
-    const updateCurrentTime = () => {
-        if (!sessionStartTime) return;
-        
-        const now = new Date();
-        const elapsedMs = now.getTime() - sessionStartTime.getTime();
-        const elapsedSeconds = Math.floor(elapsedMs / 1000);
-        const totalSeconds = accumulatedTime + elapsedSeconds;
-        
-        setCurrentTime(totalSeconds);
-    };
+      {/* TIME DISPLAY */}
+      <div
+        className="flex w-full max-w-4xl items-center justify-between rounded-2xl border backdrop-blur-xl px-6 py-10"
+        style={{
+          borderColor: "#CBD5E1",
+        }}
+      >
+        <TimeUnit label="Hours">
+          <AnimatedDigit value={hours} />
+        </TimeUnit>
+        <TimeUnit label="Minutes">
+          <AnimatedDigit value={minutes} />
+        </TimeUnit>
+        <TimeUnit label="Seconds">
+          <AnimatedDigit value={seconds} />
+        </TimeUnit>
+      </div>
 
-    async function handleStartFocusingClick() {
-        if (!isRunning) {
-            const now = new Date();
-            setSessionStartTime(now);
-            setPausedAt(null);
-            setIsRunning(true);
-            await setUserFocusing(true);
-        }
-    }
+      {/* CONTROLS */}
+      <div className="flex gap-4 mt-8">
+        {isRunning ? (
+          <button
+            onClick={handleStop}
+            className="px-6 py-3 rounded-full bg-[#0F172A] dark:bg-white text-white dark:text-black"
+          >
+            Stop
+          </button>
+        ) : (
+          <button
+            onClick={handleStart}
+            className="px-6 py-3 rounded-full bg-[#0F172A] dark:bg-white text-white dark:text-black"
+          >
+            Start
+          </button>
+        )}
 
-    async function handleStopFocusingClick() {
-        if (isRunning && sessionStartTime) {
-            const now = new Date();
-            setPausedAt(now);
-            
-            // Calculate and store accumulated time
-            const elapsedMs = now.getTime() - sessionStartTime.getTime();
-            const elapsedSeconds = Math.floor(elapsedMs / 1000);
-            setAccumulatedTime(prev => prev + elapsedSeconds);
-            
-            setIsRunning(false);
-            await setUserFocusing(false);
-            setSessionStartTime(null);
-        }
-    }
+        <button
+          onClick={handleReset}
+          className="
+    px-6 py-3 rounded-full border
+    text-[#0F172A] dark:text-[#E6EDF3]
+    border-[#CBD5E1] dark:border-[#334155]
+  "
+        >
+          Reset
+        </button>
 
-    async function handleTimerComplete() {
-        setIsRunning(false);
-        
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-        
-        await handleSaveSessionClick();
-    }
+        <button
+          disabled={!(currentTime > 0 && !isRunning && !isSavingSession)}
+          onClick={handleSave}
+          className="
+    px-6 py-3 rounded-full border
+    text-[#0F172A] dark:text-[#E6EDF3]
+    border-[#CBD5E1] dark:border-[#334155]
+  "
+        >
+          {isSavingSession ? "Saving…" : "Save"}
+        </button>
 
-    async function handleSaveSessionClick() {
-        if (currentTime === 0) return;
+        <button
+          onClick={() => setEdit(true)}
+          className="
+    px-6 py-3 rounded-full border
+    text-[#0F172A] dark:text-[#E6EDF3]
+    border-[#CBD5E1] dark:border-[#334155]
+  "
+        >
+          Edit
+        </button>
+      </div>
 
-        setisSavingSession(true);
-        
-        
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    'Authorization': `Bearer ${session?.accessToken}`
-                },
-                body: JSON.stringify({
-                    startTime: sessionStartTime || pausedAt,
-                    endTime: new Date(),
-                    durationSec: currentTime,
-                    tag: tags,
-                    note: null
-                })
-            });
-
-            if (!response.ok) {
-                console.log("unable to save focus session");
-                return;
-            }
-
-            const res = await response.json();
-            console.log("focus session saved successfully...", res.data.focusSession);
-
-            alert(`Congratulations, focus duration of ${Math.floor(currentTime / 60)} minutes saved!`);
-            
-            // Reset everything
-            handleReset();
-            await setUserFocusing(false);
-
-            setisSavingSession(false);
-
-            return true;
-
-        } catch (error) {
-            console.log("unable to save focus session, got an error: " + error);
-            setisSavingSession(false);
-            return;
-        }
-    }
-
-    function handleReset() {
-        setIsRunning(false);
-        setCurrentTime(0);
-        setAccumulatedTime(0);
-        setSessionStartTime(null);
-        setPausedAt(null);
-        
-        
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-    }
-
-    return (
-        <div className='min-h-screen flex justify-center bg-white dark:bg-black'>
-            <div className='flex-col'>
-                <div className="md:w-100 md:h-100 w-80 h-80 rounded-full bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-white flex items-center justify-center shadow-2xl border-2 border-gray-300 dark:border-zinc-800 mt-10 m-8">
-                    <div className='flex-col justify-between'>
-                        <div className='flex justify-center items-center md:mb-20 mb-15 font-bold text-lg'>
-                            {type}
-                        </div>
-                        <div className='flex justify-around text-7xl font-bold'>
-                            <div>{hours > 9 ? `${hours}` : `0${hours}`}</div>
-                            <div>:</div>
-                            <div>{minutes > 9 ? `${minutes}` : `0${minutes}`}</div>
-                            <div>:</div>
-                            <div>{seconds > 9 ? `${seconds}` : `0${seconds}`}</div>
-                        </div>
-
-                        <div className='flex justify-center'>
-                            <div className='flex justify-center items-center md:mt-20 mt-15 ml-4 font-bold cursor-pointer p-2 px-4 bg-gray-200 dark:bg-zinc-800 hover:bg-gray-300 dark:hover:bg-zinc-700 rounded-2xl transition-colors' onClick={() => setEdit(true)}>
-                                Edit🛠️
-                            </div>
-
-                            {edit && (
-                                <div className='absolute top-50 min-h-100 w-100 rounded-2xl z-50 bg-gray-100 dark:bg-zinc-900 shadow-2xl border border-gray-200 dark:border-zinc-800'>
-                                    <div className='flex p-4 pl-2 justify-around font-bold'>
-                                        <div className={`rounded-2xl cursor-pointer transition-all ${type == "Stopwatch" ? "p-4 bg-gray-900 dark:bg-white text-white dark:text-black shadow-lg" : "pt-4 text-gray-900 dark:text-white"}`} onClick={() => setType("Stopwatch")}>Stopwatch</div>
-                                        <div className={`rounded-2xl cursor-pointer transition-all ${type == "Timer" ? "p-4 bg-gray-900 dark:bg-white text-white dark:text-black shadow-lg" : "pt-4 text-gray-900 dark:text-white"}`} onClick={() => setType("Timer")}>Timer</div>
-                                    </div>
-
-                                    <div>
-                                        {type == "Stopwatch" ?
-                                            <div className='p-6 flex justify-center text-gray-900 dark:text-white'>
-                                                <p>To save session, you can stop focusing and click on save session</p>
-                                            </div>
-                                            :
-                                            <div className='flex-col'>
-                                                <div className='flex-col justify-center gap-4 m-4'>
-                                                    <div className='font-bold p-2 text-gray-900 dark:text-white'><h1>Set Timer</h1></div>
-                                                    <div>
-                                                        <input
-                                                            type="number"
-                                                            placeholder="30 minutes"
-                                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700
-                                                                focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white
-                                                                bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
-                                                            onChange={(e) => {
-                                                                const v = Number(e.target.value)
-                                                                if (v < 0.1) {
-                                                                    setTimerDuration(0)
-                                                                    return
-                                                                }
-                                                                setTimerDuration(v * 60)
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-
-                                        <div className='m-4'>
-                                            <h1 className='m-2 text-gray-900 dark:text-white font-medium'>Add tag to session:</h1>
-                                            <input 
-                                                type="text" 
-                                                className='w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700
-                                                    focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white
-                                                    bg-white dark:bg-zinc-800 text-gray-900 dark:text-white' 
-                                                placeholder='College Study'
-                                                value={tags || ''}
-                                                onChange={(e) => setTags(e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className='flex justify-center items-center'>
-                                            <p className='font-bold border-gray-900 dark:border-white border-2 m-4 w-10 h-10 cursor-pointer text-2xl rounded-full flex justify-center items-center bg-gray-900 dark:bg-white text-white dark:text-black transition-transform duration-200 hover:scale-105' onClick={() => setEdit(false)}>X</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className='flex justify-center items-center md:mt-20 mt-12 ml-4 font-bold cursor-pointer text-3xl hover:scale-110 transition-transform' onClick={handleReset}>
-                                🔄️
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className='flex justify-around gap-4'>
-                    <div className='flex justify-center'>
-                        {isRunning ?
-                            <button onClick={handleStopFocusingClick} className='bg-gray-900 dark:bg-white text-white dark:text-black font-bold p-4 rounded-2xl mt-4 fade-slide-up cursor-pointer hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors'>Stop Focusing</button> :
-                            <button onClick={handleStartFocusingClick} className='bg-gray-900 dark:bg-white text-white dark:text-black font-bold p-4 rounded-2xl mt-4 fade-slide-up cursor-pointer hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors'>Start Focusing</button>
-                        }
-                    </div>
-
-                    <button
-                        className="
-                            bg-gray-900 dark:bg-white text-white dark:text-black font-bold p-4 rounded-2xl mt-4 fade-slide-up
-                            hover:bg-gray-800 dark:hover:bg-gray-100
-                            disabled:opacity-40
-                            disabled:bg-gray-500 dark:disabled:bg-gray-400
-                            disabled:cursor-not-allowed 
-                            disabled:hover:bg-gray-500 dark:disabled:hover:bg-gray-400
-                            cursor-pointer
-                            transition-colors
-                        "
-                        disabled={!(currentTime > 0 && !isRunning && !isSavingSession)}
-                        onClick={handleSaveSessionClick}
-                    >
-                        {isSavingSession ? "saving session" : "save session"}
-                    </button>
-                </div>
+      {/* EDIT MODAL */}
+      {edit && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+          <div className="bg-white dark:bg-[#151B22] text-[#0F172A] dark:text-[#E6EDF3] rounded-2xl p-6 w-80">
+            <div className="flex justify-between mb-4">
+              <button
+                onClick={() => setType("Stopwatch")}
+                className={`px-3 py-1 rounded-full ${
+                  type === "Stopwatch"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : ""
+                }`}
+              >
+                Stopwatch
+              </button>
+              <button
+                onClick={() => setType("Timer")}
+                className={`px-3 py-1 rounded-full ${
+                  type === "Timer"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : ""
+                }`}
+              >
+                Timer
+              </button>
             </div>
+
+            {type === "Timer" && (
+              <input
+                type="number"
+                placeholder="Minutes"
+                className="w-full mb-4 p-2 rounded border"
+                onChange={(e) => setTimerDuration(Number(e.target.value) * 60)}
+              />
+            )}
+
+            <input
+              type="text"
+              placeholder="Session tag"
+              value={tags || ""}
+              onChange={(e) => setTags(e.target.value)}
+              className="w-full p-2 rounded border"
+            />
+
+            <button
+              onClick={() => setEdit(false)}
+              className="mt-4 w-full py-2 rounded-full border"
+            >
+              Close
+            </button>
+          </div>
         </div>
-    )
+      )}
+    </section>
+  );
 }
 
-export default Clock
+/* ===================== Unit ===================== */
+
+function TimeUnit({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center">
+      {children}
+      <span className="mt-2 text-sm text-[#64748B] dark:text-[#9FB0C0]">
+        {label}
+      </span>
+      <div className="mt-4 h-px w-full bg-[#CBD5E1] dark:bg-[#334155]" />
+    </div>
+  );
+}
