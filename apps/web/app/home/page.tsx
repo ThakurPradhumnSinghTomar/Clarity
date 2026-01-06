@@ -16,7 +16,7 @@ import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData
 const HistogramSkeleton = () => (
   <div
     className="
-      h-[420px] rounded-3xl border
+      h-[420px] min-w-[720px] rounded-3xl border
       bg-white border-[#E2E8F0]
       dark:bg-[#151B22] dark:border-[#1F2933]
       animate-pulse flex items-center justify-center
@@ -154,7 +154,7 @@ export default function Home() {
           className="
             relative rounded-3xl border p-8
             bg-white border-[#E2E8F0]
-            dark:bg-[#151B22] dark:border-[#1F2933]
+            dark:bg-[#151B22] dark:border-[#1F2933] min-h-[520px]
           "
         >
           {!stopNow && (
