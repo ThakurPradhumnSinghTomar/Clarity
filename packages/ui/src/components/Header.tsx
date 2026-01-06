@@ -9,132 +9,130 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "./themeToggel";
 
 const dropdownTransition = {
-  duration: 0.22,
+  duration: 0.18,
   ease: [0.16, 1, 0.3, 1] as const,
 };
 
 const Header = () => {
-  const [isOptions, setisOptions] = useState(false);
-
+  const [isOptions, setIsOptions] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
-  const { mode } = useTheme();
+  const { resolvedTheme } = useTheme();
 
-  const isDark = mode === "dark";
+  const isDark = resolvedTheme === "dark";
 
   return (
     <div
-      className="sticky top-3 z-50 mx-4 backdrop-blur-xl border rounded-2xl"
+      className="sticky top-4 z-50 mx-4 rounded-2xl backdrop-blur-xl border"
       style={{
-        backgroundColor: isDark
-          ? "rgba(54, 57, 70, 0.82)" // #363946 Gunmetal
-          : "rgba(242, 245, 240, 0.78)",
+        background: isDark
+          ? "rgba(21,27,34,0.82)"
+          : "rgba(255,255,255,0.75)",
         borderColor: isDark
-          ? "rgba(129, 149, 149, 0.45)" // #819595 Cool Steel
-          : "rgba(202, 207, 201, 0.6)",
+          ? "rgba(129,149,149,0.35)"
+          : "rgba(203,213,225,0.6)",
       }}
     >
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         {/* LOGO */}
         <div
           onClick={() => router.push("/home")}
-          className="text-lg font-semibold tracking-tight cursor-pointer select-none transition"
+          className="cursor-pointer select-none text-lg font-semibold tracking-tight"
           style={{
-            color: isDark ? "#B1B6A6" : "#313630", // Ash Grey
+            color: isDark ? "#E5E7EB" : "#0F172A",
           }}
         >
           Rebuild
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT */}
         <div className="flex items-center gap-2 text-sm font-medium">
           {/* HOME */}
-          <div
+          <motion.div
+            whileHover={{ y: -1 }}
             onClick={() => router.push("/home")}
             className="px-3 py-1.5 rounded-full cursor-pointer transition"
             style={{
-              color: isDark ? "#B1B6A6" : "#495049",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = isDark
-                ? "rgba(105, 103, 115, 0.55)" // #696773 Dim Grey
-                : "rgba(229, 234, 225, 0.8)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
+              color: isDark ? "#CBD5E1" : "#334155",
             }}
           >
             Home
-          </div>
+          </motion.div>
 
           {/* OPTIONS */}
           <div
             className="relative"
-            onMouseEnter={() => setisOptions(true)}
-            onMouseLeave={() => setisOptions(false)}
+            onMouseEnter={() => setIsOptions(true)}
+            onMouseLeave={() => setIsOptions(false)}
           >
-            <div
+            <motion.div
+              whileHover={{ y: -1 }}
               className="px-3 py-1.5 rounded-full cursor-pointer transition"
               style={{
-                color: isDark ? "#B1B6A6" : "#495049",
-                backgroundColor: isOptions
+                color: isDark ? "#CBD5E1" : "#334155",
+                background: isOptions
                   ? isDark
-                    ? "rgba(105, 103, 115, 0.55)"
-                    : "rgba(229, 234, 225, 0.8)"
+                    ? "rgba(125,211,252,0.12)"
+                    : "rgba(59,130,246,0.08)"
                   : "transparent",
               }}
             >
               Options
-            </div>
+            </motion.div>
 
             <AnimatePresence>
               {isOptions && (
                 <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -2, scale: 0.99 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.99 }}
                   transition={dropdownTransition}
                   className="absolute left-0 mt-3 w-56 rounded-2xl overflow-hidden backdrop-blur-2xl border shadow-xl"
                   style={{
-                    backgroundColor: "rgba(54, 57, 70, 0.96)", // Gunmetal
-                    borderColor: "rgba(129, 149, 149, 0.45)",
+                    background: isDark
+                      ? "rgba(21,27,34,0.95)"
+                      : "rgba(255,255,255,0.95)",
+                    borderColor: isDark
+                      ? "rgba(129,149,149,0.35)"
+                      : "rgba(203,213,225,0.6)",
                   }}
                 >
-                  <div className="py-1">
-                    {[
-                      ["Study Session", "/home/study-session"],
-                      ["Private Rooms", "/home/rooms"],
-                      ["Habit Building", ""],
-                      ["Track Expenses", ""],
-                    ].map(([label, path]) => (
-                      <div
-                        key={label}
-                        onClick={() => path && router.push(path)}
-                        className="px-4 py-2 cursor-pointer transition"
-                        style={{
-                          color: "#B1B6A6",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            "rgba(105, 103, 115, 0.55)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                        }}
-                      >
-                        {label}
-                      </div>
-                    ))}
-
+                  {[
+                    ["Study Session", "/home/study-session"],
+                    ["Private Rooms", "/home/rooms"],
+                    ["Habit Building", ""],
+                    ["Track Expenses", ""],
+                  ].map(([label, path]) => (
                     <div
-                      className="mt-1 border-t"
+                      key={label}
+                      onClick={() => path && router.push(path)}
+                      className="px-4 py-2 cursor-pointer transition"
                       style={{
-                        borderColor: "rgba(129, 149, 149, 0.45)",
+                        color: isDark ? "#CBD5E1" : "#334155",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = isDark
+                          ? "rgba(125,211,252,0.12)"
+                          : "rgba(59,130,246,0.08)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
                       }}
                     >
-                      <div className="px-4 py-2 transition">
-                        <SignOutBtn />
-                      </div>
+                      {label}
+                    </div>
+                  ))}
+
+                  <div
+                    className="mt-1 border-t"
+                    style={{
+                      borderColor: isDark
+                        ? "rgba(129,149,149,0.35)"
+                        : "rgba(203,213,225,0.6)",
+                    }}
+                  >
+                    <div className="px-4 py-2">
+                      <SignOutBtn />
                     </div>
                   </div>
                 </motion.div>
@@ -150,7 +148,9 @@ const Header = () => {
             onClick={() => router.push("/home/profile")}
             className="ml-2 w-8 h-8 rounded-full overflow-hidden border cursor-pointer transition hover:opacity-80"
             style={{
-              borderColor: isDark ? "#696773" : "#afb6af",
+              borderColor: isDark
+                ? "rgba(125,211,252,0.4)"
+                : "rgba(59,130,246,0.35)",
             }}
           >
             <img
