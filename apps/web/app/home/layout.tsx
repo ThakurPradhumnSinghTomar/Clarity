@@ -40,6 +40,10 @@ const layout = ({children} : { children: React.ReactNode }) => {
       <div className='pt-[65px]'>
         {children}
       </div>
+         {/* FOOTER */}
+      <footer className="text-center text-xs text-neutral-500 pb-6">
+        © {new Date().getFullYear()} Rebuild — Built for focused minds.
+      </footer>
     </div>
   )
 }

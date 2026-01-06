@@ -1,64 +1,82 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import type React from "react";
+import { useState, useEffect, useRef } from "react";
+import { useTheme } from "@repo/context-providers";
 
 export function OrbitalClock() {
-  const [time, setTime] = useState(new Date())
-  const [isHovered, setIsHovered] = useState(false)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [time, setTime] = useState(new Date());
+  const [isHovered, setIsHovered] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTime(new Date())
-    }, 50)
-    return () => clearInterval(interval)
-  }, [])
+      setTime(new Date());
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2)
-    const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2)
-    setMousePos({ x: x * 8, y: y * 8 })
-  }
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+    const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+    setMousePos({ x: x * 8, y: y * 8 });
+  };
 
-  const seconds = time.getSeconds() + time.getMilliseconds() / 1000
-  const minutes = time.getMinutes() + seconds / 60
-  const hours = (time.getHours() % 12) + minutes / 60
+  const seconds = time.getSeconds() + time.getMilliseconds() / 1000;
+  const minutes = time.getMinutes() + seconds / 60;
+  const hours = (time.getHours() % 12) + minutes / 60;
 
-  const secondDeg = seconds * 6
-  const minuteDeg = minutes * 6
-  const hourDeg = hours * 30
+  const secondDeg = seconds * 6;
+  const minuteDeg = minutes * 6;
+  const hourDeg = hours * 30;
 
-  const formatDate = () => {
-    return time.toLocaleDateString("en-US", {
+  const formatDate = () =>
+    time.toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
 
   return (
     <div
       ref={containerRef}
-      className={`
-        relative flex items-center justify-center cursor-pointer select-none
-        text-slate-900 dark:text-slate-100
-        [--orb-primary:rgb(59,130,246)] dark:[--orb-primary:rgb(125,211,252)]
-        [--orb-marker-strong:rgba(15,23,42,0.7)] dark:[--orb-marker-strong:rgba(255,255,255,0.7)]
-        [--orb-marker-weak:rgba(15,23,42,0.35)] dark:[--orb-marker-weak:rgba(255,255,255,0.25)]
-        [--orb-center:rgba(15,23,42,0.9)] dark:[--orb-center:rgba(255,255,255,0.85)]
-        [--orb-date:rgba(100,116,139,0.9)] dark:[--orb-date:rgba(148,163,184,0.9)]
-      `}
+      className="relative flex items-center justify-center cursor-pointer select-none"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
-        setIsHovered(false)
-        setMousePos({ x: 0, y: 0 })
+        setIsHovered(false);
+        setMousePos({ x: 0, y: 0 });
       }}
       onMouseMove={handleMouseMove}
-      style={{ perspective: "600px" }}
+      style={{
+        perspective: "600px",
+        color: isDark ? "#E5E7EB" : "#0F172A",
+
+        ["--orb-primary" as any]: isDark
+          ? "rgb(125,211,252)"
+          : "rgb(59,130,246)",
+
+        ["--orb-marker-strong" as any]: isDark
+          ? "rgba(255,255,255,0.7)"
+          : "rgba(15,23,42,0.7)",
+
+        ["--orb-marker-weak" as any]: isDark
+          ? "rgba(255,255,255,0.25)"
+          : "rgba(15,23,42,0.35)",
+
+        ["--orb-center" as any]: isDark
+          ? "rgba(255,255,255,0.85)"
+          : "rgba(15,23,42,0.9)",
+
+        ["--orb-date" as any]: isDark
+          ? "rgba(148,163,184,0.9)"
+          : "rgba(100,116,139,0.9)",
+      }}
     >
       <div
         className="relative w-60 h-60 transition-transform duration-300 ease-out"
@@ -76,22 +94,30 @@ export function OrbitalClock() {
           }}
         />
 
-        <div className="absolute inset-2 rounded-full bg-white/95 dark:bg-card border border-slate-200/70 dark:border-border/50 shadow-xl">
+        <div
+          className="absolute inset-2 rounded-full border shadow-xl"
+          style={{
+            background: isDark ? "rgba(21,27,34,0.95)" : "rgba(255,255,255,0.95)",
+            borderColor: isDark ? "#1F2933" : "#E2E8F0",
+          }}
+        >
           <div
-            className={`absolute inset-3 rounded-full border transition-all duration-500 ${
-              isHovered
-                ? "border-[color:var(--orb-primary)]/40"
-                : "border-black/5 dark:border-white/5"
-            }`}
+            className="absolute inset-3 rounded-full border transition-all duration-500"
+            style={{
+              borderColor: isHovered
+                ? "color-mix(in srgb, var(--orb-primary) 40%, transparent)"
+                : isDark
+                ? "rgba(255,255,255,0.05)"
+                : "rgba(0,0,0,0.05)",
+            }}
           />
 
           {Array.from({ length: 12 }).map((_, i) => {
-            const angle = i * 30
-            const isActive =
-              Math.floor(hours) === i || Math.floor(hours) === i + 12
-            const rad = (angle - 90) * (Math.PI / 180)
-            const x = 50 + 38 * Math.cos(rad)
-            const y = 50 + 38 * Math.sin(rad)
+            const angle = i * 30;
+            const isActive = Math.floor(hours) === i;
+            const rad = (angle - 90) * (Math.PI / 180);
+            const x = 50 + 38 * Math.cos(rad);
+            const y = 50 + 38 * Math.sin(rad);
 
             return (
               <div
@@ -111,22 +137,24 @@ export function OrbitalClock() {
                     : "none",
                 }}
               />
-            )
+            );
           })}
 
           <div
-            className="absolute left-1/2 bottom-1/2 w-1 origin-bottom rounded-full bg-slate-800 dark:bg-slate-200"
+            className="absolute left-1/2 bottom-1/2 w-1 origin-bottom rounded-full"
             style={{
               height: "28%",
               transform: `translateX(-50%) rotate(${hourDeg}deg)`,
+              background: isDark ? "#E5E7EB" : "#0F172A",
             }}
           />
 
           <div
-            className="absolute left-1/2 bottom-1/2 w-0.5 origin-bottom rounded-full bg-slate-500 dark:bg-slate-300"
+            className="absolute left-1/2 bottom-1/2 w-0.5 origin-bottom rounded-full"
             style={{
               height: "36%",
               transform: `translateX(-50%) rotate(${minuteDeg}deg)`,
+              background: isDark ? "#CBD5E1" : "#64748B",
             }}
           />
 
@@ -168,5 +196,5 @@ export function OrbitalClock() {
         {formatDate()}
       </div>
     </div>
-  )
+  );
 }

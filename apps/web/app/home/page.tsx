@@ -5,8 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-import { Histogram, ClassicLoader, RoomCard } from "@repo/ui";
-import { OrbitalClock } from "@repo/ui";
+import { Histogram, ClassicLoader, RoomCard, OrbitalClock } from "@repo/ui";
 import { Room } from "@repo/types";
 
 import { transformRoomData } from "@/lib/helpfulFunctions/transformRoomData";
@@ -15,24 +14,38 @@ import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData
 /* ---------------- Skeleton ---------------- */
 
 const HistogramSkeleton = () => (
-  <div className="h-[450px] rounded-2xl border animate-pulse bg-[#F6F8F4] flex items-center justify-center"><ClassicLoader></ClassicLoader></div>
+  <div
+    className="
+      h-[420px] rounded-3xl border
+      bg-white border-[#E2E8F0]
+      dark:bg-[#151B22] dark:border-[#1F2933]
+      animate-pulse flex items-center justify-center
+    "
+  >
+    <ClassicLoader />
+  </div>
 );
 
-type PanelTab = "overview" | "rooms" | "session";
+/* ---------------- Icons ---------------- */
+
+const ArrowLeftIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+);
+
+const ArrowRightIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+    <path d="M9 18l6-6-6-6" />
+  </svg>
+);
 
 /* ---------------- Page ---------------- */
 
 export default function Home() {
   const { data: session } = useSession();
   const router = useRouter();
-
   const accessToken = session?.accessToken;
-
-  /* ---------- UI State ---------- */
-
-  const [activeTab, setActiveTab] = useState<PanelTab>("overview");
-
-  /* ---------- Histogram State ---------- */
 
   const [data, setData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
   const currentDay = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
@@ -42,16 +55,11 @@ export default function Home() {
   const [histogramPage, setHistogramPage] = useState(0);
   const [stopNow, setStopNow] = useState(false);
 
-  /* ---------- Rooms State ---------- */
-
   const [myRooms, setMyRooms] = useState<Room[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
 
-  /* ---------- Fetch Rooms ---------- */
-
   useEffect(() => {
     if (!accessToken) return;
-
     fetchMyRooms({
       setIsLoadingRooms,
       accessToken,
@@ -59,8 +67,6 @@ export default function Home() {
       setError: () => {},
     });
   }, [accessToken]);
-
-  /* ---------- Fetch Histogram ---------- */
 
   useEffect(() => {
     if (!accessToken) return;
@@ -70,11 +76,8 @@ export default function Home() {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-week-study-hours/${histogramPage}`,
-          {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
-
         const json = await res.json();
 
         if (!json?.weeklyStudyHours?.days?.length) {
@@ -104,171 +107,159 @@ export default function Home() {
     load();
   }, [accessToken, histogramPage]);
 
-  /* ---------------- Render ---------------- */
-
   return (
-    <main className="max-w-8xl mx-auto px-6 pb-24">
-      <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-14 items-start">
-
-        {/* ---------- LEFT : CLOCK ---------- */}
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col items-center justify-center min-h-[520px]"
-        >
-          <p className="mb-6 text-[10px] uppercase tracking-[0.4em] text-muted-foreground font-mono">
-            Local Time
+    <main
+      className="
+        max-w-8xl mx-auto px-12 pb-32 space-y-32
+        bg-[#F4F6F8] text-[#1F2937]
+        dark:bg-[#0F1419] dark:text-[#E6EDF3]
+      "
+    >
+      {/* ---------------- HERO ---------------- */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center pt-24">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <p className="text-xs uppercase tracking-[0.4em] text-[#64748B] dark:text-[#9FB0C0] mb-6">
+            Daily Focus
           </p>
 
+          <h1 className="text-4xl font-semibold leading-tight mb-6">
+            Build consistency.
+            <br />
+            <span className="text-[#4F6EF7] dark:text-[#7C9AFF]">
+              Let the hours compound.
+            </span>
+          </h1>
+
+          <p className="text-[#64748B] dark:text-[#9FB0C0] max-w-md">
+            Track deep work, stay accountable with rooms, and enter flow without friction.
+          </p>
+        </motion.div>
+
+        <div className="relative flex justify-center">
+          <div className="absolute inset-0 rounded-full bg-[#4F6EF7]/10 dark:bg-[#7C9AFF]/10 blur-3xl" />
           <OrbitalClock />
+        </div>
+      </section>
 
-          <p className="mt-12 text-xs font-mono tracking-wide text-muted-foreground">
-            [ focus matters ]
+      {/* ---------------- WEEKLY FOCUS ---------------- */}
+      <section className="space-y-8">
+        <header>
+          <h2 className="text-2xl font-semibold">Weekly Focus</h2>
+          <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+            Your actual work, not intentions.
           </p>
-        </motion.section>
+        </header>
 
-        {/* ---------- RIGHT : PANEL ---------- */}
-        <motion.section
-          initial={{ opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
+        <div
           className="
-            rounded-3xl border
-            bg-white/70 dark:bg-card/70
-            backdrop-blur-xl
-            shadow-xl
-            p-8 mr-8 min-h-[560]
+            relative rounded-3xl border p-8
+            bg-white border-[#E2E8F0]
+            dark:bg-[#151B22] dark:border-[#1F2933]
           "
         >
-          {/* Tabs */}
-          <div className="flex gap-2 mb-8">
-            {[
-              { id: "overview", label: "Overview" },
-              { id: "rooms", label: "My Rooms" },
-              { id: "session", label: "Session" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as PanelTab)}
-                className={`
-                  px-4 py-2 rounded-full text-sm transition
-                  ${
-                    activeTab === tab.id
-                      ? "bg-neutral-900 text-white"
-                      : "border hover:bg-neutral-100 dark:hover:bg-muted"
-                  }
-                `}
+          {!stopNow && (
+            <button
+              onClick={() => setHistogramPage((p) => p + 1)}
+              className="
+                absolute left-4 top-1/2 -translate-y-1/2
+                h-9 w-9 rounded-full border
+                bg-white border-[#E2E8F0] hover:bg-[#F1F5F9]
+                dark:bg-[#1F2933] dark:border-[#1F2933] dark:hover:bg-[#263241]
+                flex items-center justify-center
+              "
+            >
+              <ArrowLeftIcon />
+            </button>
+          )}
+
+          <div className="flex justify-center">
+            {isLoadingHistogram ? (
+              <HistogramSkeleton />
+            ) : noWeeklyData ? (
+              <div className="h-[320px] flex items-center justify-center text-sm opacity-70">
+                No study data this week
+              </div>
+            ) : (
+              <Histogram data={data} currentDay={currentDay} />
+            )}
+          </div>
+
+          {histogramPage > 0 && (
+            <button
+              onClick={() => setHistogramPage((p) => Math.max(0, p - 1))}
+              className="
+                absolute right-4 top-1/2 -translate-y-1/2
+                h-9 w-9 rounded-full border
+                bg-white border-[#E2E8F0] hover:bg-[#F1F5F9]
+                dark:bg-[#1F2933] dark:border-[#1F2933] dark:hover:bg-[#263241]
+                flex items-center justify-center
+              "
+            >
+              <ArrowRightIcon />
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* ---------------- ROOMS ---------------- */}
+      <section className="space-y-6">
+        <header>
+          <h2 className="text-2xl font-semibold">Your Rooms</h2>
+          <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+            Accountability works better with people.
+          </p>
+        </header>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {isLoadingRooms ? (
+            <p className="opacity-60">Loading rooms…</p>
+          ) : myRooms.length ? (
+            myRooms.map((room) => (
+              <motion.div
+                key={room.id}
+                whileHover={{ y: -6 }}
+                className="
+                  cursor-pointer transition
+                  hover:shadow-lg
+                  dark:hover:shadow-[0_20px_40px_rgba(124,154,255,0.15)]
+                "
+                onClick={() => router.push(`/home/rooms/${room.id}`)}
               >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+                <RoomCard {...transformRoomData(room)} />
+              </motion.div>
+            ))
+          ) : (
+            <p className="opacity-60">No rooms joined yet</p>
+          )}
+        </div>
+      </section>
 
-          {/* Content */}
-          <div className="min-h-[360px]">
-            {activeTab === "overview" && (
-              <div className="relative">
-                {!stopNow && (
-                  <button
-                    onClick={() => setHistogramPage((p) => p + 1)}
-                    className="
-                      absolute -left-5 top-1/2 -translate-y-1/2
-                      h-9 w-9 rounded-full border
-                      bg-white/70 dark:bg-card/70
-                      backdrop-blur-md
-                      hover:bg-neutral-100 dark:hover:bg-muted
-                      transition z-10
-                    "
-                  >
-                    ←
-                  </button>
-                )}
+      {/* ---------------- CTA ---------------- */}
+      <section
+        className="
+          rounded-3xl p-12 text-center border
+          bg-white border-[#E2E8F0]
+          dark:bg-[#151B22] dark:border-[#1F2933]
+        "
+      >
+        <h2 className="text-3xl font-semibold mb-4">Ready to enter flow?</h2>
 
-                {isLoadingHistogram ? (
-                  <HistogramSkeleton />
-                ) : noWeeklyData ? (
-                  <div className="h-[320px] flex items-center justify-center text-sm opacity-70">
-                    No study data this week
-                  </div>
-                ) : (
-                  <Histogram data={data} currentDay={currentDay} />
-                )}
+        <p className="text-[#64748B] dark:text-[#9FB0C0] max-w-xl mx-auto mb-8">
+          One click. Timer on. Distractions out. Your future self will thank you.
+        </p>
 
-                {histogramPage > 0 && (
-                  <button
-                    onClick={() =>
-                      setHistogramPage((p) => Math.max(0, p - 1))
-                    }
-                    className="
-                      absolute -right-5 top-1/2 -translate-y-1/2
-                      h-9 w-9 rounded-full border
-                      bg-white/70 dark:bg-card/70
-                      backdrop-blur-md
-                      hover:bg-neutral-100 dark:hover:bg-muted
-                      transition
-                    "
-                  >
-                    →
-                  </button>
-                )}
-              </div>
-            )}
-
-            {activeTab === "rooms" && (
-              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
-                {isLoadingRooms ? (
-                  <p className="text-sm opacity-60 text-center mt-10">
-                    Loading rooms…
-                  </p>
-                ) : myRooms.length > 0 ? (
-                  myRooms.map((room) => (
-                    <div
-                      key={room.id}
-                      onClick={() =>
-                        router.push(`/home/rooms/${room.id}`)
-                      }
-                      className="cursor-pointer"
-                    >
-                      <RoomCard {...transformRoomData(room)} />
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm opacity-60 text-center mt-10">
-                    No rooms joined yet
-                  </p>
-                )}
-              </div>
-            )}
-
-            {activeTab === "session" && (
-              <div className="h-[320px] flex flex-col items-center justify-center text-center">
-                <h3 className="text-xl font-semibold mb-4">
-                  Ready to focus?
-                </h3>
-                <p className="text-sm opacity-70 mb-6 max-w-sm">
-                  Start a focused study session and track your progress in real time.
-                </p>
-                <button
-                  onClick={() => router.push("/session")}
-                  className="
-                    h-12 px-6 rounded-full
-                    bg-neutral-900 text-white
-                    hover:bg-neutral-800 transition
-                  "
-                >
-                  Start Study Session
-                </button>
-              </div>
-            )}
-          </div>
-        </motion.section>
-      </div>
-
-       {/* FOOTER */}
-      <footer className="text-center text-xs text-neutral-500 pt-30">
-        © {new Date().getFullYear()} Rebuild — Built for focused minds.
-      </footer>
+        <button
+          onClick={() => router.push("/session")}
+          className="
+            h-12 px-8 rounded-full
+            bg-[#4F6EF7] text-white hover:bg-[#3B5BDB]
+            dark:bg-[#7C9AFF] dark:text-[#0F1419] dark:hover:bg-[#93AEFF]
+            transition
+          "
+        >
+          Start Study Session
+        </button>
+      </section>
     </main>
   );
 }
