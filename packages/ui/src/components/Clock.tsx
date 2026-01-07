@@ -4,6 +4,37 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAnimate } from "framer-motion";
 import { useSession } from "next-auth/react";
 
+// Extend the Window interface to include custom storage API
+// This tells TypeScript about window.storage
+// Without this, TypeScript would show error: "Property 'storage' does not exist"
+declare global {
+  interface Window {
+    storage: {
+      // Get a value from storage by key
+      get: (
+        key: string,
+        shared?: boolean
+      ) => Promise<{ key: string; value: string; shared: boolean } | null>;
+      // Save a value to storage
+      set: (
+        key: string,
+        value: string,
+        shared?: boolean
+      ) => Promise<{ key: string; value: string; shared: boolean } | null>;
+      // Delete a value from storage
+      delete: (
+        key: string,
+        shared?: boolean
+      ) => Promise<{ key: string; deleted: boolean; shared: boolean } | null>;
+      // List all keys with optional prefix filter
+      list: (
+        prefix?: string,
+        shared?: boolean
+      ) => Promise<{ keys: string[]; prefix?: string; shared: boolean } | null>;
+    };
+  }
+}
+
 const HOUR = 3600;
 const MINUTE = 60;
 
@@ -70,6 +101,8 @@ export default function Clock() {
   const [currentTime, setCurrentTime] = useState(0);
   const [edit, setEdit] = useState(false);
   const [tags, setTags] = useState<string | null>(null);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [storedSession, setStoredSession] = useState<any>(null);
 
   const { data: session } = useSession();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,31 +144,30 @@ export default function Clock() {
     };
   }, [isRunning, sessionStartTime, accumulatedTime]);
 
-useEffect(() => {
-  if (!isRunning || !session?.accessToken) return;
+  useEffect(() => {
+    if (!isRunning || !session?.accessToken) return;
 
-  const handleVisibilityChange = () => {
+    const handleVisibilityChange = () => {
+      pingNow();
+    };
+
+    // immediate ping on start
     pingNow();
-  };
 
-  // immediate ping on start
-  pingNow();
+    pingIntervalRef.current = setInterval(() => {
+      pingNow();
+    }, 60_000);
 
-  pingIntervalRef.current = setInterval(() => {
-    pingNow();
-  }, 60_000);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-  document.addEventListener("visibilitychange", handleVisibilityChange);
-
-  return () => {
-    if (pingIntervalRef.current) {
-      clearInterval(pingIntervalRef.current);
-      pingIntervalRef.current = null;
-    }
-    document.removeEventListener("visibilitychange", handleVisibilityChange);
-  };
-}, [isRunning, session?.accessToken]);
-
+    return () => {
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
+      }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isRunning, session?.accessToken]);
 
   useEffect(() => {
     if (type === "Timer" && isRunning && currentTime >= timerDuration) {
@@ -143,22 +175,111 @@ useEffect(() => {
     }
   }, [currentTime, timerDuration, isRunning, type]);
 
+  useEffect(() => {
+    const checkForStoredSession = async () => {
+      const stored = await loadStoredState();
+
+      if (stored) {
+        // Only show restore modal if session is more than 1 minute (60 seconds)
+        if (stored.currentTime > 60) {
+          setStoredSession(stored);
+          setShowRestoreModal(true);
+        } else {
+          // Session is too short (less than 1 minute) - auto-discard
+          await clearStoredState();
+        }
+      }
+    };
+
+    checkForStoredSession();
+  }, []);
+
+  useEffect(() => {
+    // Debounce timer
+    const timeoutId = setTimeout(() => {
+      saveStateToStorage();
+    }, 1000); // Save after 1 second of inactivity
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    type,
+    timerDuration,
+    isRunning,
+    sessionStartTime,
+    pausedAt,
+    accumulatedTime,
+    currentTime,
+    tags,
+  ]);
+
+  // Separate effect for frequent saves when running
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const intervalId = setInterval(() => {
+      saveStateToStorage();
+    }, 10000); // Save every 10 seconds when running
+
+    return () => clearInterval(intervalId);
+  }, [isRunning]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveStateToStorage();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [
+    type,
+    timerDuration,
+    isRunning,
+    sessionStartTime,
+    pausedAt,
+    accumulatedTime,
+    currentTime,
+    tags,
+  ]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab just went to background - save immediately
+        saveStateToStorage();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [
+    type,
+    timerDuration,
+    isRunning,
+    sessionStartTime,
+    pausedAt,
+    accumulatedTime,
+    currentTime,
+    tags,
+  ]);
+
   /* ===================== Backend ===================== */
 
   async function updateFocusingStatus(isFocusing: boolean) {
-  await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`,
-    {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session?.accessToken}`,
       },
       body: JSON.stringify({ isFocusing }),
-    }
-  );
-}
-
+    });
+  }
 
   async function pingNow() {
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/ping`, {
@@ -169,34 +290,80 @@ useEffect(() => {
     });
   }
 
-async function handleStart() {
-  if (isRunning) return;
-  setSessionStartTime(new Date());
-  setPausedAt(null);
-  setIsRunning(true);
-  await updateFocusingStatus(true);
-}
+  async function saveStateToStorage() {
+    try {
+      const state = {
+        type,
+        timerDuration,
+        isRunning,
+        sessionStartTime: sessionStartTime?.toISOString() || null,
+        pausedAt: pausedAt?.toISOString() || null,
+        accumulatedTime,
+        currentTime,
+        tags,
+      };
 
+      // Use localStorage instead of window.storage
+      localStorage.setItem("focus-clock-state", JSON.stringify(state));
+    } catch (error) {
+      console.error("Failed to save state:", error);
+    }
+  }
 
-async function handleStop() {
-  if (!isRunning || !sessionStartTime) return;
-  const now = new Date();
-  const elapsed = Math.floor(
-    (now.getTime() - sessionStartTime.getTime()) / 1000
-  );
-  setAccumulatedTime((p) => p + elapsed);
-  setPausedAt(now);
-  setIsRunning(false);
-  setSessionStartTime(null);
-  await updateFocusingStatus(false);
-}
+  /**
+   * Clears the stored session data from storage
+   */
+  async function clearStoredState() {
+    try {
+      localStorage.removeItem("focus-clock-state");
+    } catch (error) {
+      console.error("Failed to clear state:", error);
+    }
+  }
 
- async function handleTimerComplete() {
-  setIsRunning(false);
-  await updateFocusingStatus(false);
-  await handleSave();
-}
+  /**
+   * Loads previously stored session data from storage
+   * Returns null if no stored data exists or if parsing fails
+   */
+  async function loadStoredState() {
+    try {
+      const storedData = localStorage.getItem("focus-clock-state");
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        return parsed;
+      }
+    } catch (error) {
+      console.error("Failed to load state:", error);
+    }
+    return null;
+  }
 
+  async function handleStart() {
+    if (isRunning) return;
+    setSessionStartTime(new Date());
+    setPausedAt(null);
+    setIsRunning(true);
+    await updateFocusingStatus(true);
+  }
+
+  async function handleStop() {
+    if (!isRunning || !sessionStartTime) return;
+    const now = new Date();
+    const elapsed = Math.floor(
+      (now.getTime() - sessionStartTime.getTime()) / 1000
+    );
+    setAccumulatedTime((p) => p + elapsed);
+    setPausedAt(now);
+    setIsRunning(false);
+    setSessionStartTime(null);
+    await updateFocusingStatus(false);
+  }
+
+  async function handleTimerComplete() {
+    setIsRunning(false);
+    await updateFocusingStatus(false);
+    await handleSave();
+  }
 
   async function handleSave() {
     if (!currentTime) return;
@@ -225,19 +392,77 @@ async function handleStop() {
     );
 
     handleReset();
+    await clearStoredState();
     setIsSavingSession(false);
   }
 
-function handleReset() {
-  setIsRunning(false);
-  setCurrentTime(0);
-  setAccumulatedTime(0);
-  setSessionStartTime(null);
-  setPausedAt(null);
-  updateFocusingStatus(false);
-  if (intervalRef.current) clearInterval(intervalRef.current);
-}
+  async function handleReset() {
+    setIsRunning(false);
+    setCurrentTime(0);
+    setAccumulatedTime(0);
+    setSessionStartTime(null);
+    setPausedAt(null);
+    updateFocusingStatus(false);
+    await clearStoredState();
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  }
 
+  function handleResumeSession() {
+    if (!storedSession) return;
+
+    setType(storedSession.type);
+    setTimerDuration(storedSession.timerDuration);
+    setIsRunning(false); // Always pause
+    setSessionStartTime(null); // Clear start time
+    setPausedAt(
+      storedSession.pausedAt ? new Date(storedSession.pausedAt) : null
+    );
+    setAccumulatedTime(storedSession.currentTime);
+    setCurrentTime(storedSession.currentTime);
+    setTags(storedSession.tags);
+
+    setShowRestoreModal(false);
+    setStoredSession(null);
+  }
+
+  async function handleSavePreviousSession() {
+    if (!storedSession) return;
+
+    setIsSavingSession(true);
+
+    await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify({
+          startTime: storedSession.sessionStartTime || storedSession.pausedAt,
+          endTime: new Date(storedSession.pausedAt || Date.now()),
+          durationSec: storedSession.currentTime,
+          tag: storedSession.tags,
+          note: null,
+        }),
+      }
+    );
+
+    alert(
+      `Previous session of ${Math.floor(storedSession.currentTime / 60)} minutes saved 🎉`
+    );
+
+    await clearStoredState();
+    setShowRestoreModal(false);
+    setStoredSession(null);
+    setIsSavingSession(false);
+  }
+
+  async function handleDiscardSession() {
+    await clearStoredState();
+    setShowRestoreModal(false);
+    setStoredSession(null);
+  }
 
   /* ===================== UI ===================== */
 
@@ -319,6 +544,63 @@ function handleReset() {
           Edit
         </button>
       </div>
+
+      {/* RESTORE SESSION MODAL */}
+      {showRestoreModal && storedSession && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+          <div className="bg-white dark:bg-[#151B22] text-[#0F172A] dark:text-[#E6EDF3] rounded-2xl p-6 w-96">
+            <h3 className="text-xl font-semibold mb-4">
+              Previous Session Found
+            </h3>
+
+            <div className="mb-6 p-4 rounded-lg bg-[#F4F6F8] dark:bg-[#0F1419]">
+              <p className="mb-2">
+                <span className="font-semibold">Type:</span>{" "}
+                {storedSession.type}
+              </p>
+              <p className="mb-2">
+                <span className="font-semibold">Duration:</span>{" "}
+                {Math.floor(storedSession.currentTime / 60)} minutes
+              </p>
+              {storedSession.tags && (
+                <p className="mb-2">
+                  <span className="font-semibold">Tag:</span>{" "}
+                  {storedSession.tags}
+                </p>
+              )}
+              <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+                {storedSession.isRunning
+                  ? "Session was running"
+                  : "Session was paused"}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleResumeSession}
+                className="w-full py-3 rounded-full bg-[#0F172A] dark:bg-white text-white dark:text-black font-semibold"
+              >
+                Resume Session
+              </button>
+
+              <button
+                onClick={handleSavePreviousSession}
+                disabled={isSavingSession}
+                className="w-full py-3 rounded-full border border-[#CBD5E1] dark:border-[#334155]"
+              >
+                {isSavingSession ? "Saving..." : "Save & Start Fresh"}
+              </button>
+
+              <button
+                onClick={handleDiscardSession}
+                className="w-full py-3 rounded-full border border-[#CBD5E1] dark:border-[#334155] text-red-600 dark:text-red-400"
+              >
+                Discard Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* EDIT MODAL */}
       {edit && (
