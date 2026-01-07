@@ -176,8 +176,8 @@ export default function Home() {
             {isLoadingHistogram ? (
               <HistogramSkeleton />
             ) : noWeeklyData ? (
-              <div className="h-[320px] flex items-center justify-center text-sm opacity-70">
-                No study data this week
+              <div className="h-[320px] flex text-center items-center justify-center text-sm opacity-70 leading-loose mt-10">
+                No study data this week <br/> Start your study session now
               </div>
             ) : (
               <Histogram data={data} currentDay={currentDay} isCurrentWeek={histogramPage === 0} />
@@ -249,7 +249,7 @@ export default function Home() {
         </p>
 
         <button
-          onClick={() => router.push("/session")}
+          onClick={() => router.push("/home/study-session")}
           className="
             h-12 px-8 rounded-full
             bg-[#4F6EF7] text-white hover:bg-[#3B5BDB]

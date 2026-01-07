@@ -25,9 +25,7 @@ const Header = () => {
     <div
       className="sticky top-4 z-50 mx-4 rounded-2xl backdrop-blur-xl border"
       style={{
-        background: isDark
-          ? "rgba(21,27,34,0.82)"
-          : "rgba(255,255,255,0.75)",
+        background: isDark ? "rgba(21,27,34,0.82)" : "rgba(255,255,255,0.75)",
         borderColor: isDark
           ? "rgba(129,149,149,0.35)"
           : "rgba(203,213,225,0.6)",
@@ -83,10 +81,15 @@ const Header = () => {
             <AnimatePresence>
               {isOptions && (
                 <motion.div
-                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.99 }}
-                  transition={dropdownTransition}
+                  initial={{ opacity: 0, y: -14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 22,
+                    mass: 0.6,
+                  }}
                   className="absolute left-0 mt-3 w-56 rounded-2xl overflow-hidden backdrop-blur-2xl border shadow-xl"
                   style={{
                     background: isDark
@@ -101,27 +104,39 @@ const Header = () => {
                     ["Study Session", "/home/study-session"],
                     ["Private Rooms", "/home/rooms"],
                     ["Habit Building", ""],
-                    ["Track Expenses", ""],
-                  ].map(([label, path]) => (
-                    <div
-                      key={label}
-                      onClick={() => path && router.push(path)}
-                      className="px-4 py-2 cursor-pointer transition"
-                      style={{
-                        color: isDark ? "#CBD5E1" : "#334155",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = isDark
-                          ? "rgba(125,211,252,0.12)"
-                          : "rgba(59,130,246,0.08)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      {label}
-                    </div>
-                  ))}
+                    ["Our Community", ""],
+                  ].map(([label, path]) => {
+                    const isLocked = !path;
+
+                    return (
+                      <div
+                        key={label}
+                        onClick={() => !isLocked && router.push(path)}
+                        className={`px-4 py-2 transition flex items-center justify-between ${
+                          isLocked
+                            ? "cursor-not-allowed opacity-60"
+                            : "cursor-pointer"
+                        }`}
+                        style={{
+                          color: isDark ? "#CBD5E1" : "#334155",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (isLocked) return;
+                          e.currentTarget.style.background = isDark
+                            ? "rgba(125,211,252,0.12)"
+                            : "rgba(59,130,246,0.08)";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (isLocked) return;
+                          e.currentTarget.style.background = "transparent";
+                        }}
+                      >
+                        <span>{label}</span>
+
+                        {isLocked && <span className="text-sm ml-3">🔒</span>}
+                      </div>
+                    );
+                  })}
 
                   <div
                     className="mt-1 border-t"

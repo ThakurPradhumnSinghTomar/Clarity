@@ -497,14 +497,18 @@ export default function Clock() {
         {isRunning ? (
           <button
             onClick={handleStop}
-            className="px-6 py-3 rounded-full bg-[#0F172A] dark:bg-white text-white dark:text-black"
+            className="px-6 py-3 rounded-full bg-[#0F172A] dark:bg-white text-white dark:text-black transition-all duration-300 ease-out
+    hover:-translate-y-0.5
+    hover:shadow-lg hover:dark:shadow-slate-900/30 hover:shadow-[#E6EDF3] hover:dark:shadow-sm cursor-pointer"
           >
             Stop
           </button>
         ) : (
           <button
             onClick={handleStart}
-            className="px-6 py-3 rounded-full bg-[#0F172A] dark:bg-white text-white dark:text-black"
+            className="px-6 py-3 rounded-full bg-[#0F172A] dark:bg-white text-white dark:text-black transition-all duration-300 ease-out
+    hover:-translate-y-0.5
+    hover:shadow-lg hover:dark:shadow-slate-900/30 hover:shadow-[#E6EDF3] hover:dark:shadow-sm cursor-pointer"
           >
             Start
           </button>
@@ -516,6 +520,9 @@ export default function Clock() {
     px-6 py-3 rounded-full border
     text-[#0F172A] dark:text-[#E6EDF3]
     border-[#CBD5E1] dark:border-[#334155]
+    transition-all duration-300 ease-out
+    hover:-translate-y-0.5
+    hover:shadow-lg hover:shadow-slate-900/30 hover:dark:shadow-[#E6EDF3] hover:dark:shadow-sm cursor-pointer
   "
         >
           Reset
@@ -527,7 +534,10 @@ export default function Clock() {
           className="
     px-6 py-3 rounded-full border
     text-[#0F172A] dark:text-[#E6EDF3]
-    border-[#CBD5E1] dark:border-[#334155]
+    border-[#CBD5E1] dark:border-[#334155] cursor-pointer
+    transition-all duration-300 ease-out
+    hover:-translate-y-0.5
+    hover:shadow-lg hover:shadow-slate-900/30 hover:dark:shadow-[#E6EDF3] hover:dark:shadow-sm
   "
         >
           {isSavingSession ? "Saving…" : "Save"}
@@ -539,6 +549,9 @@ export default function Clock() {
     px-6 py-3 rounded-full border
     text-[#0F172A] dark:text-[#E6EDF3]
     border-[#CBD5E1] dark:border-[#334155]
+    transition-all duration-300 ease-out
+    hover:-translate-y-0.5
+    hover:shadow-lg hover:shadow-slate-900/30 hover:dark:shadow-[#E6EDF3] hover:dark:shadow-sm cursor-pointer
   "
         >
           Edit
