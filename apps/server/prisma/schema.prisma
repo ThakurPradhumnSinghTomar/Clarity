@@ -19,7 +19,7 @@ model User {
   email           String   @unique
   image           String?
   hashedPassword  String?
-  isFocusing Boolean?
+  lastPing DateTime? @default(now())
   
   // OAuth fields
   provider        String?

@@ -73,6 +73,9 @@ export default function Clock() {
 
   const { data: session } = useSession();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  useUnmountClear(pingIntervalRef);
+
   useUnmountClear(intervalRef);
 
   const displayTime =
@@ -109,6 +112,31 @@ export default function Clock() {
   }, [isRunning, sessionStartTime, accumulatedTime]);
 
   useEffect(() => {
+    if (!isRunning || !session?.accessToken) {
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
+      }
+      return;
+    }
+
+    // ping immediately
+    pingNow();
+
+    // then ping every 30 seconds
+    pingIntervalRef.current = setInterval(() => {
+      pingNow();
+    }, 20_000);
+
+    return () => {
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
+      }
+    };
+  }, [isRunning, session?.accessToken]);
+
+  useEffect(() => {
     if (type === "Timer" && isRunning && currentTime >= timerDuration) {
       handleTimerComplete();
     }
@@ -116,14 +144,12 @@ export default function Clock() {
 
   /* ===================== Backend ===================== */
 
-  async function setUserFocusing(isFocusing: boolean) {
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
+  async function pingNow() {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/ping`, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${session?.accessToken}`,
       },
-      body: JSON.stringify({ isFocusing }),
     });
   }
 
@@ -132,7 +158,6 @@ export default function Clock() {
     setSessionStartTime(new Date());
     setPausedAt(null);
     setIsRunning(true);
-    await setUserFocusing(true);
   }
 
   async function handleStop() {
@@ -145,7 +170,6 @@ export default function Clock() {
     setPausedAt(now);
     setIsRunning(false);
     setSessionStartTime(null);
-    await setUserFocusing(false);
   }
 
   async function handleTimerComplete() {
@@ -153,34 +177,35 @@ export default function Clock() {
     await handleSave();
   }
 
- async function handleSave() {
-  if (!currentTime) return;
-  setIsSavingSession(true);
+  async function handleSave() {
+    if (!currentTime) return;
+    setIsSavingSession(true);
 
-  await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-    body: JSON.stringify({
-      startTime: sessionStartTime || pausedAt,
-      endTime: new Date(),
-      durationSec: currentTime,
-      tag: tags,
-      note: null,
-    }),
-  });
+    await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify({
+          startTime: sessionStartTime || pausedAt,
+          endTime: new Date(),
+          durationSec: currentTime,
+          tag: tags,
+          note: null,
+        }),
+      }
+    );
 
-  alert(
-    `Congratulations! Focus session of ${Math.floor(currentTime / 60)} minutes saved 🎉`
-  );
+    alert(
+      `Congratulations! Focus session of ${Math.floor(currentTime / 60)} minutes saved 🎉`
+    );
 
-  handleReset();
-  await setUserFocusing(false);
-  setIsSavingSession(false);
-}
-
+    handleReset();
+    setIsSavingSession(false);
+  }
 
   function handleReset() {
     setIsRunning(false);

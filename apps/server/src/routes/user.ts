@@ -333,6 +333,8 @@ userRouter.patch("/update-profile", authMiddleware, async (req, res) => {
   }
 });
 
+
+/*
 userRouter.patch("/focusing", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -368,6 +370,45 @@ userRouter.patch("/focusing", authMiddleware, async (req, res) => {
     });
   }
 });
+
+*/
+
+
+
+userRouter.patch("/ping", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      })
+    }
+
+    await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        lastPing: new Date(),
+      },
+    })
+
+    return res.status(200).json({
+      success: true,
+      message: "Ping updated",
+    })
+  } catch (error: any) {
+    console.error("Ping error:", error)
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update ping",
+    })
+  }
+})
+
 
 export default userRouter;
 

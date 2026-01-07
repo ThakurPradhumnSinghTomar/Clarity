@@ -61,6 +61,10 @@ roomRouter.post("/create-room", authMiddleware, async (req, res) => {
   }
 });
 
+// we have to update the below route to return the following data : 
+//   -member count
+//   -how many are focussing now in the room
+
 roomRouter.get("/get-my-rooms", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -443,6 +447,20 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
 });
 
 roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
+  function isFocusing(date: any): boolean {
+  if (!date) return false
+
+  const lastPing = new Date(date).getTime()
+  if (isNaN(lastPing)) return false
+
+  const now = Date.now()
+  const diffInMs = Math.abs(now - lastPing)
+
+  const FIVE_MINUTES = 10 * 1000
+
+  return diffInMs <= FIVE_MINUTES
+}
+
   try {
     const userId = req.user?.id;
     const roomId = req.params.roomId;
@@ -472,7 +490,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
             name: true,
             email: true,
             image: true,
-            isFocusing: true,
+            lastPing: true,
             weeklyStudyHours: {
               orderBy: { weekStart: "desc" },
               take: 1,
@@ -488,7 +506,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
                 name: true,
                 email: true,
                 image: true,
-                isFocusing: true,
+                lastPing: true,
                 weeklyStudyHours: {
                   orderBy: {
                     weekStart: "desc",
@@ -549,7 +567,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
         name: member.user.name,
         email: member.user.email,
         avatar: member.user.image || "👤",
-        isFocusing: member.user.isFocusing || false,
+        isFocusing: isFocusing(member.user.lastPing) || false,
         studyTime: Math.floor(studyTimeSeconds / 60),
         joinedAt: member.joinedAt,
         role: member.role,
@@ -565,7 +583,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
       name: room.host.name,
       email: room.host.email,
       avatar: room.host.image || "👑",
-      isFocusing: room.host.isFocusing || false,
+      isFocusing: isFocusing(room.host.lastPing) || false,
       studyTime: Math.floor(hostStudySeconds / 60),
       joinedAt: room.createdAt,
       role: "host",
