@@ -111,30 +111,31 @@ export default function Clock() {
     };
   }, [isRunning, sessionStartTime, accumulatedTime]);
 
-  useEffect(() => {
-    if (!isRunning || !session?.accessToken) {
-      if (pingIntervalRef.current) {
-        clearInterval(pingIntervalRef.current);
-        pingIntervalRef.current = null;
-      }
-      return;
-    }
+useEffect(() => {
+  if (!isRunning || !session?.accessToken) return;
 
-    // ping immediately
+  const handleVisibilityChange = () => {
     pingNow();
+  };
 
-    // then ping every 30 seconds
-    pingIntervalRef.current = setInterval(() => {
-      pingNow();
-    }, 20_000);
+  // immediate ping on start
+  pingNow();
 
-    return () => {
-      if (pingIntervalRef.current) {
-        clearInterval(pingIntervalRef.current);
-        pingIntervalRef.current = null;
-      }
-    };
-  }, [isRunning, session?.accessToken]);
+  pingIntervalRef.current = setInterval(() => {
+    pingNow();
+  }, 60_000);
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  return () => {
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = null;
+    }
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+  };
+}, [isRunning, session?.accessToken]);
+
 
   useEffect(() => {
     if (type === "Timer" && isRunning && currentTime >= timerDuration) {
@@ -143,6 +144,21 @@ export default function Clock() {
   }, [currentTime, timerDuration, isRunning, type]);
 
   /* ===================== Backend ===================== */
+
+  async function updateFocusingStatus(isFocusing: boolean) {
+  await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      body: JSON.stringify({ isFocusing }),
+    }
+  );
+}
+
 
   async function pingNow() {
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/ping`, {
@@ -153,29 +169,34 @@ export default function Clock() {
     });
   }
 
-  async function handleStart() {
-    if (isRunning) return;
-    setSessionStartTime(new Date());
-    setPausedAt(null);
-    setIsRunning(true);
-  }
+async function handleStart() {
+  if (isRunning) return;
+  setSessionStartTime(new Date());
+  setPausedAt(null);
+  setIsRunning(true);
+  await updateFocusingStatus(true);
+}
 
-  async function handleStop() {
-    if (!isRunning || !sessionStartTime) return;
-    const now = new Date();
-    const elapsed = Math.floor(
-      (now.getTime() - sessionStartTime.getTime()) / 1000
-    );
-    setAccumulatedTime((p) => p + elapsed);
-    setPausedAt(now);
-    setIsRunning(false);
-    setSessionStartTime(null);
-  }
 
-  async function handleTimerComplete() {
-    setIsRunning(false);
-    await handleSave();
-  }
+async function handleStop() {
+  if (!isRunning || !sessionStartTime) return;
+  const now = new Date();
+  const elapsed = Math.floor(
+    (now.getTime() - sessionStartTime.getTime()) / 1000
+  );
+  setAccumulatedTime((p) => p + elapsed);
+  setPausedAt(now);
+  setIsRunning(false);
+  setSessionStartTime(null);
+  await updateFocusingStatus(false);
+}
+
+ async function handleTimerComplete() {
+  setIsRunning(false);
+  await updateFocusingStatus(false);
+  await handleSave();
+}
+
 
   async function handleSave() {
     if (!currentTime) return;
@@ -207,14 +228,16 @@ export default function Clock() {
     setIsSavingSession(false);
   }
 
-  function handleReset() {
-    setIsRunning(false);
-    setCurrentTime(0);
-    setAccumulatedTime(0);
-    setSessionStartTime(null);
-    setPausedAt(null);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  }
+function handleReset() {
+  setIsRunning(false);
+  setCurrentTime(0);
+  setAccumulatedTime(0);
+  setSessionStartTime(null);
+  setPausedAt(null);
+  updateFocusingStatus(false);
+  if (intervalRef.current) clearInterval(intervalRef.current);
+}
+
 
   /* ===================== UI ===================== */
 

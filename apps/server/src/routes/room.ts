@@ -6,6 +6,18 @@ import { error } from "node:console";
 
 const roomRouter = express.Router();
 
+const FOCUS_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
+
+function isUserFocusing(
+  isFocusingFlag: boolean,
+  lastPing: Date | null
+): boolean {
+  if (!isFocusingFlag) return false;
+  if (!lastPing) return false;
+
+  return Date.now() - new Date(lastPing).getTime() <= FOCUS_WINDOW_MS;
+}
+
 roomRouter.get("/", (req, res) => {
   return res
     .status(201)
@@ -61,10 +73,6 @@ roomRouter.post("/create-room", authMiddleware, async (req, res) => {
   }
 });
 
-// we have to update the below route to return the following data : 
-//   -member count
-//   -how many are focussing now in the room
-
 roomRouter.get("/get-my-rooms", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -99,6 +107,19 @@ roomRouter.get("/get-my-rooms", authMiddleware, async (req, res) => {
             id: true,
             name: true,
             email: true,
+            lastPing: true,
+            isFocusing: true,
+          },
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                lastPing: true,
+                isFocusing: true,
+              },
+            },
           },
         },
         _count: {
@@ -108,12 +129,41 @@ roomRouter.get("/get-my-rooms", authMiddleware, async (req, res) => {
         },
       },
     });
+    const roomsWithFocusCount = myRooms.map((room) => {
+      let focusingCount = 0;
+
+      // host
+      if (isUserFocusing(room.host.isFocusing, room.host.lastPing)) {
+        focusingCount += 1;
+      }
+
+      // members
+      for (const member of room.members) {
+        if (isUserFocusing(member.user.isFocusing, member.user.lastPing)) {
+          focusingCount += 1;
+        }
+      }
+
+      return {
+        id: room.id,
+        name: room.name,
+        description: room.description,
+        roomCode: room.roomCode,
+        isPublic: room.isPublic,
+        createdAt: room.createdAt,
+        updatedAt: room.updatedAt,
+
+        host: room.host,
+        memberCount: room._count.members,
+        focusingCount, // 🔥 THIS is what you wanted
+      };
+    });
 
     return res.status(200).json({
       success: true,
       message: "Successfully fetched your rooms",
-      rooms: myRooms,
-      count: myRooms.length,
+      rooms: roomsWithFocusCount,
+      count: roomsWithFocusCount.length,
     });
   } catch (error: any) {
     console.error("Error fetching rooms:", error);
@@ -447,20 +497,6 @@ roomRouter.patch("/join-room", authMiddleware, async (req, res) => {
 });
 
 roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
-  function isFocusing(date: any): boolean {
-  if (!date) return false
-
-  const lastPing = new Date(date).getTime()
-  if (isNaN(lastPing)) return false
-
-  const now = Date.now()
-  const diffInMs = Math.abs(now - lastPing)
-
-  const FIVE_MINUTES = 10 * 1000
-
-  return diffInMs <= FIVE_MINUTES
-}
-
   try {
     const userId = req.user?.id;
     const roomId = req.params.roomId;
@@ -491,6 +527,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
             email: true,
             image: true,
             lastPing: true,
+            isFocusing: true,
             weeklyStudyHours: {
               orderBy: { weekStart: "desc" },
               take: 1,
@@ -507,6 +544,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
                 email: true,
                 image: true,
                 lastPing: true,
+                isFocusing: true,
                 weeklyStudyHours: {
                   orderBy: {
                     weekStart: "desc",
@@ -567,7 +605,10 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
         name: member.user.name,
         email: member.user.email,
         avatar: member.user.image || "👤",
-        isFocusing: isFocusing(member.user.lastPing) || false,
+        isFocusing: isUserFocusing(
+          member.user.isFocusing,
+          member.user.lastPing
+        ),
         studyTime: Math.floor(studyTimeSeconds / 60),
         joinedAt: member.joinedAt,
         role: member.role,
@@ -583,7 +624,8 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
       name: room.host.name,
       email: room.host.email,
       avatar: room.host.image || "👑",
-      isFocusing: isFocusing(room.host.lastPing) || false,
+      isFocusing: isUserFocusing(room.host.isFocusing, room.host.lastPing),
+
       studyTime: Math.floor(hostStudySeconds / 60),
       joinedAt: room.createdAt,
       role: "host",
@@ -616,7 +658,7 @@ roomRouter.get("/get-room/:roomId", authMiddleware, async (req, res) => {
       roomCode: room.roomCode,
       isPublic: room.isPublic,
       isHost: isHost,
-      hostId : room.hostId,
+      hostId: room.hostId,
       memberCount: room.members.length,
       totalStudyTime: totalStudyTime,
       host: room.host,
@@ -750,7 +792,7 @@ roomRouter.patch("/update-room", authMiddleware, async (req, res) => {
       });
     }
 
-    console.log("membersToDelete Are : ",membersToRemove)
+    console.log("membersToDelete Are : ", membersToRemove);
 
     await prisma.roomMember.deleteMany({
       where: {
@@ -774,7 +816,6 @@ roomRouter.patch("/update-room", authMiddleware, async (req, res) => {
       success: true,
       message: "Room updated successfully",
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -783,6 +824,5 @@ roomRouter.patch("/update-room", authMiddleware, async (req, res) => {
     });
   }
 });
-
 
 export default roomRouter;

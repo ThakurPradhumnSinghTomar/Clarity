@@ -409,6 +409,43 @@ userRouter.patch("/ping", authMiddleware, async (req, res) => {
   }
 })
 
+userRouter.patch("/focusing", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const { isFocusing } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    if (typeof isFocusing !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isFocusing must be a boolean",
+      });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isFocusing },
+    });
+
+    return res.json({
+      success: true,
+      isFocusing,
+    });
+  } catch (err) {
+    console.error("Update focusing error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
+
 
 export default userRouter;
 

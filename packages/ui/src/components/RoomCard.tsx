@@ -1,11 +1,12 @@
 import React from "react";
 import { useTheme } from "@repo/context-providers";
+import { Divide } from "lucide-react";
 
 interface RoomCardProps {
   id: string;
   name: string;
   memberCount: number;
-  totalStudyTime: number;
+  focusingCount: number;
   rank?: number;
   lastActive?: string;
   color?: string;
@@ -14,7 +15,7 @@ interface RoomCardProps {
 export const RoomCard: React.FC<RoomCardProps> = ({
   name,
   memberCount,
-  totalStudyTime,
+  focusingCount,
   rank,
   lastActive,
   color = "#7C9AFF",
@@ -34,9 +35,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({
     <div
       className="group rounded-2xl p-5 border backdrop-blur-xl transition-all duration-300 cursor-pointer"
       style={{
-        background: isDark
-          ? "rgba(21,27,34,0.65)"
-          : "rgba(242,245,240,0.75)",
+        background: isDark ? "rgba(21,27,34,0.65)" : "rgba(242,245,240,0.75)",
         borderColor: isDark
           ? "rgba(129,149,149,0.45)"
           : "rgba(202,207,201,0.6)",
@@ -49,7 +48,9 @@ export const RoomCard: React.FC<RoomCardProps> = ({
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center font-semibold text-sm"
             style={{
-              background: isDark ? "rgba(125,211,252,0.15)" : "rgba(59,130,246,0.12)",
+              background: isDark
+                ? "rgba(125,211,252,0.15)"
+                : "rgba(59,130,246,0.12)",
               color: isDark ? "#E5E7EB" : "#0F172A",
             }}
           >
@@ -74,22 +75,21 @@ export const RoomCard: React.FC<RoomCardProps> = ({
             )}
           </div>
         </div>
-
       </div>
 
       {/* STATS */}
       <div className="flex items-center justify-between text-xs">
-        <div
-          style={{ color: isDark ? "#819595" : "#626b61" }}
-        >
-          {memberCount} {memberCount === 1 ? "member" : "members"}
+        <div style={{ color: isDark ? "#819595" : "#626b61" }}>
+          {memberCount+1} {memberCount === 1 ? "member" : "members"}
         </div>
 
-        <div
-          style={{ color: isDark ? "#819595" : "#626b61" }}
-        >
-          {formatStudyTime(totalStudyTime)} studied
-        </div>
+        {focusingCount > 0 ? (
+          <div style={{ color: isDark ? "#819595" : "#626b61" }}>
+            {focusingCount} is focusing now..🔥
+          </div>
+        ) : (
+          <div></div>
+        )}
       </div>
 
       {/* SUBTLE HOVER ACCENT */}

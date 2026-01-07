@@ -307,7 +307,7 @@ const RoomPage = () => {
                     Members
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {roomData.memberCount}
+                    {roomData.memberCount+1}
                   </p>
                 </div>
               </div>
