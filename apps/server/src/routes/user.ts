@@ -334,47 +334,6 @@ userRouter.patch("/update-profile", authMiddleware, async (req, res) => {
 });
 
 
-/*
-userRouter.patch("/focusing", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const { isFocusing } = req.body;
-
-    if (typeof isFocusing !== "boolean") {
-      return res.status(400).json({
-        success: false,
-        message: "isFocusing must be a boolean",
-      });
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { isFocusing },
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: isFocusing ? "User started focusing" : "User stopped focusing",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-});
-
-*/
-
-
-
 userRouter.patch("/ping", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id
@@ -445,6 +404,150 @@ userRouter.patch("/focusing", authMiddleware, async (req, res) => {
     });
   }
 });
+
+userRouter.get("/tags", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { tags: true },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Here are your tags",
+      tags: user?.tags || [],
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch tags",
+    });
+  }
+});
+
+
+userRouter.post("/create-tag", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const { tag } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    if (!tag || typeof tag !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid tag",
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { tags: true },
+    });
+
+    if (user?.tags?.includes(tag)) {
+      return res.status(409).json({
+        success: false,
+        message: "Tag already exists",
+      });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        tags: {
+          push: tag,
+        },
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Tag created successfully",
+      tag,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create tag",
+    });
+  }
+});
+
+userRouter.get("/focus-sessions/recent", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const now = new Date();
+
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
+    const startOfPastDays = new Date(startOfToday);
+    startOfPastDays.setDate(startOfPastDays.getDate() - 4); // last 5 days total
+
+    const sessions = await prisma.focusSession.findMany({
+      where: {
+        userId,
+        startTime: {
+          gte: startOfPastDays,
+        },
+      },
+      orderBy: {
+        startTime: "desc",
+      },
+    });
+
+    const todaySessions = [];
+    const pastSessions = [];
+
+    for (const session of sessions) {
+      if (session.startTime >= startOfToday) {
+        todaySessions.push(session);
+      } else {
+        pastSessions.push(session);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      today: todaySessions,
+      pastSessions,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch focus sessions",
+    });
+  }
+});
+
+
+
 
 
 export default userRouter;

@@ -100,9 +100,15 @@ export default function Clock() {
   const [accumulatedTime, setAccumulatedTime] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [edit, setEdit] = useState(false);
-  const [tags, setTags] = useState<string | null>(null);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const [tagMessage, setTagMessage] = useState<string | null>(null);
+
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [storedSession, setStoredSession] = useState<any>(null);
+  const [creatingTag, setCreatingTag] = useState(false);
+  const [newtag, setnewtag] = useState("");
 
   const { data: session } = useSession();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -119,6 +125,33 @@ export default function Clock() {
   const hours = Math.floor(displayTime / HOUR);
   const minutes = Math.floor((displayTime % HOUR) / MINUTE);
   const seconds = displayTime % MINUTE;
+
+  //load tags
+  useEffect(() => {
+    if (!session?.accessToken) return;
+
+    const fetchTags = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/tags`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+          }
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setAvailableTags(data.tags || []);
+      } catch (e) {
+        console.error("Failed to fetch tags", e);
+      }
+    };
+
+    fetchTags();
+  }, [session?.accessToken]);
 
   /* ===================== Time updates ===================== */
 
@@ -209,7 +242,7 @@ export default function Clock() {
     pausedAt,
     accumulatedTime,
     currentTime,
-    tags,
+    selectedTag,
   ]);
 
   // Separate effect for frequent saves when running
@@ -241,7 +274,7 @@ export default function Clock() {
     pausedAt,
     accumulatedTime,
     currentTime,
-    tags,
+    selectedTag,
   ]);
 
   useEffect(() => {
@@ -265,7 +298,7 @@ export default function Clock() {
     pausedAt,
     accumulatedTime,
     currentTime,
-    tags,
+    selectedTag,
   ]);
 
   /* ===================== Backend ===================== */
@@ -300,7 +333,7 @@ export default function Clock() {
         pausedAt: pausedAt?.toISOString() || null,
         accumulatedTime,
         currentTime,
-        tags,
+        selectedTag,
       };
 
       // Use localStorage instead of window.storage
@@ -381,7 +414,7 @@ export default function Clock() {
           startTime: sessionStartTime || pausedAt,
           endTime: new Date(),
           durationSec: currentTime,
-          tag: tags,
+          tag: selectedTag,
           note: null,
         }),
       }
@@ -406,6 +439,41 @@ export default function Clock() {
     await clearStoredState();
     if (intervalRef.current) clearInterval(intervalRef.current);
   }
+  async function handleCreateTag() {
+    if (!newtag.trim() || isCreatingTag) return;
+
+    setIsCreatingTag(true);
+    setTagMessage(null);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/create-tag`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: JSON.stringify({ tag: newtag.trim() }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to create tag");
+      }
+
+      setAvailableTags((prev) => [...prev, newtag.trim()]);
+      setSelectedTag(newtag.trim());
+      setTagMessage("Tag created successfully ✓");
+      setnewtag("");
+      //setCreatingTag(false);
+    } catch (e) {
+      console.error(e);
+      setTagMessage("Failed to create tag. Try again.");
+    } finally {
+      setIsCreatingTag(false);
+    }
+  }
 
   function handleResumeSession() {
     if (!storedSession) return;
@@ -419,7 +487,7 @@ export default function Clock() {
     );
     setAccumulatedTime(storedSession.currentTime);
     setCurrentTime(storedSession.currentTime);
-    setTags(storedSession.tags);
+    setSelectedTag(storedSession.selectedTag);
 
     setShowRestoreModal(false);
     setStoredSession(null);
@@ -442,7 +510,7 @@ export default function Clock() {
           startTime: storedSession.sessionStartTime || storedSession.pausedAt,
           endTime: new Date(storedSession.pausedAt || Date.now()),
           durationSec: storedSession.currentTime,
-          tag: storedSession.tags,
+          tag: storedSession.selectedTag,
           note: null,
         }),
       }
@@ -531,14 +599,17 @@ export default function Clock() {
         <button
           disabled={!(currentTime > 0 && !isRunning && !isSavingSession)}
           onClick={handleSave}
-          className="
+          className={`
     px-6 py-3 rounded-full border
-    text-[#0F172A] dark:text-[#E6EDF3]
-    border-[#CBD5E1] dark:border-[#334155] cursor-pointer
     transition-all duration-300 ease-out
-    hover:-translate-y-0.5
-    hover:shadow-lg hover:shadow-slate-900/30 hover:dark:shadow-[#E6EDF3] hover:dark:shadow-sm
-  "
+    ${
+      currentTime > 0 && !isRunning && !isSavingSession
+        ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-lg"
+        : "opacity-40 cursor-not-allowed"
+    }
+    text-[#0F172A] dark:text-[#E6EDF3]
+    border-[#CBD5E1] dark:border-[#334155]
+  `}
         >
           {isSavingSession ? "Saving…" : "Save"}
         </button>
@@ -651,16 +722,89 @@ export default function Clock() {
               />
             )}
 
-            <input
-              type="text"
-              placeholder="Session tag"
-              value={tags || ""}
-              onChange={(e) => setTags(e.target.value)}
-              className="w-full p-2 rounded border"
-            />
+            {creatingTag ? (
+              <div>
+                <input
+                  onChange={(e) => setnewtag(e.target.value)}
+                  placeholder="create tag"
+                  type="text"
+                  className="w-full   p-2 text-white rounded-2xl mt-2"
+                />
+                <button
+                  onClick={handleCreateTag}
+                  disabled={isCreatingTag}
+                  className={`
+                        w-full p-2 rounded-2xl my-4
+                        transition
+                        ${
+                          isCreatingTag
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer hover:opacity-90"
+                        }
+                        bg-[#0F172A] dark:bg-white
+                        text-white dark:text-black
+                      `}
+                >
+                  {isCreatingTag ? "Creating…" : "Create tag"}
+                </button>
+                {tagMessage && (
+                  <p
+                    className={`text-sm text-center mt-2 ${
+                      tagMessage.includes("success")
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {tagMessage}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <select
+                onChange={(e) => {
+                  if (e.target.value == "create") {
+                    setCreatingTag(true);
+                  } else {
+                    setSelectedTag(e.target.value);
+                  }
+                }}
+                defaultValue=""
+                className="
+                    w-full mb-4 px-4 py-2.5
+                    rounded-xl
+                    text-sm
+                    border
+                    transition
+                    bg-transparent
+                    text-[#0F172A] dark:text-[#E6EDF3] 
+                  "
+              >
+                <option value="" disabled>
+                  Select a tag
+                </option>
+
+                {availableTags.map((tag) => (
+                  <option
+                    className="text-[#0F172A] dark:text-[#E6EDF3]"
+                    key={tag}
+                    value={tag}
+                  >
+                    {tag}
+                  </option>
+                ))}
+
+                <option onSelect={() => setCreatingTag(true)} value="create">
+                  Create a new tag
+                </option>
+              </select>
+            )}
 
             <button
-              onClick={() => setEdit(false)}
+              onClick={() => {
+                setEdit(false);
+                setCreatingTag(false);
+                setTagMessage("");
+              }}
               className="mt-4 w-full py-2 rounded-full border"
             >
               Close

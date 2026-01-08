@@ -21,6 +21,7 @@ model User {
   hashedPassword  String?
   lastPing DateTime? @default(now())
   isFocusing   Boolean @default(false)
+  tags String[]
   
   // OAuth fields
   provider        String?
