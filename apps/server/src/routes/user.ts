@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { extractGlobalLeaderBoard } from "../controllers/extractGlobalLeaderBoard.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { getCurrentWeekStart } from "../controllers/getCurrentWeekStart.js";
+import type { Prisma__FocusSessionClient } from "../generated/prisma/models.js";
 
 const userRouter = express.Router();
 
@@ -225,11 +226,6 @@ userRouter.get(
         success: true,
         weeklyStudyHours: weeklyStudyHours[0], // Return the first (and only) item
       });
-
-      return res.status(200).json({
-        success: true, // This was 'false' - should be 'true'
-        weeklyStudyHours,
-      });
     } catch (err) {
       console.error("Error fetching weekly study hours:", err);
       return res.status(500).json({
@@ -333,16 +329,15 @@ userRouter.patch("/update-profile", authMiddleware, async (req, res) => {
   }
 });
 
-
 userRouter.patch("/ping", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.id
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
-      })
+      });
     }
 
     await prisma.user.update({
@@ -352,21 +347,21 @@ userRouter.patch("/ping", authMiddleware, async (req, res) => {
       data: {
         lastPing: new Date(),
       },
-    })
+    });
 
     return res.status(200).json({
       success: true,
       message: "Ping updated",
-    })
+    });
   } catch (error: any) {
-    console.error("Ping error:", error)
+    console.error("Ping error:", error);
 
     return res.status(500).json({
       success: false,
       message: "Failed to update ping",
-    })
+    });
   }
-})
+});
 
 userRouter.patch("/focusing", authMiddleware, async (req, res) => {
   try {
@@ -433,7 +428,6 @@ userRouter.get("/tags", authMiddleware, async (req, res) => {
     });
   }
 });
-
 
 userRouter.post("/create-tag", authMiddleware, async (req, res) => {
   try {
@@ -546,10 +540,83 @@ userRouter.get("/focus-sessions/recent", authMiddleware, async (req, res) => {
   }
 });
 
+function getPreviousWeekStart(currentWeekStart: Date, weeksAgo = 1) {
+  const d = new Date(currentWeekStart);
+  d.setDate(d.getDate() - weeksAgo * 7);
+  return d;
+}
 
+userRouter.get(
+  "/get-weekly-study-hours-by-tags/:page",
+  authMiddleware,
+  async (req, res) => {
+    const userId = req.user?.id;
+    const page = Number(req.params.page);
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: "false", message: "unauthorized" });
+    }
 
+    //we have to get current week start and than make two var based on page, i.e gte and lt
+    let lte;
+    let gte;
+    const currentWeekStart = getCurrentWeekStart();
+    gte = getPreviousWeekStart(currentWeekStart, page);
 
+    if (page == 0) {
+      lte = new Date();
+    } else {
+      let d = gte.getDate() + 1;
+      lte = new Date(d);
+    }
 
+    //now get focus sessions of current week
+    const focusSessions = await prisma.focusSession.findMany({
+      where: {
+        userId,
+        startTime: {
+          gte: gte,
+          lte: lte,
+        },
+      },
+      orderBy: {
+        tag: "asc",
+      },
+    });
+
+    type FocusSession = (typeof focusSessions)[number];
+    type SessionGroup = {
+      sessions: FocusSession[];
+      totalDuration: number;
+    };
+
+    const sessionByTag: Record<string, SessionGroup> = {};
+    // s of focusSessions vs s in focusSessions :- of will iterate actual value but in will iterate over index or key
+
+    for (const s of focusSessions) {
+      let tag = s.tag;
+      if (!tag) {
+        tag = "untaged";
+      }
+
+      const group =
+        sessionByTag[tag] ??
+        (sessionByTag[tag] = {
+          sessions: [],
+          totalDuration: 0,
+        });
+
+      group.sessions.push(s);
+      group.totalDuration += s.durationSec;
+
+      //group is basically referring to same object in sessionByTag
+    }
+
+    //return res.status(201).json({"success":"true","message":"here are your focus session of page week" //sardi bhut lag rhi h, isko kal karunga..
+  }
+);
+//
 export default userRouter;
 
 /*
@@ -558,4 +625,6 @@ export default userRouter;
 Fields like name, email, image, createdAt, emailVerified are scalar fields, NOT relations.
 Prisma does NOT allow including scalar fields — they always come by default.
 
+
+should not use dynamic values as keys because typescript can complain than object maybe undefined even if you handeled the null case of that dynamic value
 */
