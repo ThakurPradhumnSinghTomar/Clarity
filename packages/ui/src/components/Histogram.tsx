@@ -92,7 +92,7 @@ export default function Histogram({
 
   return (
     <div
-      className="w-full max-w-4xl min-h-[360px] rounded-2xl border backdrop-blur-xl shadow-sm p-8"
+      className="w-full min-h-[360px] rounded-2xl border backdrop-blur-xl shadow-sm p-8"
       style={{
         background: isDark ? "rgba(21,27,34,0.55)" : "rgba(242,245,240,0.75)",
         borderColor: isDark

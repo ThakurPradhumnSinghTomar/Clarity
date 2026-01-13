@@ -552,70 +552,88 @@ userRouter.get(
   async (req, res) => {
     const userId = req.user?.id;
     const page = Number(req.params.page);
+
     if (!userId) {
       return res
         .status(401)
-        .json({ success: "false", message: "unauthorized" });
+        .json({ success: false, message: "unauthorized" });
     }
 
-    //we have to get current week start and than make two var based on page, i.e gte and lt
-    let lte;
-    let gte;
+    // calculate week range (mon -> sun)
     const currentWeekStart = getCurrentWeekStart();
-    gte = getPreviousWeekStart(currentWeekStart, page);
+    const gte = getPreviousWeekStart(currentWeekStart, page);
 
-    if (page == 0) {
+    let lte: Date;
+    if (page === 0) {
       lte = new Date();
     } else {
-      let d = gte.getDate() + 1;
-      lte = new Date(d);
+      lte = new Date(gte);
+      lte.setDate(gte.getDate() + 7);
     }
 
-    //now get focus sessions of current week
     const focusSessions = await prisma.focusSession.findMany({
       where: {
         userId,
         startTime: {
-          gte: gte,
-          lte: lte,
+          gte,
+          lte,
         },
       },
       orderBy: {
-        tag: "asc",
+        startTime: "asc",
       },
     });
 
     type FocusSession = (typeof focusSessions)[number];
-    type SessionGroup = {
+
+    type DayGroup = {
       sessions: FocusSession[];
       totalDuration: number;
     };
 
-    const sessionByTag: Record<string, SessionGroup> = {};
-    // s of focusSessions vs s in focusSessions :- of will iterate actual value but in will iterate over index or key
+    type TagGroup = {
+      totalDuration: number;
+      byDay: DayGroup[]; // index 0 = Monday ... 6 = Sunday
+    };
+
+    const sessionByTag: Record<string, TagGroup> = {};
+    let weeklyTotalDuration = 0;
 
     for (const s of focusSessions) {
-      let tag = s.tag;
-      if (!tag) {
-        tag = "untaged";
+      const tag = s.tag ?? "untagged";
+
+      if (!sessionByTag[tag]) {
+        sessionByTag[tag] = {
+          totalDuration: 0,
+          byDay: Array.from({ length: 7 }, (): DayGroup => ({
+            sessions: [],
+            totalDuration: 0,
+          })),
+        };
       }
 
-      const group =
-        sessionByTag[tag] ??
-        (sessionByTag[tag] = {
-          sessions: [],
-          totalDuration: 0,
-        });
+      // JS: 0=Sun,1=Mon,...6=Sat → convert to 0=Mon,...6=Sun
+      const dayIndex = (s.startTime.getDay() + 6) % 7;
 
-      group.sessions.push(s);
-      group.totalDuration += s.durationSec;
+      sessionByTag[tag]!.byDay[dayIndex]!.sessions.push(s);
+      sessionByTag[tag]!.byDay[dayIndex]!.totalDuration += s.durationSec;
 
-      //group is basically referring to same object in sessionByTag
+      sessionByTag[tag].totalDuration += s.durationSec;
+      weeklyTotalDuration += s.durationSec;
     }
 
-    //return res.status(201).json({"success":"true","message":"here are your focus session of page week" //sardi bhut lag rhi h, isko kal karunga..
+    return res.json({
+      success: true,
+      week: {
+        gte,
+        lte,
+        totalDuration: weeklyTotalDuration,
+      },
+      data: sessionByTag,
+    });
   }
 );
+
 //
 export default userRouter;
 

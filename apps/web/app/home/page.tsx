@@ -14,14 +14,7 @@ import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData
 /* ---------------- Skeleton ---------------- */
 
 const HistogramSkeleton = () => (
-  <div
-    className="
-      h-[420px] min-w-[720px] rounded-3xl border
-      bg-white border-[#E2E8F0]
-      dark:bg-[#151B22] dark:border-[#1F2933]
-      animate-pulse flex items-center justify-center
-    "
-  >
+  <div className="w-full min-h-[360px] rounded-2xl border-[#475661] backdrop-blur-xl shadow-sm p-8 flex justify-center items-center">
     <ClassicLoader />
   </div>
 );
@@ -29,13 +22,25 @@ const HistogramSkeleton = () => (
 /* ---------------- Icons ---------------- */
 
 const ArrowLeftIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    className="h-4 w-4"
+  >
     <path d="M15 18l-6-6 6-6" />
   </svg>
 );
 
 const ArrowRightIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    className="h-4 w-4"
+  >
     <path d="M9 18l6-6-6-6" />
   </svg>
 );
@@ -57,7 +62,40 @@ export default function Home() {
 
   const [myRooms, setMyRooms] = useState<Room[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState("All Tags");
+  const [tagContributionMap, setTagContributionMap] = useState<
+    Record<string, number>
+  >({});
 
+  //load tags
+  useEffect(() => {
+    if (!session?.accessToken) return;
+
+    const fetchTags = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/tags`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+          }
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setAvailableTags(data.tags || []);
+      } catch (e) {
+        console.error("Failed to fetch tags", e);
+      }
+    };
+
+    fetchTags();
+  }, [session?.accessToken]);
+
+  //fetch rooms
   useEffect(() => {
     if (!accessToken) return;
     fetchMyRooms({
@@ -68,44 +106,101 @@ export default function Home() {
     });
   }, [accessToken]);
 
+  //get current week study hours by tags
   useEffect(() => {
     if (!accessToken) return;
 
-    const load = async () => {
-      setIsLoadingHistogram(true);
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-week-study-hours/${histogramPage}`,
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
-        const json = await res.json();
+    if (selectedTag == "All Tags") {
+      const load = async () => {
+        setIsLoadingHistogram(true);
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-week-study-hours/${histogramPage}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+          const json = await res.json();
 
-        if (!json?.weeklyStudyHours?.days?.length) {
-          setStopNow(true);
-          setNoWeeklyData(true);
-          return;
-        }
-
-        const newData = [0, 0, 0, 0, 0, 0, 0];
-        json.weeklyStudyHours.days.forEach(
-          (d: { weekday: number; focusedSec: number }) => {
-            newData[d.weekday] =
-              Math.round((d.focusedSec / 3600) * 100) / 100;
+          if (!json?.weeklyStudyHours?.days?.length) {
+            setStopNow(true);
+            setNoWeeklyData(true);
+            return;
           }
-        );
 
-        setData(newData);
-        setNoWeeklyData(false);
-        setStopNow(false);
-      } catch {
-        setNoWeeklyData(true);
-      } finally {
-        setIsLoadingHistogram(false);
-      }
-    };
+          const newData = [0, 0, 0, 0, 0, 0, 0];
+          json.weeklyStudyHours.days.forEach(
+            (d: { weekday: number; focusedSec: number }) => {
+              newData[d.weekday] =
+                Math.round((d.focusedSec / 3600) * 100) / 100;
+            }
+          );
 
-    load();
-  }, [accessToken, histogramPage]);
+          setData(newData);
+          setNoWeeklyData(false);
+          setStopNow(false);
+        } catch {
+          setNoWeeklyData(true);
+        } finally {
+          setIsLoadingHistogram(false);
+        }
+      };
+      load();
+    } else {
+      //load weekly study hours by tag
+      const load = async () => {
+        setIsLoadingHistogram(true);
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-weekly-study-hours-by-tags/${histogramPage}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+          const json = await res.json();
+
+          if (!json?.data) {
+            setStopNow(true);
+            setNoWeeklyData(true);
+            return;
+          }
+
+          const newData = [0, 0, 0, 0, 0, 0, 0];
+
+          const tagData = json.data[selectedTag];
+          if (tagData.byDay.length == 0) {
+            setStopNow(true);
+            setNoWeeklyData(true);
+            return;
+          }
+
+          if (tagData) {
+            tagData.byDay.forEach((day: any, index: number) => {
+              newData[index] =
+                Math.round((day.totalDuration / 3600) * 100) / 100;
+            });
+          }
+
+          const totalWeekDuration = json.week.totalDuration || 0;
+          const contributionMap: Record<string, number> = {};
+
+          Object.entries(json.data).forEach(([tagName, tagInfo]: any) => {
+            contributionMap[tagName] =
+              totalWeekDuration > 0
+                ? Math.round((tagInfo.totalDuration / totalWeekDuration) * 100)
+                : 0;
+          });
+
+          setTagContributionMap(contributionMap);
+
+          setData(newData);
+          setNoWeeklyData(false);
+          setStopNow(false);
+        } catch (e) {
+          setNoWeeklyData(true);
+        } finally {
+          setIsLoadingHistogram(false);
+        }
+      };
+      load();
+    }
+  }, [accessToken, histogramPage, selectedTag]);
 
   return (
     <main
@@ -117,7 +212,10 @@ export default function Home() {
     >
       {/* ---------------- HERO ---------------- */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center pt-24">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <p className="text-xs uppercase tracking-[0.4em] text-[#64748B] dark:text-[#9FB0C0] mb-6">
             Daily Focus
           </p>
@@ -131,7 +229,8 @@ export default function Home() {
           </h1>
 
           <p className="text-[#64748B] dark:text-[#9FB0C0] max-w-md">
-            Track deep work, stay accountable with rooms, and enter flow without friction.
+            Track deep work, stay accountable with rooms, and enter flow without
+            friction.
           </p>
         </motion.div>
 
@@ -152,52 +251,139 @@ export default function Home() {
 
         <div
           className="
-            relative rounded-3xl border p-8
+            relative rounded-3xl border lg:p-8
             bg-white border-[#E2E8F0]
             dark:bg-[#151B22] dark:border-[#1F2933] min-h-[520px]
           "
         >
-          {!stopNow && (
-            <button
-              onClick={() => setHistogramPage((p) => p + 1)}
-              className="
-                absolute left-4 top-1/2 -translate-y-1/2
-                h-9 w-9 rounded-full border
-                bg-white border-[#E2E8F0] hover:bg-[#F1F5F9]
-                dark:bg-[#1F2933] dark:border-[#1F2933] dark:hover:bg-[#263241]
-                flex items-center justify-center
-              "
-            >
-              <ArrowLeftIcon />
-            </button>
-          )}
+          <div className="">
+            <div className="grid grid-cols-1 lg:grid-cols-[75%_25%] gap-6">
+              <div className="">
+                <div className="flex justify-around">
+                  <div className="">
+                    <button
+                      onClick={() => setHistogramPage((p) => p + 1)}
+                      disabled={stopNow}
+                      className={`
+                      -translate-y-1/2 z-10
+                      h-9 w-9 rounded-full border
+                      flex items-center justify-center
+                      bg-white border-[#E2E8F0]
+                      dark:bg-[#1F2933] dark:border-[#1F2933]
 
-          <div className="flex justify-center">
-            {isLoadingHistogram ? (
-              <HistogramSkeleton />
-            ) : noWeeklyData ? (
-              <div className="h-[320px] flex text-center items-center justify-center text-sm opacity-70 leading-loose mt-10">
-                No study data this week <br/> Start your study session now
+                      ${
+                        stopNow
+                          ? "opacity-40 cursor-not-allowed"
+                          : "hover:bg-[#F1F5F9] dark:hover:bg-[#263241]"
+                      }
+                    `}
+                    >
+                      <ArrowLeftIcon />
+                    </button>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() =>
+                        setHistogramPage((p) => Math.max(0, p - 1))
+                      }
+                      disabled={histogramPage === 0}
+                      className={`
+                        -translate-y-1/2
+                        h-9 w-9 rounded-full border
+                        flex items-center justify-center
+                        bg-white border-[#E2E8F0]
+                        dark:bg-[#1F2933] dark:border-[#1F2933]
+
+                        ${
+                          histogramPage === 0
+                            ? "opacity-40 cursor-not-allowed"
+                            : "hover:bg-[#F1F5F9] dark:hover:bg-[#263241]"
+                        }
+                      `}
+                    >
+                      <ArrowRightIcon />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  {isLoadingHistogram ? (
+                    <HistogramSkeleton />
+                  ) : noWeeklyData ? (
+                    <div>
+                      <div className="h-[420px] flex text-center items-center justify-center text-sm opacity-70 leading-loose  border rounded-2xl">
+                        No study data this week <br /> Start your study session
+                        now
+                      </div>
+                    </div>
+                  ) : (
+                    <Histogram
+                      data={data}
+                      currentDay={currentDay}
+                      isCurrentWeek={histogramPage === 0}
+                    />
+                  )}
+                </div>
               </div>
-            ) : (
-              <Histogram data={data} currentDay={currentDay} isCurrentWeek={histogramPage === 0} />
-            )}
-          </div>
+              <div className="">
+                <div className="lg:mt-10 flex-col justify-between">
+                  <div className="flex lg:flex-col gap-3 overflow-x-auto lg:h-[380px] overflow-y-auto scrollbar-hide px-1">
+                    {["All Tags", ...availableTags, "untagged"].map((tag) => {
+                      const isActive = selectedTag === tag;
+                      const contribution =
+                        tag === "All Tags"
+                          ? 100
+                          : (tagContributionMap[tag] ?? 0);
 
-          {histogramPage > 0 && (
-            <button
-              onClick={() => setHistogramPage((p) => Math.max(0, p - 1))}
-              className="
-                absolute right-4 top-1/2 -translate-y-1/2
-                h-9 w-9 rounded-full border
-                bg-white border-[#E2E8F0] hover:bg-[#F1F5F9]
-                dark:bg-[#1F2933] dark:border-[#1F2933] dark:hover:bg-[#263241]
-                flex items-center justify-center
-              "
-            >
-              <ArrowRightIcon />
-            </button>
-          )}
+                      return (
+                        <motion.button
+                          key={tag}
+                          onClick={() => setSelectedTag(tag)}
+                          whileHover={{ y: -2 }}
+                          whileTap={{ scale: 0.96 }}
+                          className={`
+                        px-4 py-2 rounded-2xl text-sm whitespace-nowrap
+                        border transition-all
+                        ${
+                          isActive
+                            ? "bg-[#4F6EF7] text-white border-transparent shadow-md dark:bg-[#7C9AFF] dark:text-[#0F1419]"
+                            : "bg-white/60 text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9] dark:bg-[#1F2933] dark:text-[#CBD5E1] dark:border-[#263241] dark:hover:bg-[#263241]"
+                        }
+                      `}
+                        >
+                          {tag}
+                          {selectedTag == "All Tags" ? (
+                            <div></div>
+                          ) : (
+                            <div>
+                              {
+                                <div className="mt-1 text-[11px] opacity-70">
+                                  {contribution > 0
+                                    ? `${contribution}% of week`
+                                    : "No contribution"}
+                                </div>
+                              }
+                              <div className="w-full h-1 mt-1 rounded bg-black/10 dark:bg-white/10 overflow-hidden">
+                                <div
+                                  className="h-full bg-current transition-all"
+                                  style={{ width: `${contribution}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[#64748B] dark:text-[#9FB0C0] p-4 pt-4">
+                    <p>
+                      Select above tags and check how much they contributed to
+                      your studies
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -245,7 +431,8 @@ export default function Home() {
         <h2 className="text-3xl font-semibold mb-4">Ready to enter flow?</h2>
 
         <p className="text-[#64748B] dark:text-[#9FB0C0] max-w-xl mx-auto mb-8">
-          One click. Timer on. Distractions out. Your future self will thank you.
+          One click. Timer on. Distractions out. Your future self will thank
+          you.
         </p>
 
         <button
