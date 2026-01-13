@@ -11,10 +11,24 @@ import { Room } from "@repo/types";
 import { transformRoomData } from "@/lib/helpfulFunctions/transformRoomData";
 import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData";
 
+type FocusSession = {
+  id: string;
+  startTime: string;
+  endTime: string | null;
+  durationSec: number;
+};
+
+const getTimeBucket = (date: Date) => {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 12) return "Morning";
+  if (hour >= 12 && hour < 18) return "Day";
+  return "Night";
+};
+
 /* ---------------- Skeleton ---------------- */
 
 const HistogramSkeleton = () => (
-  <div className="w-full min-h-[360px] rounded-2xl border-[#475661] backdrop-blur-xl shadow-sm p-8 flex justify-center items-center">
+  <div className="w-full min-h-[480px] rounded-2xl border-[#475661] backdrop-blur-xl shadow-sm p-8 flex justify-center items-center">
     <ClassicLoader />
   </div>
 );
@@ -67,6 +81,61 @@ export default function Home() {
   const [tagContributionMap, setTagContributionMap] = useState<
     Record<string, number>
   >({});
+
+  const [dailySessions, setDailySessions] = useState<{
+    Morning: FocusSession[];
+    Day: FocusSession[];
+    Night: FocusSession[];
+  }>({
+    Morning: [],
+    Day: [],
+    Night: [],
+  });
+
+  const [isLoadingDaily, setIsLoadingDaily] = useState(true);
+  const [dailyLabel, setDailyLabel] = useState<"Today" | "Yesterday">("Today");
+
+  //load recent focus sessions
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const loadDailyFocus = async () => {
+      setIsLoadingDaily(true);
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focus-sessions/recent`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+
+        const json = await res.json();
+        if (!json?.success) return;
+
+        const sessions = json.today.length > 0 ? json.today : json.pastSessions;
+
+        setDailyLabel(json.today.length > 0 ? "Today" : "Yesterday");
+
+        const grouped = {
+          Morning: [],
+          Day: [],
+          Night: [],
+        } as any;
+
+        sessions.forEach((s: FocusSession) => {
+          const bucket = getTimeBucket(new Date(s.startTime));
+          grouped[bucket].push(s);
+        });
+
+        setDailySessions(grouped);
+      } catch (e) {
+        console.error("Failed to load daily focus", e);
+      } finally {
+        setIsLoadingDaily(false);
+      }
+    };
+
+    loadDailyFocus();
+  }, [accessToken]);
 
   //load tags
   useEffect(() => {
@@ -258,53 +327,7 @@ export default function Home() {
         >
           <div className="">
             <div className="grid grid-cols-1 lg:grid-cols-[75%_25%] gap-6">
-              <div className="">
-                <div className="flex justify-around">
-                  <div className="">
-                    <button
-                      onClick={() => setHistogramPage((p) => p + 1)}
-                      disabled={stopNow}
-                      className={`
-                      -translate-y-1/2 z-10
-                      h-9 w-9 rounded-full border
-                      flex items-center justify-center
-                      bg-white border-[#E2E8F0]
-                      dark:bg-[#1F2933] dark:border-[#1F2933]
-
-                      ${
-                        stopNow
-                          ? "opacity-40 cursor-not-allowed"
-                          : "hover:bg-[#F1F5F9] dark:hover:bg-[#263241]"
-                      }
-                    `}
-                    >
-                      <ArrowLeftIcon />
-                    </button>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() =>
-                        setHistogramPage((p) => Math.max(0, p - 1))
-                      }
-                      disabled={histogramPage === 0}
-                      className={`
-                        -translate-y-1/2
-                        h-9 w-9 rounded-full border
-                        flex items-center justify-center
-                        bg-white border-[#E2E8F0]
-                        dark:bg-[#1F2933] dark:border-[#1F2933]
-
-                        ${
-                          histogramPage === 0
-                            ? "opacity-40 cursor-not-allowed"
-                            : "hover:bg-[#F1F5F9] dark:hover:bg-[#263241]"
-                        }
-                      `}
-                    >
-                      <ArrowRightIcon />
-                    </button>
-                  </div>
-                </div>
+              <div className="relative">
                 <div>
                   {isLoadingHistogram ? (
                     <HistogramSkeleton />
@@ -323,9 +346,55 @@ export default function Home() {
                     />
                   )}
                 </div>
+                <div className="absolute z-10 flex justify-between w-full">
+                  <div className="">
+                    <button
+                      onClick={() => setHistogramPage((p) => p + 1)}
+                      disabled={stopNow}
+                      className={`
+                      -translate-y-1/2 z-10
+                      h-9 w-9 rounded-full border
+                      flex items-center justify-center
+                      bg-white border-[#E2E8F0]
+                      dark:bg-[#1F2933] dark:border-[#1F2933] 
+
+                      ${
+                        stopNow
+                          ? "opacity-40 cursor-not-allowed"
+                          : "hover:bg-[#F1F5F9] dark:hover:bg-[#263241] cursor-pointer"
+                      }
+                    `}
+                    >
+                      <ArrowLeftIcon />
+                    </button>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() =>
+                        setHistogramPage((p) => Math.max(0, p - 1))
+                      }
+                      disabled={histogramPage === 0}
+                      className={`
+                        -translate-y-1/2
+                        h-9 w-9 rounded-full border
+                        flex items-center justify-center
+                        bg-white border-[#E2E8F0]
+                        dark:bg-[#1F2933] dark:border-[#1F2933] 
+
+                        ${
+                          histogramPage === 0
+                            ? "opacity-40 cursor-not-allowed"
+                            : "hover:bg-[#F1F5F9] dark:hover:bg-[#263241] cursor-pointer"
+                        }
+                      `}
+                    >
+                      <ArrowRightIcon />
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="">
-                <div className="lg:mt-10 flex-col justify-between">
+                <div className="mt-2 flex-col justify-between">
                   <div className="flex lg:flex-col gap-3 overflow-x-auto lg:h-[380px] overflow-y-auto scrollbar-hide px-1">
                     {["All Tags", ...availableTags, "untagged"].map((tag) => {
                       const isActive = selectedTag === tag;
@@ -342,7 +411,7 @@ export default function Home() {
                           whileTap={{ scale: 0.96 }}
                           className={`
                         px-4 py-2 rounded-2xl text-sm whitespace-nowrap
-                        border transition-all
+                        border transition-all cursor-pointer
                         ${
                           isActive
                             ? "bg-[#4F6EF7] text-white border-transparent shadow-md dark:bg-[#7C9AFF] dark:text-[#0F1419]"
@@ -384,6 +453,82 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ---------------- DAILY FOCUS ---------------- */}
+      <section className="space-y-8">
+        <header>
+          <h2 className="text-2xl font-semibold">Daily Focus</h2>
+          <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+            {dailyLabel}'s sessions, split by time of day.
+          </p>
+        </header>
+
+        <div
+          className="
+      rounded-3xl border p-8
+      bg-white border-[#E2E8F0]
+      dark:bg-[#151B22] dark:border-[#1F2933]
+    "
+        >
+          {isLoadingDaily ? (
+            <div className="h-[240px] flex items-center justify-center">
+              <ClassicLoader />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {(["Morning", "Day", "Night"] as const).map((bucket) => (
+                <div
+                  key={bucket}
+                  className="
+              rounded-2xl border p-4
+              bg-[#F8FAFC] border-[#E2E8F0]
+              dark:bg-[#0F1419] dark:border-[#1F2933]
+            "
+                >
+                  <h3 className="font-medium mb-3">{bucket}</h3>
+
+                  {dailySessions[bucket].length === 0 ? (
+                    <p className="text-sm opacity-60">No sessions</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {dailySessions[bucket].map((s) => (
+                        <div
+                          key={s.id}
+                          className="
+                      flex justify-between items-center
+                      rounded-xl px-3 py-2
+                      bg-white dark:bg-[#151B22]
+                      border border-[#E2E8F0] dark:border-[#1F2933]
+                      text-sm
+                    "
+                        >
+                          <span>
+                            {new Date(s.startTime).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {" - "}
+                            {s.endTime
+                              ? new Date(s.endTime).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "Ongoing"}
+                          </span>
+
+                          <span className="opacity-70">
+                            {Math.round(s.durationSec / 60)} min
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

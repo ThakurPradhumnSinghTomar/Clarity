@@ -104,6 +104,7 @@ export default function Clock() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [tagMessage, setTagMessage] = useState<string | null>(null);
+  const [realStartTime, setRealStartTime] = useState<Date | null>(null);
 
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [storedSession, setStoredSession] = useState<any>(null);
@@ -329,12 +330,23 @@ export default function Clock() {
         type,
         timerDuration,
         isRunning,
+        realStartTime: realStartTime?.toISOString() || null,
         sessionStartTime: sessionStartTime?.toISOString() || null,
         pausedAt: pausedAt?.toISOString() || null,
         accumulatedTime,
         currentTime,
         selectedTag,
       };
+
+      /*
+      🧠 Why ISO?
+
+        survives reload
+
+        timezone-safe
+
+        backend-safe
+              */
 
       // Use localStorage instead of window.storage
       localStorage.setItem("focus-clock-state", JSON.stringify(state));
@@ -373,6 +385,9 @@ export default function Clock() {
 
   async function handleStart() {
     if (isRunning) return;
+    if (!realStartTime) {
+      setRealStartTime(new Date());
+    }
     setSessionStartTime(new Date());
     setPausedAt(null);
     setIsRunning(true);
@@ -399,7 +414,7 @@ export default function Clock() {
   }
 
   async function handleSave() {
-    if (!currentTime) return;
+    if (!currentTime || !realStartTime) return;
     setIsSavingSession(true);
 
     await fetch(
@@ -411,7 +426,7 @@ export default function Clock() {
           Authorization: `Bearer ${session?.accessToken}`,
         },
         body: JSON.stringify({
-          startTime: sessionStartTime || pausedAt,
+          startTime: realStartTime,
           endTime: new Date(),
           durationSec: currentTime,
           tag: selectedTag,
@@ -436,6 +451,7 @@ export default function Clock() {
     setSessionStartTime(null);
     setPausedAt(null);
     updateFocusingStatus(false);
+    setRealStartTime(null);
     await clearStoredState();
     if (intervalRef.current) clearInterval(intervalRef.current);
   }
@@ -491,6 +507,9 @@ export default function Clock() {
 
     setShowRestoreModal(false);
     setStoredSession(null);
+    setRealStartTime(
+      storedSession.realStartTime ? new Date(storedSession.realStartTime) : null
+    );
   }
 
   async function handleSavePreviousSession() {
@@ -507,7 +526,7 @@ export default function Clock() {
           Authorization: `Bearer ${session?.accessToken}`,
         },
         body: JSON.stringify({
-          startTime: storedSession.sessionStartTime || storedSession.pausedAt,
+          startTime: new Date(storedSession.realStartTime),
           endTime: new Date(storedSession.pausedAt || Date.now()),
           durationSec: storedSession.currentTime,
           tag: storedSession.selectedTag,
