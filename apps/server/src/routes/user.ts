@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { extractGlobalLeaderBoard } from "../controllers/extractGlobalLeaderBoard.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { getCurrentWeekStart } from "../controllers/getCurrentWeekStart.js";
-import type { Prisma__FocusSessionClient } from "../generated/prisma/models.js";
+
 
 const userRouter = express.Router();
 
