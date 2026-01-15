@@ -6,10 +6,21 @@ import { extractGlobalLeaderBoard } from "../controllers/extractGlobalLeaderBoar
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { getCurrentWeekStart } from "../controllers/getCurrentWeekStart.js";
 
-
 const userRouter = express.Router();
 
 userRouter.get("/", async (req, res) => res.send("Auth API running!"));
+
+function getWeekStartUTC(date: Date) {
+  const d = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  );
+
+  const day = (d.getUTCDay() + 6) % 7; // Monday = 0
+  d.setUTCDate(d.getUTCDate() - day);
+  d.setUTCHours(0, 0, 0, 0);
+
+  return d;
+}
 
 userRouter.get("/leaderboard", authMiddleware, async (req, res) => {
   try {
@@ -77,49 +88,62 @@ userRouter.post("/save-focus-sesssion", authMiddleware, async (req, res) => {
 
     const { startTime, endTime, durationSec, tag, note } = req.body;
 
-    if (!startTime || !endTime || !durationSec) {
-      return res.json({
+    if (!startTime || !endTime || durationSec <= 0) {
+      return res.status(400).json({
         success: false,
-        message:
-          "missing required fields : starttime endtime or duration of focus",
+        message: "missing or invalid fields",
       });
     }
+
+    /* ===================== Normalize inputs ===================== */
 
     const start = new Date(startTime);
     const end = new Date(endTime);
 
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "invalid date format",
+      });
+    }
+
+    /* ===================== Create Focus Session ===================== */
+
     const focusSession = await prisma.focusSession.create({
       data: {
-        userId: userId,
+        userId,
         startTime: start,
         endTime: end,
-        durationSec: durationSec,
+        durationSec,
         tag: tag || null,
         note: note || null,
       },
     });
 
-    const weekStart = new Date(start);
-    weekStart.setHours(0, 0, 0, 0); //Reset the time part of this Date to exactly midnight.
-    const dayOfweek = (weekStart.getDay() + 6) % 7; //ye date ho gyi kb tumne focus session start/run kiya tha, and y ab monady based week day dega like 0-monday,1-tuesday,..
-    weekStart.setDate(weekStart.getDate() - dayOfweek); //perfect, ab y weekStart monady s hi set karega..
+    /* ===================== Weekly aggregation ===================== */
 
-    const sessionWeekday = (start.getDay() + 6) % 7; //ab database m sunday k liye 6 jayega n ki 0
+    // ✅ Canonical, UTC-safe week start (DO NOT TOUCH AFTER THIS)
+    const weekStart = getWeekStartUTC(start);
 
-    let weeklyRecord = await prisma.weeklyStudyHours.findUnique({
+    // ✅ Monday-based weekday (0 = Monday, 6 = Sunday)
+    const sessionWeekday = (start.getUTCDay() + 6) % 7;
+
+    // Find weekly record safely (Mongo + Date-safe)
+    let weeklyRecord = await prisma.weeklyStudyHours.findFirst({
       where: {
-        userId_weekStart_wsh: {
-          userId: userId,
-          weekStart: weekStart,
+        userId,
+        weekStart: {
+          equals: weekStart,
         },
       },
     });
 
     if (!weeklyRecord) {
+      // 🆕 First session of the week
       weeklyRecord = await prisma.weeklyStudyHours.create({
         data: {
-          userId: userId,
-          weekStart: weekStart,
+          userId,
+          weekStart,
           days: [
             {
               weekday: sessionWeekday,
@@ -130,40 +154,29 @@ userRouter.post("/save-focus-sesssion", authMiddleware, async (req, res) => {
         },
       });
     } else {
-      const existingWeekdayIndex = weeklyRecord.days.findIndex(
-        (day) => day.weekday === sessionWeekday
+      // 🔁 Update existing week
+      const existingDay = weeklyRecord.days.find(
+        (d) => d.weekday === sessionWeekday
       );
 
-      let updatedDays;
-      if (existingWeekdayIndex !== -1) {
-        updatedDays = weeklyRecord.days.map((day, index) => {
-          if (day.weekday === sessionWeekday) {
-            return {
-              focusedSec: day.focusedSec + durationSec,
-              weekday: sessionWeekday,
-            };
-          }
-          return day;
-        });
-      } else {
-        updatedDays = [
-          ...weeklyRecord.days,
-          {
-            weekday: sessionWeekday,
-            focusedSec: durationSec,
-          },
-        ];
-      }
+      const updatedDays = existingDay
+        ? weeklyRecord.days.map((d) =>
+            d.weekday === sessionWeekday
+              ? { ...d, focusedSec: d.focusedSec + durationSec }
+              : d
+          )
+        : [
+            ...weeklyRecord.days,
+            { weekday: sessionWeekday, focusedSec: durationSec },
+          ];
 
       const newTotalSec = updatedDays.reduce(
-        (sum, day) => sum + day.focusedSec,
+        (sum, d) => sum + d.focusedSec,
         0
       );
 
       weeklyRecord = await prisma.weeklyStudyHours.update({
-        where: {
-          id: weeklyRecord.id,
-        },
+        where: { id: weeklyRecord.id },
         data: {
           days: updatedDays,
           totalSec: newTotalSec,
@@ -171,19 +184,25 @@ userRouter.post("/save-focus-sesssion", authMiddleware, async (req, res) => {
       });
     }
 
-    res.status(201).json({
+    /* ===================== Response ===================== */
+
+    return res.status(201).json({
       success: true,
       message: "focus session saved successfully",
-      data: { focusSession, weeklyRecord },
+      data: {
+        focusSession,
+        weeklyRecord,
+      },
     });
   } catch (error) {
-    console.error(error, "error saving focus session");
-    res.status(500).json({
+    console.error("error saving focus session:", error);
+    return res.status(500).json({
       success: false,
       message: "server error while saving focus session",
     });
   }
 });
+
 
 userRouter.get(
   "/get-current-week-study-hours/:page",
@@ -502,8 +521,7 @@ userRouter.get("/focus-sessions/recent", authMiddleware, async (req, res) => {
     );
 
     const startOfPastDays = new Date(startOfToday);
-    startOfPastDays.setDate(startOfPastDays.getDate() - 4); // last 5 days total
-
+    startOfPastDays.setDate(startOfPastDays.getDate() - 1); // current day only
     const sessions = await prisma.focusSession.findMany({
       where: {
         userId,
@@ -554,9 +572,7 @@ userRouter.get(
     const page = Number(req.params.page);
 
     if (!userId) {
-      return res
-        .status(401)
-        .json({ success: false, message: "unauthorized" });
+      return res.status(401).json({ success: false, message: "unauthorized" });
     }
 
     // calculate week range (mon -> sun)
@@ -605,10 +621,13 @@ userRouter.get(
       if (!sessionByTag[tag]) {
         sessionByTag[tag] = {
           totalDuration: 0,
-          byDay: Array.from({ length: 7 }, (): DayGroup => ({
-            sessions: [],
-            totalDuration: 0,
-          })),
+          byDay: Array.from(
+            { length: 7 },
+            (): DayGroup => ({
+              sessions: [],
+              totalDuration: 0,
+            })
+          ),
         };
       }
 
@@ -631,6 +650,93 @@ userRouter.get(
       },
       data: sessionByTag,
     });
+  }
+);
+
+userRouter.get(
+  "/get-daily-study-hours-of-8-weeks",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "unauthorized" });
+      }
+
+      const WEEKS = 8;
+      const DAYS = WEEKS * 7;
+
+      const currWeekStart = getCurrentWeekStart(); // Monday 00:00
+      console.log("current week start is : ", currWeekStart); //this will show time in UTC IST = UTC + 5 hours 30 minutes
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const rangeStart = new Date(today);
+      rangeStart.setDate(rangeStart.getDate() - (DAYS - 2));
+
+      console.log(
+        "we are taking chart data from the weeks whom weekStart is greater than : ",
+        rangeStart
+      );
+
+      const weeklyStudyHours = await prisma.weeklyStudyHours.findMany({
+        where: {
+          userId,
+          weekStart: {
+            gte: rangeStart,
+          },
+        },
+        select: {
+          weekStart: true,
+          days: true,
+        },
+      });
+
+      // Map: yyyy-mm-dd -> focusedSec
+      const dayMap = new Map<string, number>();
+
+      for (const week of weeklyStudyHours) {
+        for (const day of week.days) {
+          const date = new Date(week.weekStart);
+          date.setDate(date.getDate() + day.weekday);
+
+          const key = date.toISOString().slice(0, 10);
+          dayMap.set(key, (dayMap.get(key) || 0) + day.focusedSec);
+          console.log("date " + key + " has focused sec ", dayMap.get(key));
+        }
+      }
+
+      // Build continuous 56-day timeline
+      const result = [];
+      const cursor = new Date(rangeStart);
+
+      for (let i = 0; i < DAYS; i++) {
+        const key = cursor.toISOString().slice(0, 10);
+
+        result.push({
+          date: key,
+          focusedSec: dayMap.get(key) || 0,
+        });
+
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      console.log("your chart final data is : ", result);
+
+      return res.json({
+        success: true,
+        days: result,
+      });
+    } catch (err) {
+      console.error("daily study hours error", err);
+      return res.status(500).json({
+        success: false,
+        message: "internal server error",
+      });
+    }
   }
 );
 

@@ -415,33 +415,48 @@ export default function Clock() {
 
   async function handleSave() {
     if (!currentTime || !realStartTime) return;
+
     setIsSavingSession(true);
 
-    await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
-          startTime: realStartTime,
-          endTime: new Date(),
-          durationSec: currentTime,
-          tag: selectedTag,
-          note: null,
-        }),
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/save-focus-sesssion`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: JSON.stringify({
+            startTime: realStartTime,
+            endTime: new Date(),
+            durationSec: currentTime,
+            tag: selectedTag,
+            note: null,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to save focus session");
       }
-    );
 
-    alert(
-      `Congratulations! Focus session of ${Math.floor(currentTime / 60)} minutes saved 🎉`
-    );
+      alert(
+        `Congratulations! Focus session of ${Math.floor(currentTime / 60)} minutes saved 🎉`
+      );
 
-    handleReset();
-    await clearStoredState();
-    setIsSavingSession(false);
+      handleReset();
+      await clearStoredState();
+    } catch (err : any) {
+      console.error("Save session error:", err);
+      alert(
+        err?.message ||
+          "Something went wrong while saving your session. Try again."
+      );
+    } finally {
+      setIsSavingSession(false);
+    }
   }
 
   async function handleReset() {

@@ -59,6 +59,31 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
+const getActivityColor = (sec: number) => {
+  if (sec === 0) return "bg-[#E5E7EB] dark:bg-[#1F2933]";
+  if (sec < 30 * 60) return "bg-[#C7D2FE]";
+  if (sec < 90 * 60) return "bg-[#818CF8]";
+  return "bg-[#4F6EF7]";
+};
+
+const calculateStreaks = (days: { date: string; focusedSec: number }[]) => {
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let temp = 0;
+
+  for (let i = days.length - 1; i >= 0; i--) {
+    if (days[i].focusedSec > 0) {
+      temp++;
+      if (i === days.length - 1) currentStreak = temp;
+      longestStreak = Math.max(longestStreak, temp);
+    } else {
+      temp = 0;
+    }
+  }
+
+  return { currentStreak, longestStreak };
+};
+
 /* ---------------- Page ---------------- */
 
 export default function Home() {
@@ -94,6 +119,36 @@ export default function Home() {
 
   const [isLoadingDaily, setIsLoadingDaily] = useState(true);
   const [dailyLabel, setDailyLabel] = useState<"Today" | "Yesterday">("Today");
+
+  const [activityDays, setActivityDays] = useState<
+    { date: string; focusedSec: number }[]
+  >([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(true);
+
+  //load activity chart
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const loadActivity = async () => {
+      setIsLoadingActivity(true);
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-daily-study-hours-of-8-weeks`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        const json = await res.json();
+        if (json?.success) {
+          setActivityDays(json.days || []);
+        }
+      } catch (e) {
+        console.error("Failed to load activity chart", e);
+      } finally {
+        setIsLoadingActivity(false);
+      }
+    };
+
+    loadActivity();
+  }, [accessToken]);
 
   //load recent focus sessions
   useEffect(() => {
@@ -453,6 +508,93 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-6">
+        <header>
+          <h2 className="text-2xl font-semibold">Activity</h2>
+          <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+            Your consistency over the last 8 weeks.
+          </p>
+        </header>
+
+        <div
+          className="
+    rounded-3xl border p-6
+    bg-white border-[#E2E8F0]
+    dark:bg-[#151B22] dark:border-[#1F2933]
+  "
+        >
+          {isLoadingActivity ? (
+            <div className="h-[140px] flex items-center justify-center">
+              <ClassicLoader />
+            </div>
+          ) : (
+            (() => {
+              const { currentStreak, longestStreak } =
+                calculateStreaks(activityDays);
+
+              return (
+                <div className="flex flex-col lg:flex-row gap-10 items-start">
+                  {/* HEATMAP */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: 8 }).map((_, weekIdx) => (
+                      <div key={weekIdx} className="flex flex-col gap-1">
+                        {activityDays
+                          .slice(weekIdx * 7, weekIdx * 7 + 7)
+                          .map((day, idx) => (
+                            <div
+                              key={idx}
+                              title={`${day.date} • ${Math.round(
+                                day.focusedSec / 60
+                              )} min`}
+                              className={`
+                        h-4 w-4 rounded-sm
+                        ${getActivityColor(day.focusedSec)}
+                      `}
+                            />
+                          ))}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* STATS */}
+                  <div className="space-y-6 flex justify-around w-full items-center">
+                    <div>
+                      <p className="text-sm text-[#9FB0C0]">Current streak</p>
+                      <p className="text-lg font-semibold flex items-center gap-2">
+                        🔥 {currentStreak} day{currentStreak !== 1 && "s"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-[#9FB0C0]">Best streak</p>
+                      <p className="text-lg font-medium flex items-center gap-2">
+                        🏆 {longestStreak} days
+                      </p>
+                    </div>
+
+                    <div className="">
+                      <p className="text-xs uppercase tracking-wide opacity-60 mb-2">
+                        Activity level
+                      </p>
+                      <div className="flex items-center gap-2 text-xs opacity-70">
+                        <span>Less</span>
+                        <div className="flex gap-1">
+                          <div className="h-3 w-3 rounded-sm bg-[#1F2933]" />
+                          <div className="h-3 w-3 rounded-sm bg-[#C7D2FE]" />
+                          <div className="h-3 w-3 rounded-sm bg-[#818CF8]" />
+                          <div className="h-3 w-3 rounded-sm bg-[#4F6EF7]" />
+                        </div>
+                        <span>More</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          )}
         </div>
       </section>
 
