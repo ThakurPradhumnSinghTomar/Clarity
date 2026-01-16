@@ -4,7 +4,7 @@ import { getCurrentWeekStart } from "./getCurrentWeekStart.js";
 
 export async function extractGlobalLeaderBoard() {
   // 1) Figure out which week we are in right now
-  const weekStart = getCurrentWeekStart();
+  const weekStart = getCurrentWeekStart(new Date());
 
   // 2) Query Prisma for this week's study hours for ALL users
   // -----------------------------------------------------------------
