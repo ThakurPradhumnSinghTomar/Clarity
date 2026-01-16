@@ -120,9 +120,10 @@ export default function Home() {
   const [isLoadingDaily, setIsLoadingDaily] = useState(true);
   const [dailyLabel, setDailyLabel] = useState<"Today" | "Yesterday">("Today");
 
-  const [activityDays, setActivityDays] = useState<
-    { date: string; focusedSec: number }[]
-  >([]);
+  const [activityWeeks, setActivityWeeks] = useState<Record<number, number[]>>(
+    {}
+  );
+
   const [isLoadingActivity, setIsLoadingActivity] = useState(true);
 
   //load activity chart
@@ -133,12 +134,12 @@ export default function Home() {
       setIsLoadingActivity(true);
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-daily-study-hours-of-8-weeks`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-heatmap-data`,
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
         const json = await res.json();
         if (json?.success) {
-          setActivityDays(json.days || []);
+          setActivityWeeks(json.finalWeekData || {});
         }
       } catch (e) {
         console.error("Failed to load activity chart", e);
@@ -388,7 +389,7 @@ export default function Home() {
                     <HistogramSkeleton />
                   ) : noWeeklyData ? (
                     <div>
-                      <div className="h-[420px] flex text-center items-center justify-center text-sm opacity-70 leading-loose  border rounded-2xl">
+                      <div className="h-[460px] flex text-center items-center justify-center text-sm opacity-70 leading-loose  border rounded-2xl">
                         No study data this week <br /> Start your study session
                         now
                       </div>
@@ -532,29 +533,31 @@ export default function Home() {
             </div>
           ) : (
             (() => {
-              const { currentStreak, longestStreak } =
-                calculateStreaks(activityDays);
+              const flattenedDays = Object.values(activityWeeks).flat();
+
+              const { currentStreak, longestStreak } = calculateStreaks(
+                flattenedDays.map((focusedSec, i) => ({
+                  date: String(i),
+                  focusedSec,
+                }))
+              );
 
               return (
                 <div className="flex flex-col lg:flex-row gap-10 items-start">
                   {/* HEATMAP */}
                   <div className="flex gap-1">
-                    {Array.from({ length: 8 }).map((_, weekIdx) => (
+                    {Object.entries(activityWeeks).map(([weekIdx, days]) => (
                       <div key={weekIdx} className="flex flex-col gap-1">
-                        {activityDays
-                          .slice(weekIdx * 7, weekIdx * 7 + 7)
-                          .map((day, idx) => (
-                            <div
-                              key={idx}
-                              title={`${day.date} • ${Math.round(
-                                day.focusedSec / 60
-                              )} min`}
-                              className={`
-                        h-4 w-4 rounded-sm
-                        ${getActivityColor(day.focusedSec)}
-                      `}
-                            />
-                          ))}
+                        {days.map((focusedSec, dayIdx) => (
+                          <div
+                            key={dayIdx}
+                            title={`${focusedSec > 0 ? Math.round(focusedSec / 60) : 0} min`}
+                            className={`
+            h-4 w-4 rounded-sm
+            ${getActivityColor(focusedSec)}
+          `}
+                          />
+                        ))}
                       </div>
                     ))}
                   </div>
@@ -737,3 +740,25 @@ export default function Home() {
     </main>
   );
 }
+
+/*
+
+2️⃣ What Object.values(activityWeeks) does
+👉 Removes the keys (0,1,2...) and gives you only the arrays.
+
+3️⃣ What .flat() does (this is the key)
+👉 Flattens one level deep
+
+Meaning:
+
+[
+  [a, b, c],
+  [d, e, f]
+].flat()
+
+
+becomes
+
+[a, b, c, d, e, f]
+
+*/

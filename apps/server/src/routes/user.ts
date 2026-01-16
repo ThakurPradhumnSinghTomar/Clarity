@@ -170,10 +170,7 @@ userRouter.post("/save-focus-sesssion", authMiddleware, async (req, res) => {
             { weekday: sessionWeekday, focusedSec: durationSec },
           ];
 
-      const newTotalSec = updatedDays.reduce(
-        (sum, d) => sum + d.focusedSec,
-        0
-      );
+      const newTotalSec = updatedDays.reduce((sum, d) => sum + d.focusedSec, 0);
 
       weeklyRecord = await prisma.weeklyStudyHours.update({
         where: { id: weeklyRecord.id },
@@ -202,7 +199,6 @@ userRouter.post("/save-focus-sesssion", authMiddleware, async (req, res) => {
     });
   }
 });
-
 
 userRouter.get(
   "/get-current-week-study-hours/:page",
@@ -576,7 +572,7 @@ userRouter.get(
     }
 
     // calculate week range (mon -> sun)
-    const currentWeekStart = getCurrentWeekStart();
+    const currentWeekStart = getCurrentWeekStart(new Date());
     const gte = getPreviousWeekStart(currentWeekStart, page);
 
     let lte: Date;
@@ -632,7 +628,7 @@ userRouter.get(
       }
 
       // JS: 0=Sun,1=Mon,...6=Sat → convert to 0=Mon,...6=Sun
-      const dayIndex = (s.startTime.getDay() + 6) % 7;
+      const dayIndex = (s.startTime.getUTCDay() + 6) % 7;
 
       sessionByTag[tag]!.byDay[dayIndex]!.sessions.push(s);
       sessionByTag[tag]!.byDay[dayIndex]!.totalDuration += s.durationSec;
@@ -653,92 +649,121 @@ userRouter.get(
   }
 );
 
-userRouter.get(
-  "/get-daily-study-hours-of-8-weeks",
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const userId = req.user?.id;
+userRouter.get("/get-heatmap-data", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "unauthorized" });
+    }
 
-      if (!userId) {
-        return res
-          .status(401)
-          .json({ success: false, message: "unauthorized" });
+    const WEEKS = 8;
+    const DAYS_IN_WEEK = 7;
+
+    // 🔒 UTC canonical current week start (Monday 00:00 UTC)
+    const currWeekStart = getWeekStartUTC(new Date());
+
+    // 🔒 Today at 00:00 UTC
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    /* ===================== Generate week starts ===================== */
+
+    const weekStarts: Date[] = [];
+    for (let i = WEEKS - 1; i >= 0; i--) {
+      const d = new Date(currWeekStart);
+      d.setUTCDate(d.getUTCDate() - i * DAYS_IN_WEEK);
+      weekStarts.push(d);
+    }
+
+    const rangeStart = weekStarts[0];
+    if (!rangeStart) {
+      throw new Error("weekStarts generation failed");
+    }
+
+    /* ===================== Fetch DB data ===================== */
+
+    const weeklyStudyHours = await prisma.weeklyStudyHours.findMany({
+      where: {
+        userId,
+        weekStart: {
+          gte: rangeStart,
+        },
+      },
+      select: {
+        weekStart: true,
+        days: true,
+      },
+      orderBy: {
+        weekStart: "asc",
+      },
+    });
+
+    /* ===================== Normalize + merge DB weeks ===================== */
+
+    const normalizeWeekStart = (d: Date) =>
+      Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+
+    const dbWeekMap = new Map<number, { weekStart: Date; days: any[] }>();
+
+    for (const w of weeklyStudyHours) {
+      const key = normalizeWeekStart(w.weekStart);
+
+      if (!dbWeekMap.has(key)) {
+        dbWeekMap.set(key, {
+          weekStart: w.weekStart,
+          days: [...w.days],
+        });
+      } else {
+        // merge duplicate week rows (old bad data)
+        dbWeekMap.get(key)!.days.push(...w.days);
       }
+    }
 
-      const WEEKS = 8;
-      const DAYS = WEEKS * 7;
+    /* ===================== Build final heatmap ===================== */
 
-      const currWeekStart = getCurrentWeekStart(); // Monday 00:00
-      console.log("current week start is : ", currWeekStart); //this will show time in UTC IST = UTC + 5 hours 30 minutes
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    const finalWeekData: Record<number, number[]> = {};
 
-      const rangeStart = new Date(today);
-      rangeStart.setDate(rangeStart.getDate() - (DAYS - 2));
+    weekStarts.forEach((weekStart, index) => {
+      const daysWiseStudyHrs = [0, 0, 0, 0, 0, 0, 0];
 
-      console.log(
-        "we are taking chart data from the weeks whom weekStart is greater than : ",
-        rangeStart
-      );
+      const key = normalizeWeekStart(weekStart);
+      const dbWeek = dbWeekMap.get(key);
 
-      const weeklyStudyHours = await prisma.weeklyStudyHours.findMany({
-        where: {
-          userId,
-          weekStart: {
-            gte: rangeStart,
-          },
-        },
-        select: {
-          weekStart: true,
-          days: true,
-        },
-      });
-
-      // Map: yyyy-mm-dd -> focusedSec
-      const dayMap = new Map<string, number>();
-
-      for (const week of weeklyStudyHours) {
-        for (const day of week.days) {
-          const date = new Date(week.weekStart);
-          date.setDate(date.getDate() + day.weekday);
-
-          const key = date.toISOString().slice(0, 10);
-          dayMap.set(key, (dayMap.get(key) || 0) + day.focusedSec);
-          console.log("date " + key + " has focused sec ", dayMap.get(key));
+      if (dbWeek) {
+        for (const day of dbWeek.days) {
+          daysWiseStudyHrs[day.weekday] =
+            (daysWiseStudyHrs[day.weekday] || 0) + day.focusedSec;
         }
       }
 
-      // Build continuous 56-day timeline
-      const result = [];
-      const cursor = new Date(rangeStart);
+      // 🔒 Trim current week to today (UTC-safe)
+      if (key === normalizeWeekStart(currWeekStart)) {
+        const diffDays =
+          Math.floor(
+            (today.getTime() - weekStart.getTime()) /
+              (1000 * 60 * 60 * 24)
+          ) + 1;
 
-      for (let i = 0; i < DAYS; i++) {
-        const key = cursor.toISOString().slice(0, 10);
-
-        result.push({
-          date: key,
-          focusedSec: dayMap.get(key) || 0,
-        });
-
-        cursor.setDate(cursor.getDate() + 1);
+        daysWiseStudyHrs.length = Math.min(diffDays, 7);
       }
 
-      console.log("your chart final data is : ", result);
+      finalWeekData[index] = daysWiseStudyHrs;
+    });
 
-      return res.json({
-        success: true,
-        days: result,
-      });
-    } catch (err) {
-      console.error("daily study hours error", err);
-      return res.status(500).json({
-        success: false,
-        message: "internal server error",
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      message: "weekly heatmap data (past 7 weeks + current)",
+      finalWeekData,
+    });
+  } catch (e) {
+    console.error("heatmap error:", e);
+    return res.status(500).json({
+      success: false,
+      message: "internal server error",
+    });
   }
-);
+});
+
 
 //
 export default userRouter;
