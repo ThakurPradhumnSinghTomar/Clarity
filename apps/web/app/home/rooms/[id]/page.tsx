@@ -2,30 +2,27 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Users,
-  Trophy,
-  Clock,
-  Settings,
-  LogOut,
-  Copy,
-  Check,
-  UserPlus,
   Crown,
   Medal,
-  Delete,
   AlertTriangle,
-  X,
 } from "lucide-react";
-import { Leaderboard } from "@repo/ui";
+import {
+  LeaderboardTab,
+  MembersTab,
+  PendingRequestsTab,
+  RoomHeader,
+  RoomStats,
+} from "@repo/ui";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { leaveRoom } from "@/lib/helpfulFunctions/roomsRelated/leaveRoom";
 import { useRouter } from "next/navigation";
 import { RoomData, RoomMember } from "@repo/types";
-import { div } from "framer-motion/client";
 import { EditRoomModel } from "@repo/ui";
-import { formatStudyTime } from "@/lib/helpfulFunctions/formatStudyTime";
 import { motion, AnimatePresence } from "framer-motion";
+import { RoomTabs } from "@repo/ui";
+import { useRoomData } from "@/lib/hooks/room/useRoomData";
+
 
 // Confirmation Modal Component
 interface ConfirmationModalProps {
@@ -130,23 +127,25 @@ const RoomPage = () => {
   const [activeTab, setActiveTab] = useState<
     "members" | "leaderboard" | "pending requests"
   >("members");
-  const [members, setMembers] = useState<RoomMember[]>([]);
-  const [roomData, setRoomData] = useState<RoomData | null>(null);
-  const [isReqAccepted, setisReqAccepted] = useState(false);
-  const [isReqRejected, setisReqRejected] = useState(false);
+  
   const [reqProcessing, setReqProcessing] = useState(false);
   const [isRoomEditModelOpen, setIsEditModelOpen] = useState(false);
   const [reqIndex, setReqIndex] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  
 
   const params = useParams();
   const roomId = params.id as string;
+  const { roomData, members, isLoading } = useRoomData(roomId);
+
   const isHost = roomData?.isHost || false;
   const roomCode = roomData?.roomCode || null;
   const { data: session } = useSession();
   const accessToken = session?.accessToken;
   const router = useRouter();
+
+  
 
   if (!accessToken) {
     throw new Error("no access token...  ");
@@ -175,7 +174,7 @@ const RoomPage = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ roomCode, roomId, RequserId }),
-        }
+        },
       );
 
       if (!response || !response.ok) {
@@ -208,7 +207,7 @@ const RoomPage = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ roomCode, roomId, RequserId }),
-        }
+        },
       );
 
       if (!response || !response.ok) {
@@ -220,7 +219,7 @@ const RoomPage = () => {
       setReqProcessing(false);
 
       console.log(
-        "user respectfully rejected to join the room... request rejected.."
+        "user respectfully rejected to join the room... request rejected..",
       );
       return;
     } catch (error) {
@@ -230,32 +229,6 @@ const RoomPage = () => {
     }
   };
 
-  const loadRoomData = async () => {
-    try {
-      const room = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/get-room/${roomId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-        }
-      );
-
-      if (!room.ok) {
-        console.log("failed to load room data");
-        return;
-      }
-
-      const data = await room.json();
-
-      setRoomData(data.room);
-      setMembers(data.room.members);
-    } catch (error) {
-      console.log("failed to lead room data and its members..", error);
-    }
-  };
 
   // Convert members to leaderboard format
   const leaderboardStudents = members.map((member) => ({
@@ -267,7 +240,7 @@ const RoomPage = () => {
 
   const handleCopyInviteCode = () => {
     navigator.clipboard.writeText(
-      roomData?.roomCode || "some error in copying.."
+      roomData?.roomCode || "some error in copying..",
     );
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
@@ -280,11 +253,7 @@ const RoomPage = () => {
     return null;
   };
 
-  useEffect(() => {
-    if (session?.accessToken) {
-      loadRoomData();
-    }
-  }, [session?.accessToken]);
+
 
   function RoomSkeleton() {
     return (
@@ -367,304 +336,49 @@ const RoomPage = () => {
       >
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
-          <div className="mb-8">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
-                  {roomData.name}
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  {roomData.description}
-                </p>
-              </div>
-              <div className="flex gap-3">
-                {roomData.isHost && (
-                  <button
-                    onClick={() => {
-                      setIsEditModelOpen(true);
-                    }}
-                    className="p-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-700"
-                  >
-                    <Settings size={20} />
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    if (isHost) {
-                      setShowDeleteConfirm(true);
-                    } else {
-                      setShowLeaveConfirm(true);
-                    }
-                  }}
-                  className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                >
-                  {isHost ? <Delete size={20} /> : <LogOut size={20} />}
-                </button>
-              </div>
-            </div>
+          <RoomHeader
+            name={roomData.name}
+            description={roomData.description}
+            isHost={isHost}
+            onEdit={() => setIsEditModelOpen(true)}
+            onDeleteOrLeave={() =>
+              isHost ? setShowDeleteConfirm(true) : setShowLeaveConfirm(true)
+            }
+          />
 
-            {/* Room Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                    <Users
-                      className="text-indigo-600 dark:text-indigo-400"
-                      size={24}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Members
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {roomData.memberCount + 1}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                    <Clock
-                      className="text-purple-600 dark:text-purple-400"
-                      size={24}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Total Study Time
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {formatStudyTime(roomData.totalStudyTime)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                    <Trophy
-                      className="text-green-600 dark:text-green-400"
-                      size={24}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Your Rank
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      #1
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Invite Code
-                    </p>
-                    <p className="text-lg font-mono font-bold text-gray-900 dark:text-white">
-                      {roomData.roomCode}
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleCopyInviteCode}
-                    className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    {copiedCode ? (
-                      <Check size={20} className="text-green-500" />
-                    ) : (
-                      <Copy size={20} />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <RoomStats
+            memberCount={roomData.memberCount + 1}
+            totalStudyTime={roomData.totalStudyTime}
+            roomCode={roomData.roomCode}
+            copiedCode={copiedCode}
+            onCopy={handleCopyInviteCode}
+          />
 
           {/* Tabs */}
-          <div className="mb-6 border-b border-gray-300 dark:border-gray-700">
-            <div className="flex gap-8">
-              <button
-                onClick={() => setActiveTab("members")}
-                className={`pb-4 px-2 font-semibold transition-colors relative ${
-                  activeTab === "members"
-                    ? "text-indigo-600 dark:text-indigo-400"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
-                }`}
-              >
-                Members
-                {activeTab === "members" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("leaderboard")}
-                className={`pb-4 px-2 font-semibold transition-colors relative ${
-                  activeTab === "leaderboard"
-                    ? "text-indigo-600 dark:text-indigo-400"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
-                }`}
-              >
-                Leaderboard
-                {activeTab === "leaderboard" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("pending requests")}
-                className={`pb-4 px-2 font-semibold transition-colors relative ${
-                  activeTab === "pending requests"
-                    ? "text-indigo-600 dark:text-indigo-400"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
-                }`}
-              >
-                Pending requests..
-                {activeTab === "pending requests" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400" />
-                )}
-              </button>
-            </div>
+          <div className="mt-26">
+            <RoomTabs activeTab={activeTab} onChange={setActiveTab} />
           </div>
 
           {/* Content */}
           {activeTab === "members" ? (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Room Members
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {members.map((member) => (
-                  <div
-                    key={member.id}
-                    className="bg-white dark:bg-[#18181B] rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-700 transition-all duration-300"
-                  >
-                    <div className="flex items-center justify-between">
-                      {/* Left: Avatar + Info */}
-                      <div className="flex items-center gap-4">
-                        <div className="relative">
-                          <div className="w-14 h-14  flex items-center justify-center text-2xl shadow-md overflow-hidden rounded-full">
-                            <img
-                              src={member.avatar}
-                              alt="user profile"
-                              className=""
-                            />
-                          </div>
-                          {member.isFocusing && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white dark:border-[#18181B] rounded-full animate-pulse" />
-                          )}
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900 dark:text-white text-base">
-                              {member.name}
-                            </h3>
-                            {member.rank <= 3 && getRankIcon(member.rank)}
-                          </div>
-
-                          {member.isFocusing ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 font-medium">
-                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                              Focusing now 🔥
-                            </span>
-                          ) : (
-                            <span className="text-xs text-gray-500 dark:text-gray-500">
-                              Offline
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Right: Stats */}
-                      <div className="flex flex-col items-end gap-1.5">
-                        <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
-                          <Clock
-                            size={16}
-                            className="text-gray-400 dark:text-gray-500"
-                          />
-                          <span className="font-semibold text-sm">
-                            {formatStudyTime(member.studyTime)}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-500 font-medium">
-                          Rank #{member.rank}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <MembersTab members={members} />
           ) : activeTab === "leaderboard" ? (
             <div className="flex justify-center ">
-              <Leaderboard students={leaderboardStudents} />
+              <LeaderboardTab students={leaderboardStudents} />
             </div>
           ) : (
-            <div className="bg-white dark:bg-[#18181B] rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-700 transition-all duration-300">
-              {roomData.joinRequests && roomData.joinRequests.length <= 0 ? (
-                <p>No pending join request for this room...</p>
-              ) : (
-                <div className="flex-col gap-2 w-full h-[500px] overflow-y-auto scrollbar-hide">
-                  {roomData.joinRequests &&
-                    roomData.joinRequests.map((joinRequest, index) => (
-                      <div
-                        key={index}
-                        className=" m-4 rounded-2xl p-2 px-4 flex justify-between bg-gray-50 dark:bg-gray-700"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 overflow-hidden rounded-full">
-                            <img
-                              src={joinRequest.user.image}
-                              alt="user profile image"
-                            />
-                          </div>
-                          <div className="font-semibold text-md text-black dark:text-white">
-                            <div>
-                              <p>{joinRequest.user.name}</p>
-                            </div>
-                          </div>
-                          <div></div>
-                        </div>
-                        {joinRequest.status == "pending" ? (
-                          <div className="flex gap-2 items-center">
-                            <div
-                              className="bg-green-400 rounded-2xl p-2 m-2 px-4"
-                              onClick={() => {
-                                setReqIndex(index);
-                                acceptJoinReq();
-                              }}
-                            >
-                              <p>{reqProcessing ? "loading.." : "Accept"}</p>
-                            </div>
-                            <div
-                              onClick={() => {
-                                setReqIndex(index);
-                                rejectJoinReq();
-                              }}
-                              className="bg-red-400 rounded-2xl p-2 m-2 px-4"
-                            >
-                              <p>{reqProcessing ? "loading.." : "Reject"}</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="bg-yellow-400 rounded-2xl p-2 m-2 px-4">
-                            {joinRequest.status}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
+            <PendingRequestsTab
+              roomData={roomData}
+              reqProcessing={reqProcessing}
+              onAccept={(index) => {
+                setReqIndex(index);
+                acceptJoinReq();
+              }}
+              onReject={(index) => {
+                setReqIndex(index);
+                rejectJoinReq();
+              }}
+            />
           )}
         </div>
 

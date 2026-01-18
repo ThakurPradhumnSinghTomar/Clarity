@@ -16,4 +16,16 @@ export {default as RebuildHero} from "./components/RebuildHero";
 export {Hero} from "./components/helix-hero";
 export {LoginPage} from "./components/animated-characters-login-page";
 export {OrbitalClock} from "./components/orbital-clock";
-export {default as ClassicLoader} from "./components/loader"
+export {default as ClassicLoader} from "./components/loader";
+export {HeroSection} from "./components/home/HeroSection";
+export {WeeklyFocus} from "./components/home/WeeklyFocus";
+export {ActivitySection} from "./components/home/ActivitySection";
+export {RoomsSection} from "./components/home/RoomSection";
+export {CTASection} from "./components/home/CTASection";
+export {DailyFocusSection} from "./components/home/DailyFocusSection";
+export {RoomHeader} from "./components/rooms/RoomHeader"
+export {RoomTabs} from "./components/rooms/RoomTabs";
+export {RoomStats} from "./components/rooms/RoomStats";
+export {MembersTab} from "./components/rooms/MembersTab";
+export {LeaderboardTab} from "./components/rooms/Leaderboard";
+export {PendingRequestsTab} from "./components/rooms/PendingRequestsTab";
