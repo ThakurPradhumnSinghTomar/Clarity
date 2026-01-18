@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Plus,
   LogIn,
@@ -8,16 +8,13 @@ import {
   Target,
   TrendingUp,
   Shield,
-  Loader2,
 } from "lucide-react";
-import { RoomCard, InfoCard, CreateRoomModal, JoinRoomModal } from "@repo/ui";
-import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
+import { RoomCard, InfoCard, CreateRoomModal, JoinRoomModal, ActionButton } from "@repo/ui";
 import { useRouter } from "next/navigation";
-import { Room } from "@repo/types";
 import { transformRoomData } from "@/lib/helpfulFunctions/transformRoomData";
-import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData";
 import { motion } from "framer-motion";
+import { useMyRooms } from "@/lib/hooks/rooms/useMyRooms";
+import { useRoomMutations } from "@/lib/hooks/rooms/useRoomMutations";
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -42,101 +39,14 @@ const item = {
 const RoomsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const [myRooms, setMyRooms] = useState<Room[]>([]);
-  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
-  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const { data: session } = useSession();
   const router = useRouter();
-  const accessToken = session?.accessToken;
 
-  if (!accessToken) {
-    throw error;
-  }
+  const { rooms, isLoading, refetch } = useMyRooms();
 
-  useEffect(() => {
-    fetchMyRooms({ setIsLoadingRooms, setError, accessToken, setMyRooms });
-  }, [accessToken]);
+  const { createRoom, joinRoom, isCreating } =
+  useRoomMutations(refetch);
 
-  /* ================= ACTIONS ================= */
-
-  const handleCreateRoom = async (
-    roomName: string,
-    isPrivate: boolean,
-    roomDescription: string
-  ) => {
-    setIsCreatingRoom(true);
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/create-room`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            name: roomName,
-            description: roomDescription,
-            isPublic: !isPrivate,
-          }),
-        }
-      );
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      toast.success(`Room created · Code: ${data.room.roomCode}`);
-      setIsCreateModalOpen(false);
-      await fetchMyRooms({
-        setIsLoadingRooms,
-        setError,
-        accessToken,
-        setMyRooms,
-      });
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create room");
-    } finally {
-      setIsCreatingRoom(false);
-    }
-  };
-
-  const handleJoinRoom = async (inviteCode: string) => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/join-room`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ roomCode: inviteCode }),
-        }
-      );
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      data.joinRequest
-        ? toast.info(data.message)
-        : toast.success(`Joined ${data.room.name}`);
-
-      setIsJoinModalOpen(false);
-      await fetchMyRooms({
-        setIsLoadingRooms,
-        setError,
-        accessToken,
-        setMyRooms,
-      });
-    } catch (err: any) {
-      toast.error(err.message || "Failed to join room");
-    }
-  };
-
-  /* ================= UI ================= */
+  
 
   return (
     <main className="min-h-screen bg-[#F4F6F8] dark:bg-[#171C28] transition-colors">
@@ -163,7 +73,7 @@ const RoomsPage = () => {
           className="grid grid-cols-1 sm:grid-cols-2 gap-4"
         >
           <ActionButton
-            loading={isCreatingRoom}
+            loading={isCreating}
             icon={Plus}
             label="Create room"
             onClick={() => setIsCreateModalOpen(true)}
@@ -211,14 +121,14 @@ const RoomsPage = () => {
             <h2 className="text-xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
               My rooms
             </h2>
-            {!isLoadingRooms && (
+            {!isLoading && (
               <span className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
-                {myRooms.length} rooms
+                {rooms.length} rooms
               </span>
             )}
           </div>
 
-          {isLoadingRooms && (
+          {isLoading && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
                 <div
@@ -229,14 +139,14 @@ const RoomsPage = () => {
             </div>
           )}
 
-          {!isLoadingRooms && !error && (
+          {!isLoading && (
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: EASE }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
-              {myRooms.length>0?myRooms.map((room) => (
+              {rooms.length>0?rooms.map((room) => (
                 <motion.div
                   key={room.id}
                   whileHover={{ y: -4 }}
@@ -256,50 +166,16 @@ const RoomsPage = () => {
       <CreateRoomModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateRoom}
-        isLoading={isCreatingRoom}
+        onSubmit={createRoom}
+        isLoading={isCreating}
       />
       <JoinRoomModal
         isOpen={isJoinModalOpen}
         onClose={() => setIsJoinModalOpen(false)}
-        onSubmit={handleJoinRoom}
+        onSubmit={joinRoom}
       />
     </main>
   );
 };
 
 export default RoomsPage;
-
-/* ================= SUB ================= */
-
-function ActionButton({
-  icon: Icon,
-  label,
-  onClick,
-  loading,
-}: {
-  icon: any;
-  label: string;
-  onClick: () => void;
-  loading?: boolean;
-}) {
-  return (
-    <motion.button
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: EASE }}
-      onClick={onClick}
-      disabled={loading}
-      className="
-        flex items-center justify-center gap-3 px-6 py-4 rounded-2xl border
-        bg-white/70 dark:bg-[#151B22]/70
-        border-[#CBD5E1] dark:border-[#334155]
-        text-[#0F172A] dark:text-[#E6EDF3]
-        disabled:opacity-60
-      "
-    >
-      {loading ? <Loader2 className="animate-spin" /> : <Icon size={20} />}
-      {label}
-    </motion.button>
-  );
-}
