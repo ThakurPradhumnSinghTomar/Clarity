@@ -69,6 +69,14 @@ export function useClockEngine() {
     setIsRunning(false);
   }
 
+  // ✅ NEW: hydration API (Option A)
+  function hydrate(elapsedSeconds: number) {
+    setCurrentTime(elapsedSeconds);
+    setAccumulatedTime(elapsedSeconds);
+    setSessionStartTime(null);
+    setIsRunning(false);
+  }
+
   function reset() {
     setIsRunning(false);
     setCurrentTime(0);
@@ -107,5 +115,6 @@ export function useClockEngine() {
     start,
     stop,
     reset,
+    hydrate
   };
 }

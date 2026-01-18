@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAnimate } from "framer-motion";
 import { useSession } from "next-auth/react";
 
+
 // Extend the Window interface to include custom storage API
 // This tells TypeScript about window.storage
 // Without this, TypeScript would show error: "Property 'storage' does not exist"
