@@ -34,3 +34,7 @@ export {ActionButton} from "./components/rooms/ActionButtons";
 export {ProfileHeader} from "./components/profile/profileHeader";
 export {ProfileInfoSection} from "./components/profile/profileInfoSection";
 export {AccountStatsCard} from "./components/profile/AccountStatsCard";
+export {TimeDisplay} from "./components/clock/TimeDisplay";
+export {ControlButtons} from "./components/clock/ControlButtons";
+export {RestoreSessionModal} from "./components/clock/RestoreSessionModel";
+export {EditSessionModal} from "./components/clock/EditSessionModel";
