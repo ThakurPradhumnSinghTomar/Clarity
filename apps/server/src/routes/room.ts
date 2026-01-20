@@ -1,15 +1,28 @@
 import express from "express";
-import prisma from "../prismaClient.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
-import { generateRoomCode } from "../controllers/generateRandomNumber.js";
-import { error } from "node:console";
-import { approveJoinRequestController, createRoomController, getMyRoomsController, getRoomDetailsController, joinRoomController, rejectJoinRequestController } from "../modules/rooms/room.controller.js";
+
+import {
+  approveJoinRequestController,
+  createRoomController,
+  getMyRoomsController,
+  getRoomDetailsController,
+  joinRoomController,
+  rejectJoinRequestController,
+} from "../modules/rooms/room.controller.js";
 import { deleteOrLeaveRoomController } from "../modules/rooms/deleteOrLeaveRoom.controller.js";
 import { updateRoomController } from "../modules/rooms/updateRoom.controller.js";
+import { validateRequest } from "../middleware/validateRequest.js";
+import {
+  createRoomSchema,
+  joinRoomSchema,
+  approveJoinRequestSchema,
+  rejectJoinRequestSchema,
+  leaveOrDeleteRoomSchema,
+  updateRoomSchema,
+  getRoomDetailsSchema,
+} from "../modules/rooms/room.schema.js";
 
 const roomRouter = express.Router();
-
-
 
 roomRouter.get("/", (req, res) => {
   return res
@@ -20,50 +33,50 @@ roomRouter.get("/", (req, res) => {
 roomRouter.post(
   "/create-room",
   authMiddleware,
+  validateRequest(createRoomSchema),
   createRoomController,
 );
 
-
-roomRouter.get(
-  "/get-my-rooms",
+roomRouter.patch(
+  "/join-room",
   authMiddleware,
-  getMyRoomsController,
+  validateRequest(joinRoomSchema),
+  joinRoomController,
 );
 
 roomRouter.post(
   "/approve-joinroom-req",
   authMiddleware,
+  validateRequest(approveJoinRequestSchema),
   approveJoinRequestController,
 );
 
 roomRouter.post(
   "/reject-joinroom-req",
   authMiddleware,
+  validateRequest(rejectJoinRequestSchema),
   rejectJoinRequestController,
-);
-
-roomRouter.patch(
-  "/join-room",
-  authMiddleware,
-  joinRoomController,
-);
-
-roomRouter.get(
-  "/get-room/:roomId",
-  authMiddleware,
-  getRoomDetailsController,
 );
 
 roomRouter.delete(
   "/leave-room/:roomId",
   authMiddleware,
+  validateRequest(leaveOrDeleteRoomSchema),
   deleteOrLeaveRoomController,
 );
 
 roomRouter.patch(
   "/update-room",
   authMiddleware,
+  validateRequest(updateRoomSchema),
   updateRoomController,
+);
+
+roomRouter.get(
+  "/get-room/:roomId",
+  authMiddleware,
+  validateRequest(getRoomDetailsSchema),
+  getRoomDetailsController,
 );
 
 export default roomRouter;

@@ -1,13 +1,22 @@
 import express from "express";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import { validateRequest } from "../middleware/validateRequest.js";
+
+/* ===================== Controllers ===================== */
+
 import { saveFocusSessionController } from "../modules/focus/focus.controller.js";
+import { getRecentFocusSessionsController } from "../modules/focus/focus.controller.js";
+
 import { getLeaderboardController } from "../modules/leaderboard/leaderboard.controller.js";
+
 import { getWeeklyStudyHoursController } from "../modules/study-hours/studyHours.controller.js";
 import { getWeeklyStudyHoursByTagsController } from "../modules/weekly-by-tags/weeklyByTags.controller.js";
-import { getRecentFocusSessionsController } from "../modules/focus/focus.controller.js";
+
 import { getHeatmapDataController } from "../modules/heatmap/heatmap.controller.js";
 
 import {
+  getCurrentUserProfileController,
+  updateUserProfileController,
   pingUserController,
   updateFocusingController,
 } from "../modules/user/user.controller.js";
@@ -17,28 +26,75 @@ import {
   createTagController,
 } from "../modules/tags/tags.controller.js";
 
+/* ===================== Zod Schemas ===================== */
+
 import {
-  getCurrentUserProfileController,
-  updateUserProfileController,
-} from "../modules/user/user.controller.js";
+  saveFocusSessionSchema,
+  getWeeklyStudyHoursSchema,
+  weeklyStudyHoursByTagsSchema,
+  updateUserProfileSchema,
+  updateFocusingSchema,
+  createTagSchema,
+  heatmapSchema,
+} from "../modules/user/user.schema.js";
+
+/* ===================== Router ===================== */
 
 const userRouter = express.Router();
 
-userRouter.get("/", async (req, res) => res.send("Auth API running!"));
+userRouter.get("/", (_, res) => {
+  res.send("User API running!");
+});
 
-userRouter.get("/leaderboard", authMiddleware, getLeaderboardController);
+/* ===================== Leaderboard ===================== */
+
+userRouter.get(
+  "/leaderboard",
+  authMiddleware,
+  getLeaderboardController,
+);
+
+/* ===================== Focus Sessions ===================== */
 
 userRouter.post(
   "/save-focus-sesssion",
   authMiddleware,
+  validateRequest(saveFocusSessionSchema),
   saveFocusSessionController,
 );
 
 userRouter.get(
+  "/focus-sessions/recent",
+  authMiddleware,
+  getRecentFocusSessionsController,
+);
+
+/* ===================== Study Hours ===================== */
+
+userRouter.get(
   "/get-current-week-study-hours/:page",
   authMiddleware,
+  validateRequest(getWeeklyStudyHoursSchema),
   getWeeklyStudyHoursController,
 );
+
+userRouter.get(
+  "/get-weekly-study-hours-by-tags/:page",
+  authMiddleware,
+  validateRequest(weeklyStudyHoursByTagsSchema),
+  getWeeklyStudyHoursByTagsController,
+);
+
+/* ===================== Heatmap ===================== */
+
+userRouter.get(
+  "/get-heatmap-data",
+  authMiddleware,
+  validateRequest(heatmapSchema),
+  getHeatmapDataController,
+);
+
+/* ===================== User Profile ===================== */
 
 userRouter.get(
   "/get-current-user-profile",
@@ -49,38 +105,36 @@ userRouter.get(
 userRouter.patch(
   "/update-profile",
   authMiddleware,
+  validateRequest(updateUserProfileSchema),
   updateUserProfileController,
 );
 
-userRouter.patch("/ping", authMiddleware, pingUserController);
-userRouter.patch("/focusing", authMiddleware, updateFocusingController);
-
-userRouter.get("/tags", authMiddleware, getTagsController);
-userRouter.post("/create-tag", authMiddleware, createTagController);
-
-userRouter.get(
-  "/focus-sessions/recent",
+userRouter.patch(
+  "/ping",
   authMiddleware,
-  getRecentFocusSessionsController,
+  pingUserController,
 );
 
-userRouter.get(
-  "/get-weekly-study-hours-by-tags/:page",
+userRouter.patch(
+  "/focusing",
   authMiddleware,
-  getWeeklyStudyHoursByTagsController,
+  validateRequest(updateFocusingSchema),
+  updateFocusingController,
 );
 
-userRouter.get("/get-heatmap-data", authMiddleware, getHeatmapDataController);
+/* ===================== Tags ===================== */
 
-//
+userRouter.get(
+  "/tags",
+  authMiddleware,
+  getTagsController,
+);
+
+userRouter.post(
+  "/create-tag",
+  authMiddleware,
+  validateRequest(createTagSchema),
+  createTagController,
+);
+
 export default userRouter;
-
-/*
-❗ Important:
-
-Fields like name, email, image, createdAt, emailVerified are scalar fields, NOT relations.
-Prisma does NOT allow including scalar fields — they always come by default.
-
-
-should not use dynamic values as keys because typescript can complain than object maybe undefined even if you handeled the null case of that dynamic value
-*/
