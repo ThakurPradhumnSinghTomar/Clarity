@@ -14,7 +14,6 @@ export const validateRequest =
     const result = schema.safeParse({
       body: req.body,
       params: req.params,
-      query: req.query,
     });
 
     // Check if validation failed
@@ -42,8 +41,6 @@ export const validateRequest =
     // Replace req.params with validated data if it exists, otherwise keep original
     req.params = validatedData.params ?? req.params;
     
-    // Replace req.query with validated data if it exists, otherwise keep original
-    req.query = validatedData.query ?? req.query;
 
     // Call next() to pass control to the next middleware in the chain
     next();

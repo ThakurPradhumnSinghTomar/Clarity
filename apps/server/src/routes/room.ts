@@ -79,4 +79,10 @@ roomRouter.get(
   getRoomDetailsController,
 );
 
+roomRouter.get(
+  "/get-my-rooms",
+  authMiddleware,
+  getMyRoomsController
+)
+
 export default roomRouter;

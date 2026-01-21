@@ -39,3 +39,4 @@ export {ControlButtons} from "./components/clock/ControlButtons";
 export {RestoreSessionModal} from "./components/clock/RestoreSessionModel";
 export {EditSessionModal} from "./components/clock/EditSessionModel";
 export {LoginPage} from "./components/LoginPage";
+export {AnalyticsOverview} from "./components/analytics/AnalyticsOverview"
