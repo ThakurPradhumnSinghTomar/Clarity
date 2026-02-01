@@ -1,5 +1,8 @@
 import React from "react";
-import { AnalyticsOverview } from "@repo/ui";
+import {AnalyticsTrendsSection } from "../../../lib/components/analytics/AnalyticsTrendsSection";
+import {AnalyticsOverview} from "@repo/ui"
+import { TagIntelligenceSection } from "@/lib/components/analytics/TagIntelligenceSection";
+import { FocusInsightsSection } from "@/lib/components/analytics/FocusInsightsSection";
 
 const Analytics = () => {
   return (
@@ -10,6 +13,15 @@ const Analytics = () => {
         deepFocusRatio={67}
         consistencyScore={81}
       />
+
+      <AnalyticsTrendsSection></AnalyticsTrendsSection>
+
+      <TagIntelligenceSection></TagIntelligenceSection>
+
+      <FocusInsightsSection></FocusInsightsSection>
+
+      
+
     </div>
   );
 };

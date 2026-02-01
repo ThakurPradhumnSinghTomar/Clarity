@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import {LocalWeeklyFocus} from "../../lib/components/home/weeklyfocus"
 import {
-  WeeklyFocus,
   ActivitySection,
   RoomsSection,
   CTASection,
@@ -36,7 +36,7 @@ export default function Home() {
     >
       <HeroSection />
 
-      <WeeklyFocus {...weeklyFocus} currentDay={currentDay} />
+      <LocalWeeklyFocus />
 
       <ActivitySection
         isLoading={activity.isLoading}

@@ -1,4 +1,4 @@
-// auth.ts - FIXED VERSION
+// auth.ts - FIXED VERSION WITH DETAILED LOGGING
 // This file configures NextAuth.js (Auth.js v5) for handling authentication
 // Modified to use JWT tokens returned by your backend
 
@@ -49,8 +49,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             id: data.id || data.user?.id,
             email: data.email || data.user?.email,
             name: data.name || data.user?.name,
-            image: data.image || data.user?.image, // ✅ This will be the Cloudinary URL
-            backendToken: data.token || data.accessToken, // Backend JWT token
+            image: data.image || data.user?.image,
+            backendToken: data.token || data.accessToken,
           }
         }
         
@@ -82,56 +82,100 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // SIGN IN CALLBACK: Runs when user signs in
     async signIn({ user, account, profile }) {
   
-  // Only process OAuth sign-ins (not credentials)
-  if (account?.provider === "google" || account?.provider === "github") {
-    try {
-      // Call your backend API to create/update user and GET THE TOKEN
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/oauth-user`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          provider: account.provider,
-          providerId: account.providerAccountId,
-        }),
-      });
+      // Only process OAuth sign-ins (not credentials)
+      if (account?.provider === "google" || account?.provider === "github") {
+        try {
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+          
+          console.log("=== OAuth Sign In Attempt ===");
+          console.log("Backend URL:", backendUrl);
+          console.log("Provider:", account.provider);
+          console.log("Email:", user.email);
+          console.log("Name:", user.name);
+          console.log("Image:", user.image);
+          console.log("Provider Account ID:", account.providerAccountId);
+          
+          // Prepare the payload
+          const payload = {
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            provider: account.provider,
+            providerId: account.providerAccountId,
+          };
+          
+          console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+          
+          // Call your backend API to create/update user and GET THE TOKEN
+          const response = await fetch(`${backendUrl}/api/auth/oauth-user`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
 
-      const data = await response.json();
+          console.log("Backend Response Status:", response.status);
+          console.log("Backend Response Status Text:", response.statusText);
+          console.log("Backend Response OK:", response.ok);
+          
+          // Try to parse JSON response
+          let data;
+          try {
+            const responseText = await response.text();
+            console.log("Raw Backend Response:", responseText);
+            
+            data = JSON.parse(responseText);
+            console.log("Parsed Backend Response Data:", JSON.stringify(data, null, 2));
+          } catch (parseError) {
+            console.error("❌ Failed to parse backend response as JSON");
+            console.error("Parse Error:", parseError);
+            console.error("This might mean your backend isn't running or returned HTML instead of JSON");
+            return false;
+          }
 
-      if (response.ok && data.success) {
-        // ✅ FIXED: Update user object with backend data
-        user.backendToken = data.token || data.accessToken;
-        user.id = data.user?.id || data.id;
-        
-        // ✅ CRITICAL FIX: Use the name and image from your database, not from Google
-        user.name = data.user?.name || user.name;
-        user.image = data.user?.image || user.image;
-        
-        console.log("=== OAuth Sign In ===");
-        console.log("Backend returned name:", data.user?.name);
-        console.log("Backend returned image:", data.user?.image);
-        console.log("Using name:", user.name);
-        console.log("Using image:", user.image);
-        console.log("====================");
-        
-        return true;
-      } else {
-        console.error("Failed to create/update OAuth user:", data.error);
-        return false;
+          if (response.ok && data.success) {
+            // ✅ Update user object with backend data
+            user.backendToken = data.token || data.accessToken;
+            user.id = data.user?.id || data.id;
+            user.name = data.user?.name || user.name;
+            user.image = data.user?.image || user.image;
+            
+            console.log("✅ OAuth Sign In Success");
+            console.log("User ID:", user.id);
+            console.log("User Name:", user.name);
+            console.log("User Image:", user.image);
+            console.log("Backend Token:", user.backendToken);
+            console.log("=============================");
+            
+            return true;
+          } else {
+            console.error("❌ Backend returned error or success=false");
+            console.error("Response Status:", response.status);
+            console.error("Success Flag:", data.success);
+            console.error("Error Message:", data.error);
+            console.error("Full Response:", JSON.stringify(data, null, 2));
+            return false;
+          }
+          
+        } catch (error) {
+          console.error("❌ Exception in signIn callback");
+          console.error("Error Type:", error?.constructor?.name);
+          console.error("Error Message:", error instanceof Error ? error.message : String(error));
+          console.error("Error Stack:", error instanceof Error ? error.stack : 'No stack trace');
+          
+          // Check if it's a network error
+          if (error instanceof TypeError && error.message.includes('fetch')) {
+            console.error("🔥 NETWORK ERROR: Cannot reach backend at", process.env.NEXT_PUBLIC_BACKEND_URL);
+            console.error("Make sure your backend is running!");
+          }
+          
+          return false;
+        }
       }
       
-    } catch (error) {
-      console.error("Error in signIn callback:", error);
-      return false;
-    }
-  }
-  
-  return true;
-},
+      return true;
+    },
     
     // JWT CALLBACK: Store backend token in JWT
     async jwt({ token, user, account, trigger, session }) {
@@ -140,7 +184,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.image = user.image; // ✅ FIXED: Changed from token.picture to token.image
+        token.image = user.image;
         
         // CRITICAL: Store the backend JWT token
         token.backendToken = user.backendToken;
@@ -148,24 +192,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         console.log("=== JWT Callback - New Sign In ===");
         console.log("User ID:", token.id);
         console.log("User Email:", token.email);
-        console.log("User Image:", token.image); // ✅ Added for debugging
+        console.log("User Image:", token.image);
         console.log("Backend Token:", token.backendToken);
         console.log("================================");
       }
 
-        if (trigger === "update") {
-    if (session?.name) token.name = session.name;
-    if (session?.image) token.image = session.image;
-    
-    // Also check session.user object
-    if (session?.user?.name) token.name = session.user.name;
-    if (session?.user?.image) token.image = session.user.image;
-    
-    console.log("=== JWT Token Updated ===");
-    console.log("New Name:", token.name);
-    console.log("New Image:", token.image);
-    console.log("========================");
-  }
+      if (trigger === "update") {
+        if (session?.name) token.name = session.name;
+        if (session?.image) token.image = session.image;
+        
+        // Also check session.user object
+        if (session?.user?.name) token.name = session.user.name;
+        if (session?.user?.image) token.image = session.user.image;
+        
+        console.log("=== JWT Token Updated ===");
+        console.log("New Name:", token.name);
+        console.log("New Image:", token.image);
+        console.log("========================");
+      }
       
       if (account) {
         token.provider = account.provider;
@@ -174,7 +218,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       console.log("=== JWT Callback - Token Refresh ===");
       console.log("Current Token ID:", token.id);
       console.log("Current Token Email:", token.email);
-      console.log("Current Token Image:", token.image); // ✅ Added for debugging
+      console.log("Current Token Image:", token.image);
       console.log("Trigger:", trigger);
       console.log("===================================");
       
@@ -187,19 +231,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
-        session.user.image = token.image as string; // ✅ FIXED: Changed from token.imagePath to token.image
+        session.user.image = token.image as string;
         
         if (token.provider) {
           session.user.provider = token.provider as string;
         }
         
         // CRITICAL: Add the backend token to session
-        // This is the token you'll use in API requests
         session.accessToken = token.backendToken as string;
       }
       
       console.log("=== Session Callback ===");
-      console.log("Session User Image:", session.user.image); // ✅ Added for debugging
+      console.log("Session User Image:", session.user.image);
       console.log("======================");
       
       return session;

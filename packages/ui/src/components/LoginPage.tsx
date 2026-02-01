@@ -5,7 +5,7 @@ import { Button } from "./../button";
 import { Input } from "./../input";
 import { Label } from "./../label";
 import { motion } from "framer-motion";
-import RebuildHero from "./RebuildHero";
+import RebuildHero from "./home/RebuildHero";
 import { Eye, EyeOff, Mail } from "lucide-react";
 
 /* =========================

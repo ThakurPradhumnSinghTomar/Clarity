@@ -15,7 +15,7 @@ export function MetricCard({
     <div
       className="
         rounded-2xl
-        bg-white dark:bg-[#0B1220]
+        bg-white dark:bg-[#0F1419]
         border border-[#E2E8F0] dark:border-[#1E293B]
         p-5
         transition

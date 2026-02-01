@@ -75,7 +75,7 @@ export function WeeklyFocus({
     <div>
         <section className="space-y-8">
         <header>
-          <h2 className="text-2xl font-semibold">Weekly Focus</h2>
+          <h2 className="text-2xl font-semibold dark:text-white">Weekly Focus</h2>
           <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
             Your actual work, not intentions.
           </p>

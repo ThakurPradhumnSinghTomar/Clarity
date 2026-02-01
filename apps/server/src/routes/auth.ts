@@ -167,11 +167,17 @@ authRouter.post(
     try {
       const { email, name, image, provider, providerId } = req.body;
 
+      console.log("=== OAuth User Request ===");
+      console.log("Email:", email);
+      console.log("Provider:", provider);
+      console.log("ProviderId:", providerId);
+      
       // Validate required fields
       if (!email || !provider || !providerId) {
+        console.error("❌ Missing required fields");
         return res.status(400).json({
-          error:
-            "Missing required fields: email, provider, and providerId are required",
+          success: false,
+          error: "Missing required fields: email, provider, and providerId are required",
         });
       }
 
@@ -181,13 +187,15 @@ authRouter.post(
       });
 
       if (user) {
+        console.log("✅ User exists, updating...");
+        
         // Generate JWT token for existing user
         const token = jwt.sign(
           {
             userId: user.id,
             email: user.email,
             name: user.name,
-            imagePath: image,
+            imagePath: user.image, // ✅ FIX: Use user.image from database, not request
           },
           process.env.JWT_SECRET!,
           { expiresIn: "30d" },
@@ -195,7 +203,7 @@ authRouter.post(
 
         return res.status(200).json({
           success: true,
-          token, // JWT token
+          token,
           user: {
             id: user.id,
             email: user.email,
@@ -206,15 +214,17 @@ authRouter.post(
         });
       }
 
+      console.log("✅ Creating new user...");
+      
       // User doesn't exist - create new user
       user = await prisma.user.create({
         data: {
           email,
-          name: name || email.split("@")[0], // Use email prefix if no name provided
+          name: name || email.split("@")[0],
           image,
           provider,
           providerId,
-          emailVerified: new Date(), // OAuth users have verified emails
+          emailVerified: new Date(),
         },
       });
 
@@ -224,11 +234,13 @@ authRouter.post(
           userId: user.id,
           email: user.email,
           name: user.name,
-          imagePath: image,
+          imagePath: user.image, // ✅ FIX: Use user.image instead of 'image'
         },
         process.env.JWT_SECRET!,
         { expiresIn: "30d" },
       );
+
+      console.log("✅ User created successfully");
 
       return res.status(201).json({
         success: true,
@@ -242,19 +254,20 @@ authRouter.post(
         message: "User created successfully",
       });
     } catch (error: any) {
-      console.error("OAuth user handler error:", error);
+      console.error("❌ OAuth user handler error:", error);
 
       // Handle unique constraint violations (duplicate emails)
       if (error.code === "P2002") {
         return res.status(409).json({
+          success: false, // ✅ FIX: Add success: false
           error: "User with this email already exists",
         });
       }
 
       return res.status(500).json({
+        success: false, // ✅ FIX: Add success: false
         error: "Internal server error",
-        details:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+        details: process.env.NODE_ENV === "development" ? error.message : undefined,
       });
     }
   },

@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@repo/context-providers";
 import { motion, AnimatePresence } from "framer-motion";
-import { ThemeToggle } from "./themeToggel";
+import { ThemeToggle } from "./../themeToggel";
 
 const dropdownTransition = {
   duration: 0.18,
@@ -103,6 +103,7 @@ const Header = () => {
                   {[
                     ["Study Session", "/home/study-session"],
                     ["Private Rooms", "/home/rooms"],
+                    ["Analytics","/home/analytics"],
                     ["Habit Building", ""],
                     ["Our Community", ""],
                   ].map(([label, path]) => {

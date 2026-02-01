@@ -19,9 +19,12 @@ export const signupSchema = z.object({
 /* ===================== OAuth ===================== */
 
 export const oauthUserSchema = z.object({
-  email: z.string().email(),
-  name: z.string().optional(),
-  image: z.string().url().optional().nullable(),
-  provider: z.string().min(1),
-  providerId: z.string().min(1),
+  body: z.object({
+    email: z.string().email("Invalid email address"),
+    name: z.string().optional(),
+    image: z.string().url("Invalid image URL").optional().or(z.literal("")),
+    provider: z.string().min(1, "Provider is required"),
+    providerId: z.string().min(1, "Provider ID is required"),
+  }),
 });
+
