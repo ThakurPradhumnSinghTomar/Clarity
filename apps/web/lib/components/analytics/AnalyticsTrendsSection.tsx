@@ -18,8 +18,8 @@ const weeklyHistogramMock = {
 
 
 export const AnalyticsTrendsSection = () => {
-  const { data, currentDay, isCurrentWeek, insights } = weeklyHistogramMock;
   const weeklyFocus = useWeeklyFocus();
+  const insights = weeklyFocus.insights
 
   return (
     <section className="mt-12 rounded-2xl bg-white dark:bg-[#151B22] p-6">
@@ -28,7 +28,7 @@ export const AnalyticsTrendsSection = () => {
 
       {/* Histogram */}
       <div className="mb-8">
-        <WeeklyFocus {...weeklyFocus} currentDay={currentDay} />
+        <WeeklyFocus {...weeklyFocus}/>
       </div>
 
       {/* Insights */}

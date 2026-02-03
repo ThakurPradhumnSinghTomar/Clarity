@@ -12,6 +12,14 @@ const HistogramSkeleton = () => (
   </div>
 );
 
+function getCurrentDayNumber(): number {
+  const day = new Date().getDay(); 
+  return day === 0 ? 7 : day - 1;
+}
+
+
+
+
 /* ---------------- Icons ---------------- */
 
 const ArrowLeftIcon = () => (
@@ -40,14 +48,15 @@ const ArrowRightIcon = () => (
 
 export type WeeklyFocusProps = {
   data: number[];
-  currentDay: number;
+  meta : {
+    weekStart : Date
+  }
 
   isLoading: boolean;
   noData: boolean;
 
   histogramPage: number;
   stopNext: boolean;
-
   availableTags: string[];
   selectedTag: string;
   tagContributionMap: Record<string, number>;
@@ -59,7 +68,7 @@ export type WeeklyFocusProps = {
 
 export function WeeklyFocus({
   data,
-  currentDay,
+  meta,
   isLoading,
   noData,
   histogramPage,
@@ -104,7 +113,8 @@ export function WeeklyFocus({
                   ) : (
                     <Histogram
                       data={data}
-                      currentDay={currentDay}
+                      meta={meta}
+                      currentDay={getCurrentDayNumber()}
                       isCurrentWeek={histogramPage === 0}
                     />
                   )}

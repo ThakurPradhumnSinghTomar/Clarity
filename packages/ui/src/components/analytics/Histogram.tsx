@@ -7,6 +7,9 @@ interface HistogramProps {
   data: number[];
   currentDay: number;
   isCurrentWeek: boolean;
+  meta: {
+    weekStart: Date;
+  };
 }
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -43,17 +46,18 @@ const barVariants = {
 
 /* ===== Utils ===== */
 
-const getWeekRange = () => {
-  const now = new Date();
-  const day = now.getDay() || 7; // Sun = 7
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - (day - 1));
+const getWeekRange = (weekStart: Date) => {
+  const monday = new Date(weekStart);
 
   const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
 
   const fmt = (d: Date) =>
-    d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+    d.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+    });
 
   return `${fmt(monday)} – ${fmt(sunday)}`;
 };
@@ -67,6 +71,7 @@ export default function Histogram({
   data,
   currentDay,
   isCurrentWeek,
+  meta,
 }: HistogramProps) {
   const [hovered, setHovered] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
@@ -114,7 +119,7 @@ export default function Histogram({
             className="text-sm mt-1"
             style={{ color: isDark ? "#819595" : "#626b61" }}
           >
-            {getWeekRange()} · Mon → Sun
+            {getWeekRange(meta.weekStart)} · Mon → Sun
           </p>
         </div>
 

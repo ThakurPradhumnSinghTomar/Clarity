@@ -8,6 +8,16 @@ export function useWeeklyFocus() {
   const accessToken = session?.accessToken;
 
   const [data, setData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+  const [meta, setMeta] = useState({
+    weekStart: new Date(),
+  });
+  const [insights, setInsights] = useState({
+    changePercent: 0,
+    bestDay: "Wednesday",
+    bestDayMinutes: 0,
+    worstDay: "Sunday",
+    worstDayMinutes: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [noData, setNoData] = useState(false);
   const [histogramPage, setHistogramPage] = useState(0);
@@ -15,7 +25,9 @@ export function useWeeklyFocus() {
 
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState("All Tags");
-  const [tagContributionMap, setTagContributionMap] = useState<Record<string, number>>({});
+  const [tagContributionMap, setTagContributionMap] = useState<
+    Record<string, number>
+  >({});
 
   /* -------- Fetch tags -------- */
   useEffect(() => {
@@ -72,6 +84,10 @@ export function useWeeklyFocus() {
             },
           );
 
+          setMeta({
+            weekStart: json.weeklyStudyHours.weekStart,
+          });
+          setInsights(json.weeklyStudyHours.meta)
           setData(nextData);
           setNoData(false);
           setStopNext(false);
@@ -123,6 +139,8 @@ export function useWeeklyFocus() {
 
   return {
     data,
+    meta,
+    insights,
     isLoading,
     noData,
     histogramPage,
