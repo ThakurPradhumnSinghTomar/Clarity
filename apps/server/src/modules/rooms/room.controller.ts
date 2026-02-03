@@ -192,7 +192,7 @@ export async function approveJoinRequestController(
 ) {
   try {
     const hostId = req.user?.id;
-    const { roomId, requestUserId } = req.body;
+    const { roomId, RequserId } = req.body;
 
     if (!hostId) {
       return res.status(401).json({
@@ -201,7 +201,7 @@ export async function approveJoinRequestController(
       });
     }
 
-    if (!roomId || !requestUserId) {
+    if (!roomId || !RequserId) {
       return res.status(400).json({
         success: false,
         message: "roomId and requestUserId are required",
@@ -211,7 +211,7 @@ export async function approveJoinRequestController(
     const roomMember = await approveJoinRequestService(
       hostId,
       roomId,
-      requestUserId,
+      RequserId,
     );
 
     return res.status(200).json({
@@ -241,7 +241,7 @@ export async function rejectJoinRequestController(
 ) {
   try {
     const hostId = req.user?.id;
-    const { roomId, requestUserId } = req.body;
+    const { roomId, RequserId } = req.body;
 
     if (!hostId) {
       return res.status(401).json({
@@ -250,14 +250,14 @@ export async function rejectJoinRequestController(
       });
     }
 
-    if (!roomId || !requestUserId) {
+    if (!roomId || !RequserId) {
       return res.status(400).json({
         success: false,
-        message: "roomId and requestUserId are required",
+        message: "roomId and RequserId are required",
       });
     }
 
-    await rejectJoinRequestService(hostId, roomId, requestUserId);
+    await rejectJoinRequestService(hostId, roomId, RequserId);
 
     return res.status(200).json({
       success: true,

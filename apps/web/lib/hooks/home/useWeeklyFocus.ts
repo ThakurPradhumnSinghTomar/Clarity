@@ -15,7 +15,9 @@ export function useWeeklyFocus() {
 
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState("All Tags");
-  const [tagContributionMap, setTagContributionMap] = useState<Record<string, number>>({});
+  const [tagContributionMap, setTagContributionMap] = useState<
+    Record<string, number>
+  >({});
 
   /* -------- Fetch tags -------- */
   useEffect(() => {
@@ -58,19 +60,22 @@ export function useWeeklyFocus() {
 
           const json = await res.json();
 
-          if (!json?.weeklyStudyHours?.days?.length) {
+          if (!json?.weeklyStudyHours?.days) {
             setNoData(true);
             setStopNext(true);
             return;
           }
 
           const nextData = [0, 0, 0, 0, 0, 0, 0];
-          json.weeklyStudyHours.days.forEach(
-            (d: { weekday: number; focusedSec: number }) => {
-              nextData[d.weekday] =
-                Math.round((d.focusedSec / 3600) * 100) / 100;
-            },
-          );
+
+          if (json.weeklyStudyHours.days.length > 0) {
+            json.weeklyStudyHours.days.forEach(
+              (d: { weekday: number; focusedSec: number }) => {
+                nextData[d.weekday] =
+                  Math.round((d.focusedSec / 3600) * 100) / 100;
+              },
+            );
+          }
 
           setData(nextData);
           setNoData(false);

@@ -20,11 +20,10 @@ import { useWeeklyFocus } from "@/lib/hooks/home/useWeeklyFocus";
 
 export default function Home() {
   const router = useRouter();
-  const currentDay = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
   const activity = useActivity();
   const dailyFocus = useDailyFocus();
   const rooms = useRooms();
-  const weeklyFocus = useWeeklyFocus();
+  
 
   return (
     <main
