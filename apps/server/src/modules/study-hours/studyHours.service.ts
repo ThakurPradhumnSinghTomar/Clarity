@@ -3,13 +3,13 @@ import prisma from "../../prismaClient.js";
 
 function weekdayName(weekday: number) {
   return [
-    "Sunday",
     "Monday",
     "Tuesday",
     "Wednesday",
     "Thursday",
     "Friday",
     "Saturday",
+    "Sunday",
   ][weekday];
 }
 
