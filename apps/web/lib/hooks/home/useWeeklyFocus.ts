@@ -12,16 +12,19 @@ export function useWeeklyFocus() {
     weekStart: new Date(),
   });
   const [insights, setInsights] = useState({
-    weekOverWeekPercent: 0,
-    bestDay: {
-      weekday: "Monday",
-      day: "1",
-      focusedSec: 0,
-      minutes: 0,
-    },
-    bestDayMinutes: 0,
-    worstDay: "Sunday",
-    worstDayMinutes: 0,
+    weekOverWeekPercent: null as number | null,
+    bestDay: null as {
+      weekday: number;
+      day: string;
+      focusedSec: number;
+      minutes: number;
+    } | null,
+    lowestFocusDay: null as {
+      weekday: number;
+      day: string;
+      focusedSec: number;
+      minutes: number;
+    } | null,
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -94,9 +97,8 @@ export function useWeeklyFocus() {
           }
 
           setMeta({
-            weekStart: json.weeklyStudyHours.weekStart,
+            weekStart: new Date(json.weeklyStudyHours.weekStart),
           });
-          setInsights(json.weeklyStudyHours.meta);
           setInsights(json.weeklyStudyHours.meta);
           setData(nextData);
           setNoData(false);
@@ -132,6 +134,9 @@ export function useWeeklyFocus() {
                 : 0;
           });
 
+          setMeta({
+            weekStart: new Date(json.week?.gte ?? Date.now()),
+          });
           setTagContributionMap(contributionMap);
           setData(nextData);
           setNoData(false);
