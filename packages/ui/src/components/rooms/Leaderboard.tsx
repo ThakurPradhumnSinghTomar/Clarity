@@ -15,7 +15,7 @@ type LeaderboardTabProps = {
 
 export function LeaderboardTab({ students }: LeaderboardTabProps) {
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center w-full">
       <Leaderboard students={students} />
     </div>
   );
