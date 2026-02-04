@@ -2,23 +2,13 @@ import React from "react";
 import { Histogram, MetricCard } from "@repo/ui";
 import { useWeeklyFocus } from "@/lib/hooks/home/useWeeklyFocus";
 
-const weeklyHistogramMock = {
-  data: [4, 9, 13, 10, 8, 1, 4], // minutes per day (Mon → Sun)
-  currentDay: 2, // Wednesday
-  isCurrentWeek: true,
-  insights: {
-    changePercent: 11.4,
-    bestDay: "Wednesday",
-    bestDayMinutes: 160,
-    worstDay: "Sunday",
-    worstDayMinutes: 45,
-  },
-};
-
 export const LocalWeeklyFocus = () => {
-  const { data, currentDay, isCurrentWeek, insights } = weeklyHistogramMock;
-
   const weeklyFocus = useWeeklyFocus();
+  const insights = weeklyFocus.insights;
+  const weekOverWeekDisplay =
+    typeof insights.weekOverWeekPercent === "number"
+      ? insights.weekOverWeekPercent.toFixed(2)
+      : "--";
 
   return (
     <section className="mt-12 rounded-2xl bg-transparent">
@@ -34,28 +24,34 @@ export const LocalWeeklyFocus = () => {
       <div className="mb-8">
         <Histogram
           data={weeklyFocus.data}
-          currentDay={currentDay}
-          isCurrentWeek={isCurrentWeek}
+          meta={weeklyFocus.meta}
+          currentDay={new Date().getDay() === 0 ? 6 : new Date().getDay() - 1}
+          isCurrentWeek={weeklyFocus.histogramPage === 0}
         />
       </div>
 
       {/* Insights */}
-      {/* Insights */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
           label="Week-over-Week"
-          value={`${insights.changePercent}%`}
+          value={`${weekOverWeekDisplay}%`}
           subText="Compared to last week"
         />
         <MetricCard
           label="Best Day"
-          value={insights.bestDay}
-          subText={`${insights.bestDayMinutes} min`}
+          value={insights.bestDay?.day ?? "--"}
+          subText={
+            insights.bestDay ? `${insights.bestDay.minutes} min` : "No data"
+          }
         />
         <MetricCard
           label="Lowest Focus"
-          value={insights.worstDay}
-          subText={`${insights.worstDayMinutes} min`}
+          value={insights.lowestFocusDay?.day ?? "--"}
+          subText={
+            insights.lowestFocusDay
+              ? `${insights.lowestFocusDay.minutes} min`
+              : "No data"
+          }
         />
       </div>
     </section>
