@@ -74,3 +74,7 @@ export const weeklyStudyHoursByTagsSchema = paginationParamSchema;
 /* ===================== Heatmap ===================== */
 
 export const heatmapSchema = z.object({});
+
+/* ===================== Analytics Overview ===================== */
+
+export const analyticsOverviewSchema = z.object({});
