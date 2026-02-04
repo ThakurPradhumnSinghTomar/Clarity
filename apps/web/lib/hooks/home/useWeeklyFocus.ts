@@ -12,12 +12,18 @@ export function useWeeklyFocus() {
     weekStart: new Date(),
   });
   const [insights, setInsights] = useState({
-    changePercent: 0,
-    bestDay: "Wednesday",
+    weekOverWeekPercent: 0,
+    bestDay: {
+      weekday: "Monday",
+      day: "1",
+      focusedSec: 0,
+      minutes: 0,
+    },
     bestDayMinutes: 0,
     worstDay: "Sunday",
     worstDayMinutes: 0,
   });
+
   const [isLoading, setIsLoading] = useState(true);
   const [noData, setNoData] = useState(false);
   const [histogramPage, setHistogramPage] = useState(0);
@@ -90,7 +96,8 @@ export function useWeeklyFocus() {
           setMeta({
             weekStart: json.weeklyStudyHours.weekStart,
           });
-          setInsights(json.weeklyStudyHours.meta)
+          setInsights(json.weeklyStudyHours.meta);
+          setInsights(json.weeklyStudyHours.meta);
           setData(nextData);
           setNoData(false);
           setStopNext(false);

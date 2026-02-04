@@ -3,18 +3,6 @@ import { Histogram, WeeklyFocus } from "@repo/ui";
 import { MetricCard } from "@repo/ui";
 import { useWeeklyFocus } from "../../hooks/home/useWeeklyFocus";
 
-const weeklyHistogramMock = {
-  data: [4, 9, 13, 10, 8, 1, 4], // minutes per day (Mon → Sun)
-  currentDay: 2, // Wednesday
-  isCurrentWeek: true,
-  insights: {
-    changePercent: 11.4,
-    bestDay: "Wednesday",
-    bestDayMinutes: 160,
-    worstDay: "Sunday",
-    worstDayMinutes: 45,
-  },
-};
 
 
 export const AnalyticsTrendsSection = () => {
@@ -35,13 +23,13 @@ export const AnalyticsTrendsSection = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
           label="Week-over-Week"
-          value={`${insights.changePercent}%`}
+          value={`${insights.weekOverWeekPercent}%`}
           subText="Compared to last week"
         />
         <MetricCard
           label="Best Day"
-          value={insights.bestDay}
-          subText={`${insights.bestDayMinutes} min`}
+          value={insights.bestDay.day}
+          subText={`${insights.bestDay.minutes} min`}
         />
         <MetricCard
           label="Lowest Focus"
