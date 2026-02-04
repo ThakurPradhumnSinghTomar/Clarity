@@ -13,6 +13,7 @@ import { getWeeklyStudyHoursController } from "../modules/study-hours/studyHours
 import { getWeeklyStudyHoursByTagsController } from "../modules/weekly-by-tags/weeklyByTags.controller.js";
 
 import { getHeatmapDataController } from "../modules/heatmap/heatmap.controller.js";
+import { getAnalyticsOverviewController } from "../modules/analytics/analytics.controller.js";
 
 import {
   getCurrentUserProfileController,
@@ -36,6 +37,7 @@ import {
   updateFocusingSchema,
   createTagSchema,
   heatmapSchema,
+  analyticsOverviewSchema,
 } from "../modules/user/user.schema.js";
 
 /* ===================== Router ===================== */
@@ -92,6 +94,15 @@ userRouter.get(
   authMiddleware,
   validateRequest(heatmapSchema),
   getHeatmapDataController,
+);
+
+/* ===================== Analytics Overview ===================== */
+
+userRouter.get(
+  "/analytics/overview",
+  authMiddleware,
+  validateRequest(analyticsOverviewSchema),
+  getAnalyticsOverviewController,
 );
 
 /* ===================== User Profile ===================== */
