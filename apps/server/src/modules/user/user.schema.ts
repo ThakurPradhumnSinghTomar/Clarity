@@ -79,6 +79,10 @@ export const heatmapSchema = z.object({});
 
 export const analyticsOverviewSchema = z.object({});
 
+/* ===================== Focus Insights ===================== */
+
+export const focusInsightsSchema = z.object({});
+
 /* ===================== Tag Intelligence ===================== */
 
 export const tagIntelligenceSchema = paginationParamSchema;
