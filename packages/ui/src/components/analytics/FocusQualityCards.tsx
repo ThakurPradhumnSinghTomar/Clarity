@@ -13,7 +13,7 @@ export const FocusQualityCards = () => {
       {FOCUS_STATS.map((stat) => (
         <div
           key={stat.label}
-          className="rounded-2xl border p-5 bg-white dark:bg-[#111827]"
+          className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5 dark:border-[#1F2933] dark:bg-[#0F1419]"
         >
           <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
             {stat.label}

@@ -7,7 +7,7 @@ export const TagIntelligenceSection = () => {
   const { timePerTag, weeklyBreakdown, isLoading } = useTagIntelligence(0);
 
   return (
-    <section className="mt-16 space-y-10 dark:bg-[#151B22] p-6 rounded-2xl">
+    <section className="mt-16 space-y-10 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm dark:border-[#1F2933] dark:bg-[#151B22]">
       <div>
         <h2 className="text-2xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
           Tag Intelligence

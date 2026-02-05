@@ -1,11 +1,14 @@
 // FocusInsightsSection.tsx
 import React from "react";
-import { BreakPatternInsight, FocusQualityCards, SessionLengthDistribution } from "@repo/ui";
-
+import {
+  BreakPatternInsight,
+  FocusQualityCards,
+  SessionLengthDistribution,
+} from "@repo/ui";
 
 export const FocusInsightsSection = () => {
   return (
-    <section className="mt-16 space-y-10">
+    <section className="mt-16 space-y-10 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm dark:border-[#1F2933] dark:bg-[#151B22]">
       <div>
         <h2 className="text-2xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
           Focus Quality Insights

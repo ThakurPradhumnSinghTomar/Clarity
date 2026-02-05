@@ -11,7 +11,7 @@ const Analytics = () => {
   const { overview } = useAnalyticsOverview();
 
   return (
-    <div className="px-6 py-6 dark:bg-[#0F1419] min-h-screen">
+    <div className="min-h-screen bg-[#F4F6F8] px-6 py-8 transition-colors dark:bg-[#171C28]">
       <AnalyticsOverview
         avgDailyTimeMin={overview?.avgDailyTimeMin ?? 0}
         avgSessionLengthMin={overview?.avgSessionLengthMin ?? 0}
@@ -19,11 +19,11 @@ const Analytics = () => {
         consistencyScore={overview?.consistencyScore ?? 0}
       />
 
-      <AnalyticsTrendsSection></AnalyticsTrendsSection>
+      <AnalyticsTrendsSection />
 
-      <TagIntelligenceSection></TagIntelligenceSection>
+      <TagIntelligenceSection />
 
-      <FocusInsightsSection></FocusInsightsSection>
+      <FocusInsightsSection />
     </div>
   );
 };
