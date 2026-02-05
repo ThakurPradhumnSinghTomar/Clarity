@@ -1,3 +1,5 @@
+"use client";
+
 // FocusInsightsSection.tsx
 import React from "react";
 import {
@@ -5,8 +7,11 @@ import {
   FocusQualityCards,
   SessionLengthDistribution,
 } from "@repo/ui";
+import { useFocusInsights } from "@/lib/hooks/analytics/useFocusInsights";
 
 export const FocusInsightsSection = () => {
+  const { insights, isLoading } = useFocusInsights();
+
   return (
     <section className="mt-16 space-y-10 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm dark:border-[#1F2933] dark:bg-[#151B22]">
       <div>
@@ -18,9 +23,15 @@ export const FocusInsightsSection = () => {
         </p>
       </div>
 
-      <FocusQualityCards />
-      <SessionLengthDistribution />
-      <BreakPatternInsight />
+      <FocusQualityCards stats={insights.focusStats} isLoading={isLoading} />
+      <SessionLengthDistribution
+        buckets={insights.sessionBuckets}
+        isLoading={isLoading}
+      />
+      <BreakPatternInsight
+        insight={insights.breakPatternInsight}
+        isLoading={isLoading}
+      />
     </section>
   );
 };
