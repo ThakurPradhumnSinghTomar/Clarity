@@ -1,9 +1,7 @@
-"use client"
-import { WeeklyFocus } from "@repo/ui";
-import { MetricCard } from "@repo/ui";
+"use client";
+
+import { MetricCard, WeeklyFocus } from "@repo/ui";
 import { useWeeklyFocus } from "../../hooks/home/useWeeklyFocus";
-
-
 
 export const AnalyticsTrendsSection = () => {
   const weeklyFocus = useWeeklyFocus();
@@ -14,10 +12,7 @@ export const AnalyticsTrendsSection = () => {
       : "--";
 
   return (
-    <section className="mt-12 rounded-2xl bg-white dark:bg-[#151B22] p-6">
-      {/* Header */}
-      
-
+    <section className="mt-12 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm dark:border-[#1F2933] dark:bg-[#151B22]">
       {/* Histogram */}
       <div className="mb-8">
         <WeeklyFocus {...weeklyFocus}/>

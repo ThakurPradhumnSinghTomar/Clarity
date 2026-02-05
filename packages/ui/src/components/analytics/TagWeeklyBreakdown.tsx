@@ -21,8 +21,8 @@ export const TagWeeklyBreakdown = ({
   isLoading = false,
 }: TagWeeklyBreakdownProps) => {
   return (
-    <div className="rounded-2xl border p-6 dark:text-white dark:bg-[#151B22]">
-      <h3 className="text-lg font-medium mb-4">Weekly Breakdown by Tag</h3>
+    <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-6 dark:border-[#1F2933] dark:bg-[#0F1419] dark:text-white">
+      <h3 className="mb-4 text-lg font-medium text-[#0F172A] dark:text-[#E6EDF3]">Weekly Breakdown by Tag</h3>
 
       {isLoading ? (
         <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">Loading weekly breakdown...</p>
@@ -31,16 +31,16 @@ export const TagWeeklyBreakdown = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {data.map((tag) => (
-            <div key={tag.tag} className="rounded-xl border p-4">
-              <p className="font-medium">{tag.tag}</p>
+            <div key={tag.tag} className="rounded-xl border border-[#E2E8F0] bg-white p-4 dark:border-[#1F2933] dark:bg-[#151B22]">
+              <p className="font-medium text-[#0F172A] dark:text-[#E6EDF3]">{tag.tag}</p>
 
-              <p className="mt-2 text-sm text-[#64748B]">Sessions: {tag.sessions}</p>
+              <p className="mt-2 text-sm text-[#64748B] dark:text-[#9FB0C0]">Sessions: {tag.sessions}</p>
 
-              <p className="text-sm text-[#64748B]">
+              <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
                 Avg session: {toMinutes(tag.avgSessionDurationSec)} min
               </p>
 
-              <p className="text-sm text-[#64748B]">
+              <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
                 Total: {toMinutes(tag.totalDurationSec)} min
               </p>
             </div>
