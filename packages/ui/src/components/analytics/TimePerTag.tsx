@@ -1,35 +1,60 @@
 // TimePerTag.tsx
 
-const TIME_PER_TAG = [
-  { tag: "DSA", minutes: 420 },
-  { tag: "Web Dev", minutes: 310 },
-  { tag: "AI/ML", minutes: 180 },
-  { tag: "OS", minutes: 140 },
-];
+type TimePerTagItem = {
+  tag: string;
+  totalDurationSec: number;
+  sessionCount: number;
+};
 
+type TimePerTagProps = {
+  data: TimePerTagItem[];
+  isLoading?: boolean;
+};
 
-export const TimePerTag = () => {
+function formatDuration(totalDurationSec: number) {
+  const totalMinutes = Math.round(totalDurationSec / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours}h ${minutes}m`;
+}
+
+export const TimePerTag = ({ data, isLoading = false }: TimePerTagProps) => {
+  const maxDuration = data[0]?.totalDurationSec ?? 0;
+
   return (
     <div className="rounded-2xl border p-6 dark:text-white">
       <h3 className="text-lg font-medium mb-4">Time per Tag</h3>
 
-      <div className="space-y-3">
-        {TIME_PER_TAG.map(({ tag, minutes }) => (
-          <div key={tag}>
-            <div className="flex justify-between text-sm mb-1">
-              <span>{tag}</span>
-              <span>{Math.floor(minutes / 60)}h {minutes % 60}m</span>
-            </div>
+      {isLoading ? (
+        <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">Loading tag analytics...</p>
+      ) : data.length === 0 ? (
+        <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">No weekly tag data available.</p>
+      ) : (
+        <div className="space-y-3">
+          {data.map(({ tag, totalDurationSec, sessionCount }) => {
+            const widthPercent = maxDuration > 0 ? (totalDurationSec / maxDuration) * 100 : 0;
 
-            <div className="h-2 rounded-full bg-[#E5E7EB] dark:bg-[#1F2933]">
-              <div
-                className="h-2 rounded-full bg-[#0F172A] dark:bg-white"
-                style={{ width: `${minutes / 6}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+            return (
+              <div key={tag}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>{tag}</span>
+                  <span>
+                    {formatDuration(totalDurationSec)} • {sessionCount} session{sessionCount === 1 ? "" : "s"}
+                  </span>
+                </div>
+
+                <div className="h-2 rounded-full bg-[#E5E7EB] dark:bg-[#1F2933]">
+                  <div
+                    className="h-2 rounded-full bg-[#0F172A] dark:bg-white"
+                    style={{ width: `${widthPercent}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
