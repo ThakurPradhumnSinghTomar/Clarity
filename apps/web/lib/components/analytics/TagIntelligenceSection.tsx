@@ -1,8 +1,11 @@
-// TagIntelligenceSection.tsx
+"use client";
 
 import { TagWeeklyBreakdown, TimePerTag } from "@repo/ui";
+import { useTagIntelligence } from "@/lib/hooks/analytics/useTagIntelligence";
 
 export const TagIntelligenceSection = () => {
+  const { timePerTag, weeklyBreakdown, isLoading } = useTagIntelligence(0);
+
   return (
     <section className="mt-16 space-y-10 dark:bg-[#151B22] p-6 rounded-2xl">
       <div>
@@ -14,8 +17,8 @@ export const TagIntelligenceSection = () => {
         </p>
       </div>
 
-      <TimePerTag />
-      <TagWeeklyBreakdown />
+      <TimePerTag data={timePerTag} isLoading={isLoading} />
+      <TagWeeklyBreakdown data={weeklyBreakdown} isLoading={isLoading} />
     </section>
   );
 };

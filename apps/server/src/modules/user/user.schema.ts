@@ -78,3 +78,7 @@ export const heatmapSchema = z.object({});
 /* ===================== Analytics Overview ===================== */
 
 export const analyticsOverviewSchema = z.object({});
+
+/* ===================== Tag Intelligence ===================== */
+
+export const tagIntelligenceSchema = paginationParamSchema;

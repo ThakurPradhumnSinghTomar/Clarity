@@ -14,6 +14,10 @@ import { getWeeklyStudyHoursByTagsController } from "../modules/weekly-by-tags/w
 
 import { getHeatmapDataController } from "../modules/heatmap/heatmap.controller.js";
 import { getAnalyticsOverviewController } from "../modules/analytics/analytics.controller.js";
+import {
+  getWeeklyBreakdownByTagController,
+  getWeeklyTimePerTagController,
+} from "../modules/tag-intelligence/tagIntelligence.controller.js";
 
 import {
   getCurrentUserProfileController,
@@ -38,6 +42,7 @@ import {
   createTagSchema,
   heatmapSchema,
   analyticsOverviewSchema,
+  tagIntelligenceSchema,
 } from "../modules/user/user.schema.js";
 
 /* ===================== Router ===================== */
@@ -103,6 +108,23 @@ userRouter.get(
   authMiddleware,
   validateRequest(analyticsOverviewSchema),
   getAnalyticsOverviewController,
+);
+
+
+/* ===================== Tag Intelligence ===================== */
+
+userRouter.get(
+  "/analytics/time-per-tag/:page",
+  authMiddleware,
+  validateRequest(tagIntelligenceSchema),
+  getWeeklyTimePerTagController,
+);
+
+userRouter.get(
+  "/analytics/weekly-breakdown-by-tag/:page",
+  authMiddleware,
+  validateRequest(tagIntelligenceSchema),
+  getWeeklyBreakdownByTagController,
 );
 
 /* ===================== User Profile ===================== */
