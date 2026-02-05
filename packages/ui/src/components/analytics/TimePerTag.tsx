@@ -46,7 +46,7 @@ export const TimePerTag = ({ data, isLoading = false }: TimePerTagProps) => {
 
                 <div className="h-2 rounded-full bg-[#E5E7EB] dark:bg-[#1F2933]">
                   <div
-                    className="h-2 rounded-full bg-[#0F172A] dark:bg-white"
+                    className="h-2 rounded-full bg-[#475569] dark:bg-[#7C8FA3]"
                     style={{ width: `${widthPercent}%` }}
                   />
                 </div>
