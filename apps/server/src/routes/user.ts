@@ -13,7 +13,10 @@ import { getWeeklyStudyHoursController } from "../modules/study-hours/studyHours
 import { getWeeklyStudyHoursByTagsController } from "../modules/weekly-by-tags/weeklyByTags.controller.js";
 
 import { getHeatmapDataController } from "../modules/heatmap/heatmap.controller.js";
-import { getAnalyticsOverviewController } from "../modules/analytics/analytics.controller.js";
+import {
+  getAnalyticsOverviewController,
+  getFocusInsightsController,
+} from "../modules/analytics/analytics.controller.js";
 import {
   getWeeklyBreakdownByTagController,
   getWeeklyTimePerTagController,
@@ -42,6 +45,7 @@ import {
   createTagSchema,
   heatmapSchema,
   analyticsOverviewSchema,
+  focusInsightsSchema,
   tagIntelligenceSchema,
 } from "../modules/user/user.schema.js";
 
@@ -55,11 +59,7 @@ userRouter.get("/", (_, res) => {
 
 /* ===================== Leaderboard ===================== */
 
-userRouter.get(
-  "/leaderboard",
-  authMiddleware,
-  getLeaderboardController,
-);
+userRouter.get("/leaderboard", authMiddleware, getLeaderboardController);
 
 /* ===================== Focus Sessions ===================== */
 
@@ -110,6 +110,12 @@ userRouter.get(
   getAnalyticsOverviewController,
 );
 
+userRouter.get(
+  "/analytics/focus-insights",
+  authMiddleware,
+  validateRequest(focusInsightsSchema),
+  getFocusInsightsController,
+);
 
 /* ===================== Tag Intelligence ===================== */
 
@@ -142,11 +148,7 @@ userRouter.patch(
   updateUserProfileController,
 );
 
-userRouter.patch(
-  "/ping",
-  authMiddleware,
-  pingUserController,
-);
+userRouter.patch("/ping", authMiddleware, pingUserController);
 
 userRouter.patch(
   "/focusing",
@@ -157,11 +159,7 @@ userRouter.patch(
 
 /* ===================== Tags ===================== */
 
-userRouter.get(
-  "/tags",
-  authMiddleware,
-  getTagsController,
-);
+userRouter.get("/tags", authMiddleware, getTagsController);
 
 userRouter.post(
   "/create-tag",
