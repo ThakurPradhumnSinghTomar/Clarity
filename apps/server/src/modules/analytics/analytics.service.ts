@@ -118,3 +118,5 @@ export async function getAnalyticsOverview(userId: string) {
     consistencyScore,
   };
 }
+
+//yha yaad rkhna ki ki score vagerh kese nikal rhe h
