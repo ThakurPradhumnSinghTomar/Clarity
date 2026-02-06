@@ -331,9 +331,9 @@ function Clock() {
       )}
 
       {isRunning && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-[1px]">
-          <div className="w-full max-w-3xl rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-2xl dark:border-[#1F2933] dark:bg-[#151B22]">
-            <div className="flex flex-col items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-[1px] pt-44">
+          <div className="w-full max-w-4xl  rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-2xl dark:border-[#1F2933] dark:bg-[#151B22]">
+            <div className="flex flex-col  items-center justify-center">
               <TimeDisplay hours={hours} minutes={minutes} seconds={seconds} />
               <ControlButtons
                 isRunning={isRunning}
@@ -354,7 +354,7 @@ function Clock() {
                 onSave={handleSave}
                 onEdit={() => setEdit(true)}
               />
-              <p className="mt-2 text-sm text-[#64748B] dark:text-[#9FB0C0]">
+              <p className="mt-2 pt-4 text-sm text-[#64748B] dark:text-[#9FB0C0]">
                 You can&apos;t interact with anything else during a focus
                 session.
               </p>
@@ -363,28 +363,7 @@ function Clock() {
         </div>
       )}
 
-      {isRunning && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[1px]">
-          <div className="mx-4 w-full max-w-md rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-2xl dark:border-[#1F2933] dark:bg-[#151B22]">
-            <h3 className="text-lg font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
-              Focus session in progress
-            </h3>
-            <p className="mt-2 text-sm text-[#64748B] dark:text-[#9FB0C0]">
-              You can&apos;t interact with other controls while the clock is
-              running.
-            </p>
-            <button
-              onClick={() => {
-                stop();
-                updateFocusingStatus(false);
-              }}
-              className="mt-5 inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#4F6EF7] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#3f5fe9]"
-            >
-              Stop focus
-            </button>
-          </div>
-        </div>
-      )}
+      
 
       {/* RESTORE SESSION MODAL */}
       {showRestoreModal && storedSession && (
