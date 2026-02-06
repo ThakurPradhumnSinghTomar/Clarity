@@ -225,7 +225,6 @@ function Clock() {
       setSelectedTag(newtag.trim());
       setTagMessage("Tag created successfully ✓");
       setnewtag("");
-      //setCreatingTag(false);
     } catch (e) {
       console.error(e);
       setTagMessage("Failed to create tag. Try again.");
@@ -295,30 +294,103 @@ function Clock() {
   /* ===================== UI ===================== */
 
   return (
-    <section className=" pt-30 flex flex-col items-center justify-center bg-[#F4F6F8] dark:bg-[#0F1419] px-4">
-      <div className="mb-6 text-center">
-        <h2 className="text-xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
-          {type}
-        </h2>
+    <section className="flex flex-col items-center justify-center px-4">
+      {/* Page Header */}
+      <div className="w-full max-w-4xl mb-8">
+        <div className="border-l-4 border-blue-600 pl-4 py-2 bg-linear-to-r from-blue-50 to-transparent dark:from-blue-950/20">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 uppercase tracking-wide">
+            Study Session Timer
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Focus Mode - {type}
+          </p>
+        </div>
       </div>
 
-      {/* TIME DISPLAY */}
-      <TimeDisplay hours={hours} minutes={minutes} seconds={seconds} />
+      {/* Main Timer Card */}
+      <div className="w-full max-w-4xl">
+        <div className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
+          {/* Card Header */}
+          <div className="bg-linear-to-r from-blue-600 to-blue-700 px-6 py-4 border-b-2 border-blue-700">
+            <div className="flex items-center justify-between">
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wider">
+                Active Session
+              </h3>
+              {isRunning && (
+                <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-white text-xs font-bold uppercase">Live</span>
+                </div>
+              )}
+            </div>
+          </div>
 
-      {/* CONTROLS */}
-      <ControlButtons
-        isRunning={isRunning}
-        currentTime={currentTime}
-        isSavingSession={isSavingSession}
-        onStart={start}
-        onStop={stop}
-        onReset={() => {
-          reset();
-          updateFocusingStatus(false);
-        }}
-        onSave={handleSave}
-        onEdit={() => setEdit(true)}
-      />
+          {/* Card Body */}
+          <div className="p-8 md:p-12">
+            {/* Session Type Badge */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 px-6 py-2">
+                <span className="text-lg font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+                  {type}
+                </span>
+              </div>
+            </div>
+
+            {/* TIME DISPLAY */}
+            <TimeDisplay hours={hours} minutes={minutes} seconds={seconds} />
+
+            {/* Selected Tag Display */}
+            {selectedTag && (
+              <div className="flex justify-center mt-6">
+                <div className="bg-green-100 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-800 px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wide">
+                      Subject:
+                    </span>
+                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      {selectedTag}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CONTROLS */}
+            <div className="mt-8">
+              <ControlButtons
+                isRunning={isRunning}
+                currentTime={currentTime}
+                isSavingSession={isSavingSession}
+                onStart={start}
+                onStop={stop}
+                onReset={() => {
+                  reset();
+                  updateFocusingStatus(false);
+                }}
+                onSave={handleSave}
+                onEdit={() => setEdit(true)}
+              />
+            </div>
+
+            {/* Info Banner */}
+            {!isRunning && currentTime === 0 && (
+              <div className="mt-8 bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-600 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-xl">💡</div>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide mb-1">
+                      Getting Started
+                    </p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      Click "Start" to begin your study session. Use "Edit" to configure timer settings and select a subject tag.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* RESTORE SESSION MODAL */}
       {showRestoreModal && storedSession && (
@@ -361,15 +433,15 @@ function Clock() {
 
 const StudySession = () => {
   return (
-    <main className="min-h-screen bg-[#F4F6F8] dark:bg-[#0F1419] transition-colors">
+    <main className="min-h-screen bg-gray-100 dark:bg-gray-950 transition-colors">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
           duration: 0.5,
-          ease: [0.16, 1, 0.3, 1], // same calm easing you use elsewhere
+          ease: [0.16, 1, 0.3, 1],
         }}
-        className="max-w-6xl mx-auto px-6 py-12 pt-0"
+        className="max-w-7xl mx-auto px-4 md:px-6 py-12"
       >
         <Clock />
       </motion.div>

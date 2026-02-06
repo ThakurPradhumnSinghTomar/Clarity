@@ -13,7 +13,7 @@ export function HeroSection() {
             Daily Focus
           </p>
 
-          <h1 className="text-4xl font-semibold leading-tight mb-6">
+          <h1 className="text-4xl font-semibold leading-tight mb-6 text-black dark:text-white">
             Build consistency.
             <br />
             <span className="text-[#4F6EF7] dark:text-[#7C9AFF]">
