@@ -25,6 +25,13 @@ export function HeroSection() {
             Track deep work, stay accountable with rooms, and enter flow without
             friction.
           </p>
+
+          <a
+            href="/home/study-session"
+            className="mt-6 inline-flex rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#0F172A] transition hover:bg-[#F8FAFC] dark:border-[#1F2933] dark:bg-[#151B22] dark:text-[#E6EDF3] dark:hover:bg-[#1C2430]"
+          >
+            Go to Study Session
+          </a>
         </motion.div>
 
         <div className="relative flex justify-center">
