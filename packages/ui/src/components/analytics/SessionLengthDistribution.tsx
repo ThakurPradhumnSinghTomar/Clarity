@@ -13,7 +13,10 @@ export const SessionLengthDistribution = ({
   buckets,
   isLoading = false,
 }: SessionLengthDistributionProps) => {
-  const maxCount = buckets[0]?.count ?? 0;
+  const maxCount = buckets.reduce(
+    (highestCount, bucket) => Math.max(highestCount, bucket.count),
+    0
+  );
 
   return (
     <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-6 dark:border-[#1F2933] dark:bg-[#0F1419]">
@@ -33,7 +36,9 @@ export const SessionLengthDistribution = ({
         <div className="space-y-3">
           {buckets.map((bucket) => {
             const widthPercent =
-              maxCount > 0 ? (bucket.count / maxCount) * 100 : 0;
+              maxCount > 0
+                ? Math.min((bucket.count / maxCount) * 100, 100)
+                : 0;
 
             return (
               <div key={bucket.range} className="flex items-center gap-4">
