@@ -1,8 +1,26 @@
 import express from "express";
-import prisma from "../prismaClient.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
-import { generateRoomCode } from "../controllers/generateRandomNumber.js";
-import { error } from "node:console";
+
+import {
+  approveJoinRequestController,
+  createRoomController,
+  getMyRoomsController,
+  getRoomDetailsController,
+  joinRoomController,
+  rejectJoinRequestController,
+} from "../modules/rooms/room.controller.js";
+import { deleteOrLeaveRoomController } from "../modules/rooms/deleteOrLeaveRoom.controller.js";
+import { updateRoomController } from "../modules/rooms/updateRoom.controller.js";
+import { validateRequest } from "../middleware/validateRequest.js";
+import {
+  createRoomSchema,
+  joinRoomSchema,
+  approveJoinRequestSchema,
+  rejectJoinRequestSchema,
+  leaveOrDeleteRoomSchema,
+  updateRoomSchema,
+  getRoomDetailsSchema,
+} from "../modules/rooms/room.schema.js";
 
 const roomRouter = express.Router();
 

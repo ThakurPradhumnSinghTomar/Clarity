@@ -14,7 +14,15 @@ import { Histogram } from "@repo/ui";
 import { Leaderboard } from "@repo/ui";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Room } from "@repo/types";
+import {
+  WeeklyFocus,
+  ActivitySection,
+  RoomsSection,
+  CTASection,
+  DailyFocusSection,
+} from "@repo/ui";
+import { useActivity } from "@/lib/hooks/home/useActivity";
+
 import { transformRoomData } from "@/lib/helpfulFunctions/transformRoomData";
 import { fetchMyRooms } from "@/lib/helpfulFunctions/roomsRelated/fetchRoomsData";
 import { div } from "framer-motion/client";
@@ -62,127 +70,11 @@ const Home = () => {
   const [roomSelection, setRoomSelection] = useState("My Rooms");
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const router = useRouter();
-  const accessToken = session?.accessToken;
-  if (!accessToken) {
-    console.log("no access token in the session..");
-    throw error;
-  }
-
-  useEffect(() => {
-    if (session?.accessToken) {
-      fetchMyRooms({ setIsLoadingRooms, setError, accessToken, setMyRooms });
-    }
-  }, [session]);
-
-  const loadCurrentWeekStudyHours = async () => {
-    setIsLoadingHistogram(true);
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/get-current-week-study-hours/${histogramPage}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        console.error("unable to fetch current week study hours for this user");
-        return;
-      }
-
-      const responseData = await response.json();
-
-      if (!responseData.success) {
-        console.error(
-          "Failed to fetch study hours, but response is ok:",
-          responseData.message
-        );
-        return;
-      }
-
-      const weeklyStudyHours = responseData.weeklyStudyHours;
-
-      if (!weeklyStudyHours || !weeklyStudyHours.days) {
-        console.log("No weekly study hours for this user for current week");
-        setStopNow(true);
-        setNoWeeklyData(true);
-        return;
-      }
-
-      const newData = [0, 0, 0, 0, 0, 0, 0];
-      weeklyStudyHours.days.forEach(
-        (day: { weekday: number; focusedSec: number }) => {
-          if (day.weekday >= 0 && day.weekday <= 6) {
-            newData[day.weekday] =
-              Math.round((day.focusedSec / 3600) * 100) / 100;
-          }
-        }
-      );
-
-      setData(newData);
-      console.log("weekly study hours fetched successfully :", data);
-    } catch (e) {
-      console.error("error in getting leaderboard", e);
-    } finally {
-      setIsLoadingHistogram(false);
-    }
-  };
-
-  const loadLeaderboard = async () => {
-    setIsLoadingLeaderboard(true);
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/leaderboard`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        console.error("error fetching leaderboard");
-        return;
-      }
-
-      const responseData = await response.json();
-
-      if (!responseData.success) {
-        console.error("Failed to fetch study hours:", responseData.message);
-        return;
-      }
-
-      console.log(
-        "leaderboard data we fetch from backend is : ",
-        responseData.leaderboard
-      );
-      setLeaderboard(responseData.leaderboard);
-      setCurrentUser(responseData.currentUser);
-
-      console.log("leaderboard fetched successfull");
-    } catch (error) {
-      console.error("error in fetching leaderboard", error);
-    } finally {
-      setIsLoadingLeaderboard(false);
-    }
-  };
-
-  useEffect(() => {
-    if (session?.accessToken) {
-      loadCurrentWeekStudyHours();
-    }
-  }, [session?.accessToken, histogramPage]);
-
-  useEffect(() => {
-    if (session?.accessToken) {
-      loadLeaderboard();
-    }
-  }, [session?.accessToken]);
+  const currentDay = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+  const activity = useActivity();
+  const dailyFocus = useDailyFocus();
+  const rooms = useRooms();
+  const weeklyFocus = useWeeklyFocus();
 
   const onCreateRoom = (
     roomName: string,

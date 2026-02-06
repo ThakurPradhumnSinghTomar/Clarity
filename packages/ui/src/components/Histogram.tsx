@@ -6,6 +6,7 @@ import { TrendingUp } from "lucide-react";
 interface HistogramProps {
   data: number[];
   currentDay: number;
+  isCurrentWeek: boolean;
 }
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -144,7 +145,7 @@ export default function Histogram({ data, currentDay }: HistogramProps) {
             </div>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* Footer */}
       <div className="flex justify-between text-xs text-neutral-600 dark:text-white/60">

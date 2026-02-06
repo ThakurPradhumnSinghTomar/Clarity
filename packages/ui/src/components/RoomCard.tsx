@@ -16,10 +16,13 @@ interface RoomCardProps {
 export const RoomCard: React.FC<RoomCardProps> = ({
   name,
   memberCount,
-  totalStudyTime,
+  focusingCount,
   rank,
   lastActive,
 }) => {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   const formatStudyTime = (minutes: number) => {
     const h = Math.floor(minutes / 60)
     const m = minutes % 60
@@ -60,6 +63,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({
             <h3 className="text-base font-medium text-neutral-900 dark:text-white truncate">
               {name}
             </h3>
+
             {lastActive && (
               <p className="text-xs mt-1 text-neutral-500 dark:text-neutral-400">
                 Active {lastActive}
@@ -87,6 +91,14 @@ export const RoomCard: React.FC<RoomCardProps> = ({
           <Clock size={15} />
           <span>{formatStudyTime(totalStudyTime)}</span>
         </div>
+
+        {focusingCount > 0 ? (
+          <div style={{ color: isDark ? "#819595" : "#626b61" }}>
+            {focusingCount} is focusing now..🔥
+          </div>
+        ) : (
+          <div></div>
+        )}
       </div>
     </motion.div>
   )

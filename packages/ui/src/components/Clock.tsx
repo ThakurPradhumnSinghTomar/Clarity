@@ -266,6 +266,11 @@ const Clock = () => {
     if (displayIntervalRef.current) {
       clearInterval(displayIntervalRef.current);
     }
+    setSessionStartTime(new Date());
+    setPausedAt(null);
+    setIsRunning(true);
+    await updateFocusingStatus(true);
+  }
 
     displayIntervalRef.current = setInterval(() => {
       // Check if Timer mode has reached its target duration
@@ -310,6 +315,7 @@ const Clock = () => {
       setShowRecoveryModal(true);
       return;
     }
+  }
 
     // Start new session
     if (!isRunningRef.current) {
@@ -451,6 +457,57 @@ const Clock = () => {
       setShowResetConfirmModal(true);
       return;
     }
+    text-[#0F172A] dark:text-[#E6EDF3]
+    border-[#CBD5E1] dark:border-[#334155]
+  `}
+        >
+          {isSavingSession ? "Saving…" : "Save"}
+        </button>
+
+        <button
+          onClick={() => setEdit(true)}
+          className="
+    px-6 py-3 rounded-full border
+    text-[#0F172A] dark:text-[#E6EDF3]
+    border-[#CBD5E1] dark:border-[#334155]
+    transition-all duration-300 ease-out
+    hover:-translate-y-0.5
+    hover:shadow-lg hover:shadow-slate-900/30 hover:dark:shadow-[#E6EDF3] hover:dark:shadow-sm cursor-pointer
+  "
+        >
+          Edit
+        </button>
+      </div>
+
+      {/* RESTORE SESSION MODAL */}
+      {showRestoreModal && storedSession && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+          <div className="bg-white dark:bg-[#151B22] text-[#0F172A] dark:text-[#E6EDF3] rounded-2xl p-6 w-96">
+            <h3 className="text-xl font-semibold mb-4">
+              Previous Session Found
+            </h3>
+
+            <div className="mb-6 p-4 rounded-lg bg-[#F4F6F8] dark:bg-[#0F1419]">
+              <p className="mb-2">
+                <span className="font-semibold">Type:</span>{" "}
+                {storedSession.type}
+              </p>
+              <p className="mb-2">
+                <span className="font-semibold">Duration:</span>{" "}
+                {Math.floor(storedSession.currentTime / 60)} minutes
+              </p>
+              {storedSession.tags && (
+                <p className="mb-2">
+                  <span className="font-semibold">Tag:</span>{" "}
+                  {storedSession.tags}
+                </p>
+              )}
+              <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+                {storedSession.isRunning
+                  ? "Session was running"
+                  : "Session was paused"}
+              </p>
+            </div>
 
     // No time recorded, just reset
     performReset();

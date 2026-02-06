@@ -8,6 +8,7 @@ export interface Room {
   createdAt: string;
   updatedAt: string;
   memberCount: number;
+  focusingCount : number
 }
 
 export type RoomMember = {

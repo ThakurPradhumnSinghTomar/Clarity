@@ -5,21 +5,30 @@ export default function SignOutButton() {
   const handleSignOut = async () => {
     try {
       await signOut({
-        callbackUrl: '/login', // Redirect to login page after sign out
+        callbackUrl: "/login",
         redirect: true,
       });
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error("Sign out error:", error);
     }
   };
 
   return (
     <button
       onClick={handleSignOut}
-      className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+      className="
+        flex items-center gap-1.5
+        px-3 py-1.5
+        text-sm font-medium
+        rounded-md
+        bg-red-400/90 text-white
+        hover:bg-red-500/90
+        transition
+        shadow-sm hover:shadow
+      "
     >
-      <LogOut size={18} />
-      <span>Sign Out</span>
+      <LogOut size={14} />
+      <span>Sign out</span>
     </button>
   );
 }
