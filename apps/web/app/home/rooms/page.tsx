@@ -39,26 +39,42 @@ const item = {
 const RoomsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const router = useRouter();
+  const [myRooms, setMyRooms] = useState<Room[]>([]);
+  const { data: session } = useSession();
+  const router = useRouter()
+  // Loading states
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const accessToken = session?.accessToken;
+  if(!accessToken){
+    console.log("no access token in the session..")
+    throw error}
 
-  const { rooms, isLoading, refetch } = useMyRooms();
-
-  const { createRoom, joinRoom, isCreating } =
-  useRoomMutations(refetch);
+  // Fetch rooms on component mount
+  useEffect(() => {
+    if (session?.accessToken) {
+      fetchMyRooms({setIsLoadingRooms, setError, accessToken, setMyRooms });
+    }
+  }, [session]);
 
   
 
+  // Loading skeleton for room cards
+  const RoomCardSkeleton = () => (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 animate-pulse">
+      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
+      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+    </div>
+  );
+
   return (
-    <main className="min-h-screen bg-[#F4F6F8] dark:bg-[#171C28] transition-colors">
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="max-w-7xl mx-auto px-6 py-12 space-y-16"
-      >
-        {/* HEADER */}
-        <motion.section variants={item} className="space-y-3">
-          <h1 className="text-3xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#232630] py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
             Study Rooms
           </h1>
           <p className="text-[#64748B] dark:text-[#9FB0C0] max-w-xl">
@@ -162,19 +178,10 @@ const RoomsPage = () => {
         </motion.section>
       </motion.div>
 
-      {/* MODALS */}
-      <CreateRoomModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={createRoom}
-        isLoading={isCreating}
-      />
-      <JoinRoomModal
-        isOpen={isJoinModalOpen}
-        onClose={() => setIsJoinModalOpen(false)}
-        onSubmit={joinRoom}
-      />
-    </main>
+      {/* Modals */}
+     
+     
+    </div>
   );
 };
 

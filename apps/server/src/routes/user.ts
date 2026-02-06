@@ -109,32 +109,36 @@ userRouter.patch(
   updateUserProfileController,
 );
 
-userRouter.patch(
-  "/ping",
-  authMiddleware,
-  pingUserController,
-);
+userRouter.post("/focusing/heartbeat", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
 
-userRouter.patch(
-  "/focusing",
-  authMiddleware,
-  validateRequest(updateFocusingSchema),
-  updateFocusingController,
-);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
-/* ===================== Tags ===================== */
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        lastPinged: new Date(),
+      },
+    });
 
-userRouter.get(
-  "/tags",
-  authMiddleware,
-  getTagsController,
-);
+    return res.status(200).json({
+      success: true,
+      message: "Focusing heartbeat recorded",
+    });
+  } catch (error) {
+    console.error("Error in focusing heartbeat:", error);
 
-userRouter.post(
-  "/create-tag",
-  authMiddleware,
-  validateRequest(createTagSchema),
-  createTagController,
-);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to record focusing heartbeat",
+    });
+  }
+});
 
 export default userRouter;

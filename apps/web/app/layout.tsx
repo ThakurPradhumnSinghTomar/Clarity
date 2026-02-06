@@ -5,6 +5,13 @@ import { SessionProvider } from "@/lib/components/providers/session-provider";
 import { ThemeProvider } from "@repo/context-providers";
 import { ToastProvider } from "@repo/ui"; 
 
+import { Poppins } from "next/font/google";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -28,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full bg-[#F1F5F9] dark:bg-[#0F172A] overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full bg-[#F1F5F9] dark:bg-[#232630] ${poppins.className}`}
       >
         <ThemeProvider>
           <SessionProvider>

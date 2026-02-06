@@ -58,33 +58,46 @@ const Header = () => {
   };
 
   return (
-    <>
-      {/* Header Container */}
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-all duration-300 ${
-          scrolled ? "shadow-lg" : "shadow-md"
-        }`}
-        style={{
-          background: colors.bg,
-          borderColor: colors.border,
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-            {/* LOGO */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push("/home")}
-              className="cursor-pointer flex items-center gap-2 shrink-0"
-            >
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                style={{
-                  background: `linear-gradient(135deg, ${colors.gradientFrom}, ${colors.gradientTo})`,
-                }}
+    <div className='bg-white dark:bg-[#232630] text-gray-900 dark:text-white px-6 py-2 flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 shadow-sm' onMouseLeave={()=>{setisOptions(false); setisMode(false); }}>
+      {/* Logo */}
+      <div className='font-bold cursor-pointer text-2xl hover:scale-105 transition-transform duration-200'>Rebuild</div>
+      
+      {/* Navigation */}
+      <div className='flex items-center gap-6'>
+        {/* Home Link */}
+        <div 
+          className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105' 
+          onClick={() => router.push("/home")}
+        >
+          Home
+        </div>
+        
+        {/* Options Dropdown */}
+        <div 
+          className='relative'
+          onMouseEnter={() => {setisOptions(true);setisMode(false);}}
+          
+        >
+          <div className='hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-all duration-200 font-medium hover:scale-105'>
+            Options
+          </div>
+          
+          <div className={`
+            absolute top-full left-0 mt-1 min-w-[200px]
+            bg-white dark:bg-zinc-900 
+            rounded-xl shadow-xl
+            border border-gray-200 dark:border-zinc-800
+            overflow-hidden
+            transition-all duration-300 ease-in-out
+            ${isOptions 
+              ? 'opacity-100 translate-y-0 visible' 
+              : 'opacity-0 -translate-y-2 invisible pointer-events-none'
+            }
+          `}>
+            <div className='py-2'>
+              <div 
+                className='px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors duration-150 text-gray-900 dark:text-white' 
+                onClick={() => router.push("/home/study-session")}
               >
                 R
               </div>

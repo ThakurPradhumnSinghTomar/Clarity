@@ -11,32 +11,6 @@ export {CreateRoomModal} from "./components/createRoomModal";
 export {JoinRoomModal} from "./components/joinRoomModel";
 export {ToastProvider} from "./components/toastProvider";
 export {EditRoomModel} from "./components/EditRoomModel";
-export {ThemeToggle} from "./components/themeToggel";
-export {default as RebuildHero} from "./components/RebuildHero";
-export {Hero} from "./components/helix-hero";
-export {OrbitalClock} from "./components/orbital-clock";
-export {default as ClassicLoader} from "./components/loader";
-export {HeroSection} from "./components/home/HeroSection";
-export {WeeklyFocus} from "./components/home/WeeklyFocus";
-export {ActivitySection} from "./components/home/ActivitySection";
-export {RoomsSection} from "./components/home/RoomSection";
-export {CTASection} from "./components/home/CTASection";
-export {DailyFocusSection} from "./components/home/DailyFocusSection";
-export {RoomHeader} from "./components/rooms/RoomHeader"
-export {RoomTabs} from "./components/rooms/RoomTabs";
-export {RoomStats} from "./components/rooms/RoomStats";
-export {MembersTab} from "./components/rooms/MembersTab";
-export {LeaderboardTab} from "./components/rooms/Leaderboard";
-export {PendingRequestsTab} from "./components/rooms/PendingRequestsTab";
-export {ConfirmationModal} from "./components/rooms/ConfirmationModel";
-export {RoomSkeleton} from "./components/rooms/RoomSkeleton";
-export {ActionButton} from "./components/rooms/ActionButtons";
-export {ProfileHeader} from "./components/profile/profileHeader";
-export {ProfileInfoSection} from "./components/profile/profileInfoSection";
-export {AccountStatsCard} from "./components/profile/AccountStatsCard";
-export {TimeDisplay} from "./components/clock/TimeDisplay";
-export {ControlButtons} from "./components/clock/ControlButtons";
-export {RestoreSessionModal} from "./components/clock/RestoreSessionModel";
-export {EditSessionModal} from "./components/clock/EditSessionModel";
-export {LoginPage} from "./components/LoginPage";
-export {AnalyticsOverview} from "./components/analytics/AnalyticsOverview"
+export {default as RoomTabs} from "./components/RoomTabs";
+export {MyRoomsPanel} from "./components/MyRoomsPannel";
+export {Footer} from "./components/footer"
