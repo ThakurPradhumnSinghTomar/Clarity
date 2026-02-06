@@ -50,7 +50,7 @@ export function DailyFocusSection({
               <div
                 key={bucket}
                 className="
-                  rounded-2xl border p-4
+                  rounded-2xl border p-4 h-[300px] overflow-y-auto scrollbar-hide
                   bg-[#F8FAFC] border-[#E2E8F0]
                   dark:bg-[#0F1419] dark:border-[#1F2933]
                 "

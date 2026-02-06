@@ -302,23 +302,66 @@ function Clock() {
         </h2>
       </div>
 
-      {/* TIME DISPLAY */}
-      <TimeDisplay hours={hours} minutes={minutes} seconds={seconds} />
+      {!isRunning && (
+        <>
+          {/* TIME DISPLAY */}
+          <TimeDisplay hours={hours} minutes={minutes} seconds={seconds} />
 
-      {/* CONTROLS */}
-      <ControlButtons
-        isRunning={isRunning}
-        currentTime={currentTime}
-        isSavingSession={isSavingSession}
-        onStart={start}
-        onStop={stop}
-        onReset={() => {
-          reset();
-          updateFocusingStatus(false);
-        }}
-        onSave={handleSave}
-        onEdit={() => setEdit(true)}
-      />
+          {/* CONTROLS */}
+          <ControlButtons
+            isRunning={isRunning}
+            currentTime={currentTime}
+            isSavingSession={isSavingSession}
+            onStart={() => {
+              start();
+              updateFocusingStatus(true);
+            }}
+            onStop={() => {
+              stop();
+              updateFocusingStatus(false);
+            }}
+            onReset={() => {
+              reset();
+              updateFocusingStatus(false);
+            }}
+            onSave={handleSave}
+            onEdit={() => setEdit(true)}
+          />
+        </>
+      )}
+
+      {isRunning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-[1px]">
+          <div className="w-full max-w-3xl rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-2xl dark:border-[#1F2933] dark:bg-[#151B22]">
+            <div className="flex flex-col items-center justify-center">
+              <TimeDisplay hours={hours} minutes={minutes} seconds={seconds} />
+              <ControlButtons
+                isRunning={isRunning}
+                currentTime={currentTime}
+                isSavingSession={isSavingSession}
+                onStart={() => {
+                  start();
+                  updateFocusingStatus(true);
+                }}
+                onStop={() => {
+                  stop();
+                  updateFocusingStatus(false);
+                }}
+                onReset={() => {
+                  reset();
+                  updateFocusingStatus(false);
+                }}
+                onSave={handleSave}
+                onEdit={() => setEdit(true)}
+              />
+              <p className="mt-2 text-sm text-[#64748B] dark:text-[#9FB0C0]">
+                You can&apos;t interact with anything else during a focus
+                session.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* RESTORE SESSION MODAL */}
       {showRestoreModal && storedSession && (
