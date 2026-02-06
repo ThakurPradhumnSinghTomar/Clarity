@@ -168,6 +168,30 @@ export const Hero: React.FC<HeroProps> = ({ title, description }) => {
           </p>
 
           <div className="flex gap-3">
+            {/* STUDY SESSION BUTTON */}
+            <motion.button
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push("/home/study-session")}
+              className="
+                cursor-pointer
+                rounded-full
+                border
+                border-gray-200
+                text-gray-700
+                px-3
+                py-2
+                text-xs
+                font-light
+                shadow-sm
+                hover:shadow-md
+                hover:bg-gray-100
+                transition
+              "
+            >
+              Study Session
+            </motion.button>
+
             {/* LOGIN BUTTON */}
             <motion.button
               whileHover={{ y: -1 }}
