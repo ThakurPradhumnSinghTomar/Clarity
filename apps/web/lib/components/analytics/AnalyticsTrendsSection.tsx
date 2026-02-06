@@ -5,17 +5,17 @@ import { useWeeklyFocus } from "../../hooks/home/useWeeklyFocus";
 
 export const AnalyticsTrendsSection = () => {
   const weeklyFocus = useWeeklyFocus();
-  const insights = weeklyFocus.insights
+  const insights = weeklyFocus.insights;
   const weekOverWeekDisplay =
     typeof insights.weekOverWeekPercent === "number"
-      ? insights.weekOverWeekPercent.toFixed(2)
+      ? `${insights.weekOverWeekPercent > 0 ? "+" : ""}${insights.weekOverWeekPercent.toFixed(2)}`
       : "--";
 
   return (
     <section className="mt-12 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm dark:border-[#1F2933] dark:bg-[#151B22]">
       {/* Histogram */}
       <div className="mb-8">
-        <WeeklyFocus {...weeklyFocus}/>
+        <WeeklyFocus {...weeklyFocus} />
       </div>
 
       {/* Insights */}
