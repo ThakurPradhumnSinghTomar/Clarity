@@ -14,8 +14,8 @@ export const LocalWeeklyFocus = () => {
     <section className="mt-12 rounded-2xl bg-transparent">
       {/* Header */}
       <header className="mb-8">
-        <h2 className="text-2xl font-semibold dark:text-white">Weekly Focus</h2>
-        <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+        <h2 className="text-2xl font-semibold text-[var(--color-text)]">Weekly Focus</h2>
+        <p className="text-sm text-[var(--color-text-muted)]">
           Your actual work, not intentions.
         </p>
       </header>

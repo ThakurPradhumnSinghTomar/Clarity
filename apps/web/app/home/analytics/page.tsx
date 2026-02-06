@@ -11,7 +11,7 @@ const Analytics = () => {
   const { overview } = useAnalyticsOverview();
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] px-6 py-8 transition-colors dark:bg-[#171C28]">
+    <div className="min-h-screen bg-[var(--color-bg)] px-6 py-8 transition-colors">
       <AnalyticsOverview
         avgDailyTimeMin={overview?.avgDailyTimeMin ?? 0}
         avgSessionLengthMin={overview?.avgSessionLengthMin ?? 0}

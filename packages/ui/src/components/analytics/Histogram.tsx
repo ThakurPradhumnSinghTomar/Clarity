@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useMemo } from "react";
-import { useTheme } from "@repo/context-providers";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface HistogramProps {
@@ -76,9 +75,6 @@ export default function Histogram({
   const [hovered, setHovered] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
 
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
   const max = useMemo(() => Math.max(...data, 10), [data]);
   const totalWeekHours = useMemo(() => data.reduce((s, h) => s + h, 0), [data]);
   const avgDailyHours = useMemo(() => totalWeekHours / 7, [totalWeekHours]);
@@ -97,27 +93,21 @@ export default function Histogram({
 
   return (
     <div
-      className="w-full min-h-[360px] rounded-2xl border backdrop-blur-xl shadow-sm p-8"
-      style={{
-        background: isDark ? "rgba(21,27,34,0.55)" : "rgba(242,245,240,0.75)",
-        borderColor: isDark
-          ? "rgba(129,149,149,0.45)"
-          : "rgba(202,207,201,0.6)",
-      }}
+      className="w-full min-h-[360px] rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur-xl shadow-sm p-8"
     >
       {/* HEADER */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h3
             className="text-xl font-semibold tracking-tight"
-            style={{ color: isDark ? "#E5E7EB" : "#0F172A" }}
+            style={{ color: "var(--color-text)" }}
           >
             Weekly Study Hours
           </h3>
 
           <p
             className="text-sm mt-1"
-            style={{ color: isDark ? "#819595" : "#626b61" }}
+            style={{ color: "var(--color-text-muted)" }}
           >
             {getWeekRange(meta.weekStart)} · Mon → Sun
           </p>
@@ -126,10 +116,9 @@ export default function Histogram({
         <div
           className="px-4 py-2 rounded-full text-sm font-medium"
           style={{
-            background: isDark
-              ? "rgba(125,211,252,0.12)"
-              : "rgba(59,130,246,0.08)",
-            color: isDark ? "#CBD5E1" : "#334155",
+            background:
+              "color-mix(in srgb, var(--color-accent-sky) 15%, transparent)",
+            color: "var(--color-text)",
           }}
         >
           {totalWeekHours.toFixed(1)}h total
@@ -166,12 +155,8 @@ export default function Histogram({
                     height: `${heightPct}%`,
                     transformOrigin: "bottom",
                     background: isToday
-                      ? isDark
-                        ? "#E5E7EB"
-                        : "#0F172A"
-                      : isDark
-                        ? "#819595"
-                        : "#7a8679",
+                      ? "var(--color-accent-yellow)"
+                      : "var(--color-primary)",
                     boxShadow: isActive
                       ? "0 8px 20px rgba(0,0,0,0.18)"
                       : "none",
@@ -184,12 +169,8 @@ export default function Histogram({
                 className="mt-3 text-xs font-medium"
                 style={{
                   color: isToday
-                    ? isDark
-                      ? "#E5E7EB"
-                      : "#0F172A"
-                    : isDark
-                      ? "#696773"
-                      : "#7a8679",
+                    ? "var(--color-text)"
+                    : "var(--color-text-muted)",
                 }}
               >
                 {DAYS[i]}
@@ -205,11 +186,9 @@ export default function Histogram({
                     transition={{ duration: 0.18 }}
                     className="absolute -top-2 px-3 py-1.5 text-xs rounded-lg shadow-lg whitespace-nowrap -translate-x-1/2 left-1/2"
                     style={{
-                      background: isDark ? "#151B22" : "#ffffff",
-                      color: isDark ? "#E5E7EB" : "#0F172A",
-                      border: `1px solid ${
-                        isDark ? "rgba(129,149,149,0.45)" : "#e2e8f0"
-                      }`,
+                      background: "var(--color-surface)",
+                      color: "var(--color-text)",
+                      border: "1px solid var(--color-border)",
                     }}
                   >
                     {formatStudyTime(h)}
@@ -222,24 +201,17 @@ export default function Histogram({
       </motion.div>
 
       {/* FOOTER */}
-      <div
-        className="mt-6 pt-4 flex justify-between items-center border-t"
-        style={{
-          borderColor: isDark
-            ? "rgba(129,149,149,0.45)"
-            : "rgba(202,207,201,0.6)",
-        }}
-      >
+      <div className="mt-6 pt-4 flex justify-between items-center border-t border-[var(--color-border)]">
         <div
           className="text-xs"
-          style={{ color: isDark ? "#819595" : "#626b61" }}
+          style={{ color: "var(--color-text-muted)" }}
         >
           {isCurrentWeek ? (
             <>
               Today:{" "}
               <span
                 className="font-semibold"
-                style={{ color: isDark ? "#E5E7EB" : "#0F172A" }}
+                style={{ color: "var(--color-text)" }}
               >
                 {DAYS[realTodayIndex]}
               </span>
@@ -249,7 +221,7 @@ export default function Histogram({
               Viewing week:{" "}
               <span
                 className="font-semibold"
-                style={{ color: isDark ? "#E5E7EB" : "#0F172A" }}
+                style={{ color: "var(--color-text)" }}
               >
                 Mon – Sun
               </span>
@@ -259,12 +231,12 @@ export default function Histogram({
 
         <div
           className="text-xs"
-          style={{ color: isDark ? "#819595" : "#626b61" }}
+          style={{ color: "var(--color-text-muted)" }}
         >
           Daily Avg:{" "}
           <span
             className="font-semibold"
-            style={{ color: isDark ? "#E5E7EB" : "#0F172A" }}
+            style={{ color: "var(--color-text)" }}
           >
             {avgDailyHours.toFixed(1)}h
           </span>

@@ -12,7 +12,7 @@ export const AnalyticsTrendsSection = () => {
       : "--";
 
   return (
-    <section className="mt-12 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm dark:border-[#1F2933] dark:bg-[#151B22]">
+    <section className="mt-12 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
       {/* Histogram */}
       <div className="mb-8">
         <WeeklyFocus {...weeklyFocus} />

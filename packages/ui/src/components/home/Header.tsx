@@ -25,10 +25,10 @@ const Header = () => {
     <div
       className="sticky top-4 z-50 mx-4 rounded-2xl backdrop-blur-xl border"
       style={{
-        background: isDark ? "rgba(21,27,34,0.82)" : "rgba(255,255,255,0.75)",
-        borderColor: isDark
-          ? "rgba(129,149,149,0.35)"
-          : "rgba(203,213,225,0.6)",
+        background:
+          "color-mix(in srgb, var(--color-surface) 82%, transparent)",
+        borderColor:
+          "color-mix(in srgb, var(--color-border) 70%, transparent)",
       }}
     >
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -37,7 +37,7 @@ const Header = () => {
           onClick={() => router.push("/home")}
           className="cursor-pointer select-none text-lg font-semibold tracking-tight"
           style={{
-            color: isDark ? "#E5E7EB" : "#0F172A",
+            color: "var(--color-text)",
           }}
         >
           Rebuild
@@ -51,7 +51,7 @@ const Header = () => {
             onClick={() => router.push("/home")}
             className="px-3 py-1.5 rounded-full cursor-pointer transition"
             style={{
-              color: isDark ? "#CBD5E1" : "#334155",
+              color: "var(--color-text-muted)",
             }}
           >
             Home
@@ -67,11 +67,9 @@ const Header = () => {
               whileHover={{ y: -1 }}
               className="px-3 py-1.5 rounded-full cursor-pointer transition"
               style={{
-                color: isDark ? "#CBD5E1" : "#334155",
+                color: "var(--color-text-muted)",
                 background: isOptions
-                  ? isDark
-                    ? "rgba(125,211,252,0.12)"
-                    : "rgba(59,130,246,0.08)"
+                  ? "color-mix(in srgb, var(--color-accent-sky) 15%, transparent)"
                   : "transparent",
               }}
             >
@@ -92,12 +90,10 @@ const Header = () => {
                   }}
                   className="absolute left-0 mt-3 w-56 rounded-2xl overflow-hidden backdrop-blur-2xl border shadow-xl"
                   style={{
-                    background: isDark
-                      ? "rgba(21,27,34,0.95)"
-                      : "rgba(255,255,255,0.95)",
-                    borderColor: isDark
-                      ? "rgba(129,149,149,0.35)"
-                      : "rgba(203,213,225,0.6)",
+                    background:
+                      "color-mix(in srgb, var(--color-surface) 92%, transparent)",
+                    borderColor:
+                      "color-mix(in srgb, var(--color-border) 70%, transparent)",
                   }}
                 >
                   {[
@@ -119,13 +115,12 @@ const Header = () => {
                             : "cursor-pointer"
                         }`}
                         style={{
-                          color: isDark ? "#CBD5E1" : "#334155",
+                          color: "var(--color-text-muted)",
                         }}
                         onMouseEnter={(e) => {
                           if (isLocked) return;
-                          e.currentTarget.style.background = isDark
-                            ? "rgba(125,211,252,0.12)"
-                            : "rgba(59,130,246,0.08)";
+                          e.currentTarget.style.background =
+                            "color-mix(in srgb, var(--color-accent-sky) 15%, transparent)";
                         }}
                         onMouseLeave={(e) => {
                           if (isLocked) return;
@@ -142,9 +137,8 @@ const Header = () => {
                   <div
                     className="mt-1 border-t"
                     style={{
-                      borderColor: isDark
-                        ? "rgba(129,149,149,0.35)"
-                        : "rgba(203,213,225,0.6)",
+                      borderColor:
+                        "color-mix(in srgb, var(--color-border) 70%, transparent)",
                     }}
                   >
                     <div className="px-4 py-2">
@@ -164,9 +158,8 @@ const Header = () => {
             onClick={() => router.push("/home/profile")}
             className="ml-2 w-8 h-8 rounded-full overflow-hidden border cursor-pointer transition hover:opacity-80"
             style={{
-              borderColor: isDark
-                ? "rgba(125,211,252,0.4)"
-                : "rgba(59,130,246,0.35)",
+              borderColor:
+                "color-mix(in srgb, var(--color-accent-sky) 45%, transparent)",
             }}
           >
             <img

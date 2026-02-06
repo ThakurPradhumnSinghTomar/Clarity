@@ -71,7 +71,7 @@ const HelixRings: React.FC<HelixRingsProps> = ({
           castShadow
         >
           <meshPhysicalMaterial
-            color="#45BFD3"
+            color="#4F6EF7"
             metalness={0.7}
             roughness={0.5}
             clearcoat={0}
@@ -100,7 +100,7 @@ const Scene: React.FC = () => {
         far: 1000,
       }}
       gl={{ antialias: true }}
-      style={{ background: "#ffffff" }}
+      style={{ background: "var(--color-bg)" }}
     >
       <hemisphereLight color="#cfe8ff" groundColor="#ffffff" intensity={2} />
 
@@ -108,7 +108,7 @@ const Scene: React.FC = () => {
         position={[10, 10, 5]}
         intensity={2}
         castShadow
-        color="#ffeedd"
+        color="#cfe8ff"
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
       />
@@ -142,7 +142,7 @@ export const Hero: React.FC<HeroProps> = ({ title, description }) => {
   const router = useRouter();
 
   return (
-    <section className="relative h-screen w-screen font-sans tracking-tight text-gray-900 bg-white overflow-hidden">
+    <section className="relative h-screen w-screen font-sans tracking-tight text-[var(--color-text)] bg-[var(--color-bg)] overflow-hidden">
       <div className="absolute inset-0 z-0">
         <motion.div
           className="absolute inset-0 z-0"
@@ -163,7 +163,7 @@ export const Hero: React.FC<HeroProps> = ({ title, description }) => {
         >
           <h1 className="text-3xl font-light tracking-tight mb-4">{title}</h1>
 
-          <p className="text-gray-700 text-sm leading-relaxed font-light tracking-tight mb-8">
+          <p className="text-[var(--color-text-muted)] text-sm leading-relaxed font-light tracking-tight mb-8">
             {description}
           </p>
 
@@ -177,15 +177,15 @@ export const Hero: React.FC<HeroProps> = ({ title, description }) => {
                 cursor-pointer
                 rounded-full
                 border
-                border-gray-200
-                text-gray-700
+                border-[var(--color-border)]
+                text-[var(--color-text)]
                 px-3
                 py-2
                 text-xs
                 font-light
                 shadow-sm
                 hover:shadow-md
-                hover:bg-gray-100
+                hover:bg-[var(--color-surface-elevated)]
                 transition
               "
             >
@@ -200,7 +200,7 @@ export const Hero: React.FC<HeroProps> = ({ title, description }) => {
               className="
                 cursor-pointer
                 rounded-full
-                bg-gray-900
+                bg-[var(--color-primary)]
                 text-white
                 px-5
                 py-2.5
@@ -208,7 +208,7 @@ export const Hero: React.FC<HeroProps> = ({ title, description }) => {
                 font-light
                 shadow-sm
                 hover:shadow-lg
-                hover:bg-gray-800
+                hover:bg-[var(--color-primary-strong)]
                 transition
               "
             >
@@ -224,15 +224,15 @@ export const Hero: React.FC<HeroProps> = ({ title, description }) => {
                 cursor-pointer
                 rounded-full
                 border
-                border-gray-300
-                text-gray-800
+                border-[var(--color-border-strong)]
+                text-[var(--color-text)]
                 px-5
                 py-2.5
                 text-sm
                 font-light
                 shadow-sm
                 hover:shadow-md
-                hover:bg-gray-100
+                hover:bg-[var(--color-surface-elevated)]
                 transition
               "
             >

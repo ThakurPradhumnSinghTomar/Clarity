@@ -15,7 +15,7 @@ export function AnalyticsOverview({
 }: AnalyticsOverviewProps) {
   return (
     <section className="mb-10">
-      <h2 className="mb-4 text-lg font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
+      <h2 className="mb-4 text-lg font-semibold text-[var(--color-text)]">
         Overview
       </h2>
 

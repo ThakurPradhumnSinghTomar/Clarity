@@ -22,9 +22,9 @@ export function ActionButton({
       disabled={loading}
       className="
         flex items-center justify-center gap-3 px-6 py-4 rounded-2xl border
-        bg-white/70 dark:bg-[#151B22]/70
-        border-[#CBD5E1] dark:border-[#334155]
-        text-[#0F172A] dark:text-[#E6EDF3]
+        bg-[var(--color-surface)]/70
+        border-[var(--color-border-strong)]
+        text-[var(--color-text)]
         disabled:opacity-60
       "
     >

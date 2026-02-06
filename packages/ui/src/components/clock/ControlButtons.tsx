@@ -24,13 +24,12 @@ export function ControlButtons({
           onClick={onStop}
           className="
             px-6 py-3 rounded-full
-            bg-[#0F172A] dark:bg-white
-            text-white dark:text-black
+            bg-[var(--color-primary)]
+            text-white
             transition-all duration-300 ease-out
             hover:-translate-y-0.5
             hover:shadow-lg
-            hover:shadow-[#E6EDF3]
-            hover:dark:shadow-slate-900/30
+            hover:shadow-[var(--color-primary-soft)]
             cursor-pointer
           "
         >
@@ -41,13 +40,12 @@ export function ControlButtons({
           onClick={onStart}
           className="
             px-6 py-3 rounded-full
-            bg-[#0F172A] dark:bg-white
-            text-white dark:text-black
+            bg-[var(--color-primary)]
+            text-white
             transition-all duration-300 ease-out
             hover:-translate-y-0.5
             hover:shadow-lg
-            hover:shadow-[#E6EDF3]
-            hover:dark:shadow-slate-900/30
+            hover:shadow-[var(--color-primary-soft)]
             cursor-pointer
           "
         >
@@ -59,13 +57,13 @@ export function ControlButtons({
         onClick={onReset}
         className="
           px-6 py-3 rounded-full border
-          text-[#0F172A] dark:text-[#E6EDF3]
-          border-[#CBD5E1] dark:border-[#334155]
+          text-[var(--color-text)]
+          border-[var(--color-border-strong)]
           transition-all duration-300 ease-out
           hover:-translate-y-0.5
           hover:shadow-lg
           hover:shadow-slate-900/30
-          hover:dark:shadow-[#E6EDF3]
+          hover:shadow-[var(--color-border-strong)]
           cursor-pointer
         "
       >
@@ -77,8 +75,8 @@ export function ControlButtons({
         onClick={onSave}
         className={`
           px-6 py-3 rounded-full border
-          text-[#0F172A] dark:text-[#E6EDF3]
-          border-[#CBD5E1] dark:border-[#334155]
+          text-[var(--color-text)]
+          border-[var(--color-border-strong)]
           transition-all duration-300 ease-out
           ${
             currentTime > 0 && !isRunning && !isSavingSession
@@ -94,13 +92,13 @@ export function ControlButtons({
         onClick={onEdit}
         className="
           px-6 py-3 rounded-full border
-          text-[#0F172A] dark:text-[#E6EDF3]
-          border-[#CBD5E1] dark:border-[#334155]
+          text-[var(--color-text)]
+          border-[var(--color-border-strong)]
           transition-all duration-300 ease-out
           hover:-translate-y-0.5
           hover:shadow-lg
           hover:shadow-slate-900/30
-          hover:dark:shadow-[#E6EDF3]
+          hover:shadow-[var(--color-border-strong)]
           cursor-pointer
         "
       >

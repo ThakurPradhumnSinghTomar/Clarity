@@ -13,8 +13,7 @@ export function TimeDisplay({
 }) {
   return (
     <div
-      className="flex w-full max-w-4xl items-center justify-between rounded-2xl border backdrop-blur-xl px-6 py-10"
-      style={{ borderColor: "#CBD5E1" }}
+      className="flex w-full max-w-4xl items-center justify-between rounded-2xl border border-[var(--color-border-strong)] backdrop-blur-xl px-6 py-10"
     >
       <TimeUnit label="Hours">
         <AnimatedDigit value={hours} />
@@ -40,10 +39,10 @@ function TimeUnit({
   return (
     <div className="flex flex-1 flex-col items-center">
       {children}
-      <span className="mt-2 text-sm text-[#64748B] dark:text-[#9FB0C0]">
+      <span className="mt-2 text-sm text-[var(--color-text-muted)]">
         {label}
       </span>
-      <div className="mt-4 h-px w-full bg-[#CBD5E1] dark:bg-[#334155]" />
+      <div className="mt-4 h-px w-full bg-[var(--color-border-strong)]" />
     </div>
   );
 }
@@ -77,7 +76,7 @@ function AnimatedDigit({ value }: { value: number }) {
     <span
       ref={ref}
       className="block font-mono text-4xl md:text-6xl font-semibold
-             text-[#0F172A] dark:text-[#E6EDF3]"
+             text-[var(--color-text)]"
     >
       {String(value).padStart(2, "0")}
     </span>

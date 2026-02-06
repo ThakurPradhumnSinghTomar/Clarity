@@ -43,17 +43,17 @@ export const FocusQualityCards = ({
       {focusStats.map((stat) => (
         <div
           key={stat.label}
-          className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5 dark:border-[#1F2933] dark:bg-[#0F1419]"
+          className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-5"
         >
-          <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+          <p className="text-sm text-[var(--color-text-muted)]">
             {stat.label}
           </p>
 
-          <p className="mt-2 text-2xl font-semibold text-[#0F172A] dark:text-white">
+          <p className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
             {isLoading ? "--" : stat.value}
           </p>
 
-          <p className="mt-1 text-xs text-[#94A3B8]">{stat.sub}</p>
+          <p className="mt-1 text-xs text-[var(--color-text-subtle)]">{stat.sub}</p>
         </div>
       ))}
     </div>

@@ -4,10 +4,10 @@ import { ClassicLoader } from "@repo/ui";
 
 
 const getActivityColor = (sec: number) => {
-  if (sec === 0) return "bg-[#E5E7EB] dark:bg-[#1F2933]";
-  if (sec < 30 * 60) return "bg-[#C7D2FE]";
-  if (sec < 90 * 60) return "bg-[#818CF8]";
-  return "bg-[#4F6EF7]";
+  if (sec === 0) return "bg-[var(--color-surface-muted)]";
+  if (sec < 30 * 60) return "bg-[var(--color-data-low)]";
+  if (sec < 90 * 60) return "bg-[var(--color-data-mid)]";
+  return "bg-[var(--color-data-high)]";
 };
 
 
@@ -28,7 +28,7 @@ export function ActivitySection({
     <section className="space-y-6">
       <header>
         <h2 className="text-2xl font-semibold">Activity</h2>
-        <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Your consistency over the last 8 weeks.
         </p>
       </header>
@@ -36,8 +36,7 @@ export function ActivitySection({
       <div
         className="
           rounded-3xl border p-6
-          bg-white border-[#E2E8F0]
-          dark:bg-[#151B22] dark:border-[#1F2933]
+          bg-[var(--color-surface)] border-[var(--color-border)]
         "
       >
         {isLoading ? (
@@ -71,7 +70,7 @@ export function ActivitySection({
             {/* STATS */}
             <div className="space-y-6 flex justify-around w-full items-center">
               <div>
-                <p className="text-sm text-[#9FB0C0]">Current streak</p>
+                <p className="text-sm text-[var(--color-text-muted)]">Current streak</p>
                 <p className="text-lg font-semibold flex items-center gap-2">
                   🔥 {currentStreak} day
                   {currentStreak !== 1 && "s"}
@@ -79,7 +78,7 @@ export function ActivitySection({
               </div>
 
               <div>
-                <p className="text-sm text-[#9FB0C0]">Best streak</p>
+                <p className="text-sm text-[var(--color-text-muted)]">Best streak</p>
                 <p className="text-lg font-medium flex items-center gap-2">
                   🏆 {longestStreak} days
                 </p>
@@ -92,10 +91,10 @@ export function ActivitySection({
                 <div className="flex items-center gap-2 text-xs opacity-70">
                   <span>Less</span>
                   <div className="flex gap-1">
-                    <div className="h-3 w-3 rounded-sm bg-[#1F2933]" />
-                    <div className="h-3 w-3 rounded-sm bg-[#C7D2FE]" />
-                    <div className="h-3 w-3 rounded-sm bg-[#818CF8]" />
-                    <div className="h-3 w-3 rounded-sm bg-[#4F6EF7]" />
+                    <div className="h-3 w-3 rounded-sm bg-[var(--color-surface-muted)]" />
+                    <div className="h-3 w-3 rounded-sm bg-[var(--color-data-low)]" />
+                    <div className="h-3 w-3 rounded-sm bg-[var(--color-data-mid)]" />
+                    <div className="h-3 w-3 rounded-sm bg-[var(--color-data-high)]" />
                   </div>
                   <span>More</span>
                 </div>

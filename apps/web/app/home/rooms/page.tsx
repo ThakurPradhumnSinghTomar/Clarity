@@ -49,7 +49,7 @@ const RoomsPage = () => {
   
 
   return (
-    <main className="min-h-screen bg-[#F4F6F8] dark:bg-[#171C28] transition-colors">
+    <main className="min-h-screen bg-[var(--color-bg)] transition-colors">
       <motion.div
         variants={container}
         initial="hidden"
@@ -58,10 +58,10 @@ const RoomsPage = () => {
       >
         {/* HEADER */}
         <motion.section variants={item} className="space-y-3">
-          <h1 className="text-3xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
+          <h1 className="text-3xl font-semibold text-[var(--color-text)]">
             Study Rooms
           </h1>
-          <p className="text-[#64748B] dark:text-[#9FB0C0] max-w-xl">
+          <p className="text-[var(--color-text-muted)] max-w-xl">
             Stay consistent together. Track focus, share progress, and build
             momentum with peers.
           </p>
@@ -87,7 +87,7 @@ const RoomsPage = () => {
 
         {/* INFO */}
         <motion.section variants={item} className="space-y-6">
-          <h2 className="text-xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
+          <h2 className="text-xl font-semibold text-[var(--color-text)]">
             Why rooms work
           </h2>
           <motion.div
@@ -118,11 +118,11 @@ const RoomsPage = () => {
         {/* ROOMS */}
         <motion.section variants={item} className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
+            <h2 className="text-xl font-semibold text-[var(--color-text)]">
               My rooms
             </h2>
             {!isLoading && (
-              <span className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+              <span className="text-sm text-[var(--color-text-muted)]">
                 {rooms.length} rooms
               </span>
             )}
@@ -133,7 +133,7 @@ const RoomsPage = () => {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-32 rounded-2xl bg-white/60 dark:bg-[#151B22]/60 animate-pulse"
+                  className="h-32 rounded-2xl bg-[var(--color-surface)]/60 animate-pulse"
                 />
               ))}
             </div>
@@ -156,7 +156,7 @@ const RoomsPage = () => {
                 >
                   <RoomCard {...transformRoomData(room)} />
                 </motion.div>
-              )):<p className="text-md  text-[#0F172A] dark:text-[#bec3c8]">No rooms joined yet</p>}
+              )):<p className="text-md text-[var(--color-text)]">No rooms joined yet</p>}
             </motion.div>
           )}
         </motion.section>

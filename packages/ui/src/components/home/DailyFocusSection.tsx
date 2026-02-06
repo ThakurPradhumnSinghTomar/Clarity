@@ -28,7 +28,7 @@ export function DailyFocusSection({
     <section className="space-y-8">
       <header>
         <h2 className="text-2xl font-semibold">Daily Focus</h2>
-        <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+        <p className="text-sm text-[var(--color-text-muted)]">
           {dailyLabel}'s sessions, split by time of day.
         </p>
       </header>
@@ -36,8 +36,7 @@ export function DailyFocusSection({
       <div
         className="
           rounded-3xl border p-8
-          bg-white border-[#E2E8F0]
-          dark:bg-[#151B22] dark:border-[#1F2933]
+          bg-[var(--color-surface)] border-[var(--color-border)]
         "
       >
         {isLoading ? (
@@ -51,8 +50,7 @@ export function DailyFocusSection({
                 key={bucket}
                 className="
                   rounded-2xl border p-4 h-[300px] overflow-y-auto scrollbar-hide
-                  bg-[#F8FAFC] border-[#E2E8F0]
-                  dark:bg-[#0F1419] dark:border-[#1F2933]
+                  bg-[var(--color-surface-elevated)] border-[var(--color-border)]
                 "
               >
                 <h3 className="font-medium mb-3">{bucket}</h3>
@@ -67,8 +65,8 @@ export function DailyFocusSection({
                         className="
                           flex justify-between items-center
                           rounded-xl px-3 py-2
-                          bg-white dark:bg-[#151B22]
-                          border border-[#E2E8F0] dark:border-[#1F2933]
+                          bg-[var(--color-surface)]
+                          border border-[var(--color-border)]
                           text-sm
                         "
                       >

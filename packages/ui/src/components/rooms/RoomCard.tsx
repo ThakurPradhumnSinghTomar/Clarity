@@ -1,6 +1,4 @@
 import React from "react";
-import { useTheme } from "@repo/context-providers";
-import { Divide } from "lucide-react";
 
 interface RoomCardProps {
   id: string;
@@ -20,9 +18,6 @@ export const RoomCard: React.FC<RoomCardProps> = ({
   lastActive,
   color = "#7C9AFF",
 }) => {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
   const formatStudyTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -35,10 +30,10 @@ export const RoomCard: React.FC<RoomCardProps> = ({
     <div
       className="group rounded-2xl p-5 border backdrop-blur-xl transition-all duration-300 cursor-pointer"
       style={{
-        background: isDark ? "rgba(21,27,34,0.65)" : "rgba(242,245,240,0.75)",
-        borderColor: isDark
-          ? "rgba(129,149,149,0.45)"
-          : "rgba(202,207,201,0.6)",
+        background:
+          "color-mix(in srgb, var(--color-surface) 78%, transparent)",
+        borderColor:
+          "color-mix(in srgb, var(--color-border) 70%, transparent)",
       }}
     >
       {/* HEADER */}
@@ -48,10 +43,9 @@ export const RoomCard: React.FC<RoomCardProps> = ({
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center font-semibold text-sm"
             style={{
-              background: isDark
-                ? "rgba(125,211,252,0.15)"
-                : "rgba(59,130,246,0.12)",
-              color: isDark ? "#E5E7EB" : "#0F172A",
+              background:
+                "color-mix(in srgb, var(--color-accent-sky) 15%, transparent)",
+              color: "var(--color-text)",
             }}
           >
             {name.charAt(0).toUpperCase()}
@@ -60,7 +54,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({
           <div>
             <h3
               className="font-semibold tracking-tight"
-              style={{ color: isDark ? "#E5E7EB" : "#0F172A" }}
+              style={{ color: "var(--color-text)" }}
             >
               {name}
             </h3>
@@ -68,7 +62,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({
             {lastActive && (
               <p
                 className="text-xs mt-0.5"
-                style={{ color: isDark ? "#819595" : "#626b61" }}
+                style={{ color: "var(--color-text-muted)" }}
               >
                 Active {lastActive}
               </p>
@@ -79,12 +73,12 @@ export const RoomCard: React.FC<RoomCardProps> = ({
 
       {/* STATS */}
       <div className="flex items-center justify-between text-xs">
-        <div style={{ color: isDark ? "#819595" : "#626b61" }}>
+        <div style={{ color: "var(--color-text-muted)" }}>
           {memberCount+1} {memberCount === 1 ? "member" : "members"}
         </div>
 
         {focusingCount > 0 ? (
-          <div style={{ color: isDark ? "#819595" : "#626b61" }}>
+          <div style={{ color: "var(--color-text-muted)" }}>
             {focusingCount} is focusing now..🔥
           </div>
         ) : (

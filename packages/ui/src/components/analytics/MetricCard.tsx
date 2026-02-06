@@ -15,32 +15,32 @@ export function MetricCard({
     <div
       className="
         rounded-2xl
-        bg-white dark:bg-[#0F1419]
-        border border-[#E2E8F0] dark:border-[#1E293B]
+        bg-[var(--color-surface)]
+        border border-[var(--color-border)]
         p-5
         transition
         hover:shadow-sm
       "
     >
       <div className="flex items-start justify-between">
-        <p className="text-sm text-[#64748B] dark:text-[#94A3B8]">
+        <p className="text-sm text-[var(--color-text-muted)]">
           {label}
         </p>
 
         {hint && (
-          <span className="text-xs text-[#94A3B8] cursor-help">
+          <span className="text-xs text-[var(--color-text-subtle)] cursor-help">
             ⓘ
           </span>
         )}
       </div>
 
       <div className="mt-2">
-        <p className="text-2xl font-semibold text-[#0F172A] dark:text-[#E6EDF3]">
+        <p className="text-2xl font-semibold text-[var(--color-text)]">
           {value}
         </p>
 
         {subText && (
-          <p className="mt-1 text-xs text-[#64748B] dark:text-[#94A3B8]">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {subText}
           </p>
         )}

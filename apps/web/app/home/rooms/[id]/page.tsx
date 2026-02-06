@@ -81,7 +81,7 @@ const RoomPage = () => {
           duration: 0.5,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="min-h-screen bg-[#ffffff] dark:bg-[#181E2B] py-8 px-4 sm:px-6 lg:px-8"
+        className="min-h-screen bg-[var(--color-bg)] py-8 px-4 sm:px-6 lg:px-8"
       >
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}

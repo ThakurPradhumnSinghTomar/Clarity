@@ -73,7 +73,7 @@ async function updateRoom() {
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Crown className="text-yellow-500" size={20} />;
-    if (rank === 2) return <Medal className="text-gray-400" size={20} />;
+    if (rank === 2) return <Medal className="text-[var(--color-text-subtle)]" size={20} />;
     if (rank === 3) return <Medal className="text-amber-700" size={20} />;
     return null;
   };
@@ -97,19 +97,19 @@ async function updateRoom() {
 
   return (
     // 🔹 Overlay (scroll lives here)
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto scrollbar-hide">
+    <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto scrollbar-hide">
       {/* 🔹 Centering wrapper */}
       <div className="min-h-screen flex justify-center p-4">
         {/* 🔹 Modal */}
-        <div className="bg-white dark:bg-gray-800 w-[400px] rounded-lg flex flex-col my-10">
+        <div className="bg-[var(--color-surface)] w-[400px] rounded-lg flex flex-col my-10 text-[var(--color-text)]">
           {/* Header */}
-          <div className="flex justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="flex justify-between px-6 py-4 border-b border-[var(--color-border)]">
+            <h1 className="text-2xl font-bold text-[var(--color-text)]">
               Update Your Room
             </h1>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-gray-600 dark:text-gray-300 hover:text-red-500"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-red)]"
             >
               <X size={22} />
             </button>
@@ -119,7 +119,7 @@ async function updateRoom() {
           <div className="p-6 space-y-6">
             {/* Room Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
                 Room Name
               </label>
               <input
@@ -127,13 +127,13 @@ async function updateRoom() {
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="Enter room name..."
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                className="w-full px-4 py-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)]"
               />
             </div>
 
             {/* Room Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
                 Room Description
               </label>
               <input
@@ -141,13 +141,13 @@ async function updateRoom() {
                 value={roomDes}
                 onChange={(e) => setRoomDes(e.target.value)}
                 placeholder="Enter room description..."
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                className="w-full px-4 py-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)]"
               />
             </div>
 
             {/* Privacy */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">
                 Room Privacy
               </label>
 
@@ -157,24 +157,24 @@ async function updateRoom() {
                   onClick={() => setIsPrivate(false)}
                   className={`w-full flex gap-4 p-4 rounded-lg border-2 ${
                     !isPrivate
-                      ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
-                      : "border-gray-300 dark:border-gray-600"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+                      : "border-[var(--color-border-strong)]"
                   }`}
                 >
                   <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                       !isPrivate
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-600"
+                        ? "bg-[var(--color-primary)] text-white"
+                        : "bg-[var(--color-surface-muted)]"
                     }`}
                   >
                     <Globe size={20} />
                   </div>
                   <div className="text-left">
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                    <h4 className="font-semibold text-[var(--color-text)]">
                       Public Room
                     </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-[var(--color-text-muted)]">
                       Anyone can discover and join
                     </p>
                   </div>
@@ -185,24 +185,24 @@ async function updateRoom() {
                   onClick={() => setIsPrivate(true)}
                   className={`w-full flex gap-4 p-4 rounded-lg border-2 ${
                     isPrivate
-                      ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
-                      : "border-gray-300 dark:border-gray-600"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+                      : "border-[var(--color-border-strong)]"
                   }`}
                 >
                   <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                       isPrivate
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-600"
+                        ? "bg-[var(--color-primary)] text-white"
+                        : "bg-[var(--color-surface-muted)]"
                     }`}
                   >
                     <Lock size={20} />
                   </div>
                   <div className="text-left">
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                    <h4 className="font-semibold text-[var(--color-text)]">
                       Private Room
                     </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-[var(--color-text-muted)]">
                       Invite-only access
                     </p>
                   </div>
@@ -213,7 +213,7 @@ async function updateRoom() {
             {/* Members */}
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-bold text-[var(--color-text)]">
                   Room Members
                 </h2>
               
@@ -223,7 +223,7 @@ async function updateRoom() {
                 {roomData.members.filter(m=>m.userId!==roomData.hostId).map((member) => (
                   <div
                     key={member.id}
-                    className="bg-white dark:bg-[#18181B] p-4 rounded-lg border dark:border-gray-700"
+                    className="bg-[var(--color-surface)] p-4 rounded-lg border border-[var(--color-border)]"
                   >
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
@@ -233,19 +233,19 @@ async function updateRoom() {
                         />
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-gray-900 dark:text-white">
+                            <span className="font-semibold text-[var(--color-text)]">
                               {member.name}
                             </span>
                             {getRankIcon(member.rank)}
                           </div>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-[var(--color-text-muted)]">
                             Rank #{member.rank}
                           </span>
                         </div>
                       </div>
 
-                      <div className="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                        <button onClick={()=>{handelRemoveMemberClick(member)}} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">
+                      <div className="text-sm text-[var(--color-text-muted)] flex items-center gap-1">
+                        <button onClick={()=>{handelRemoveMemberClick(member)}} className="px-2 py-1 bg-[var(--color-accent-red)] text-black rounded hover:opacity-90">
                            {memToRemove.some(m=>m.id===member.id)?"unselect":"remove"}
                         </button>
                       </div>
@@ -256,7 +256,7 @@ async function updateRoom() {
             </div>
 
             <div className="mt-6 flex justify-center">
-              <button disabled={isUpdating} onClick={()=>{updateRoom();}} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+              <button disabled={isUpdating} onClick={()=>{updateRoom();}} className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-strong)]">
                 Update
               </button>
             </div>

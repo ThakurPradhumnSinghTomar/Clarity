@@ -34,13 +34,13 @@ export function EditSessionModal({
 }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-      <div className="bg-white dark:bg-[#151B22] rounded-2xl p-6 w-80">
+      <div className="bg-[var(--color-surface)] rounded-2xl p-6 w-80 text-[var(--color-text)]">
         <div className="flex justify-between mb-4">
           <button
             onClick={() => setType("Stopwatch")}
             className={`px-3 py-1 rounded-full ${
               type === "Stopwatch"
-                ? "bg-black text-white dark:bg-white dark:text-black"
+                ? "bg-[var(--color-primary)] text-white"
                 : ""
             }`}
           >
@@ -51,7 +51,7 @@ export function EditSessionModal({
             onClick={() => setType("Timer")}
             className={`px-3 py-1 rounded-full ${
               type === "Timer"
-                ? "bg-black text-white dark:bg-white dark:text-black"
+                ? "bg-[var(--color-primary)] text-white"
                 : ""
             }`}
           >
@@ -63,7 +63,7 @@ export function EditSessionModal({
           <input
             type="number"
             placeholder="Minutes"
-            className="w-full mb-4 p-2 rounded border"
+            className="w-full mb-4 p-2 rounded border border-[var(--color-border)] bg-[var(--color-surface)]"
             onChange={(e) => setTimerDuration(Number(e.target.value) * 60)}
           />
         )}
@@ -74,13 +74,13 @@ export function EditSessionModal({
               value={newtag}
               onChange={(e) => setnewtag(e.target.value)}
               placeholder="Create tag"
-              className="w-full p-2 rounded-xl mt-2"
+              className="w-full p-2 rounded-xl mt-2 border border-[var(--color-border)] bg-[var(--color-surface)]"
             />
 
             <button
               onClick={onCreateTag}
               disabled={isCreatingTag}
-              className="w-full p-2 rounded-xl my-4 bg-[#0F172A] dark:bg-white text-white dark:text-black"
+              className="w-full p-2 rounded-xl my-4 bg-[var(--color-primary)] text-white"
             >
               {isCreatingTag ? "Creating…" : "Create tag"}
             </button>
@@ -97,7 +97,7 @@ export function EditSessionModal({
                 setSelectedTag(e.target.value);
               }
             }}
-            className="w-full mb-4 p-2 rounded-xl border bg-transparent"
+            className="w-full mb-4 p-2 rounded-xl border border-[var(--color-border)] bg-transparent"
           >
             <option value="" disabled>
               Select a tag
@@ -115,7 +115,7 @@ export function EditSessionModal({
 
         <button
           onClick={onClose}
-          className="mt-4 w-full py-2 rounded-full border"
+          className="mt-4 w-full py-2 rounded-full border border-[var(--color-border)]"
         >
           Close
         </button>

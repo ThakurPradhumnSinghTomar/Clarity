@@ -21,26 +21,26 @@ export const TagWeeklyBreakdown = ({
   isLoading = false,
 }: TagWeeklyBreakdownProps) => {
   return (
-    <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-6 dark:border-[#1F2933] dark:bg-[#0F1419] dark:text-white">
-      <h3 className="mb-4 text-lg font-medium text-[#0F172A] dark:text-[#E6EDF3]">Weekly Breakdown by Tag</h3>
+    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6">
+      <h3 className="mb-4 text-lg font-medium text-[var(--color-text)]">Weekly Breakdown by Tag</h3>
 
       {isLoading ? (
-        <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">Loading weekly breakdown...</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Loading weekly breakdown...</p>
       ) : data.length === 0 ? (
-        <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">No weekly breakdown data available.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">No weekly breakdown data available.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {data.map((tag) => (
-            <div key={tag.tag} className="rounded-xl border border-[#E2E8F0] bg-white p-4 dark:border-[#1F2933] dark:bg-[#151B22]">
-              <p className="font-medium text-[#0F172A] dark:text-[#E6EDF3]">{tag.tag}</p>
+            <div key={tag.tag} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+              <p className="font-medium text-[var(--color-text)]">{tag.tag}</p>
 
-              <p className="mt-2 text-sm text-[#64748B] dark:text-[#9FB0C0]">Sessions: {tag.sessions}</p>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">Sessions: {tag.sessions}</p>
 
-              <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Avg session: {toMinutes(tag.avgSessionDurationSec)} min
               </p>
 
-              <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Total: {toMinutes(tag.totalDurationSec)} min
               </p>
             </div>

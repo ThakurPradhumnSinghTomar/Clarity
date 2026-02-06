@@ -18,7 +18,7 @@ export function RoomsSection({
     <section className="space-y-6">
       <header>
         <h2 className="text-2xl font-semibold">Your Rooms</h2>
-        <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Accountability works better with people.
         </p>
       </header>

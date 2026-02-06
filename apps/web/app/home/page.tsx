@@ -29,8 +29,7 @@ export default function Home() {
     <main
       className="
         max-w-8xl mx-auto px-12 pb-32 space-y-32
-        bg-[#F4F6F8] text-[#1F2937]
-        dark:bg-[#0F1419] dark:text-[#E6EDF3]
+        bg-[var(--color-bg)] text-[var(--color-text)]
       "
     >
       <HeroSection />

@@ -2,16 +2,12 @@
 
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
-import { useTheme } from "@repo/context-providers";
 
 export function OrbitalClock() {
   const [time, setTime] = useState(new Date());
   const [isHovered, setIsHovered] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -55,27 +51,17 @@ export function OrbitalClock() {
       onMouseMove={handleMouseMove}
       style={{
         perspective: "600px",
-        color: isDark ? "#E5E7EB" : "#0F172A",
+        color: "var(--color-text)",
 
-        ["--orb-primary" as any]: isDark
-          ? "rgb(125,211,252)"
-          : "rgb(59,130,246)",
-
-        ["--orb-marker-strong" as any]: isDark
-          ? "rgba(255,255,255,0.7)"
-          : "rgba(15,23,42,0.7)",
-
-        ["--orb-marker-weak" as any]: isDark
-          ? "rgba(255,255,255,0.25)"
-          : "rgba(15,23,42,0.35)",
-
-        ["--orb-center" as any]: isDark
-          ? "rgba(255,255,255,0.85)"
-          : "rgba(15,23,42,0.9)",
-
-        ["--orb-date" as any]: isDark
-          ? "rgba(148,163,184,0.9)"
-          : "rgba(100,116,139,0.9)",
+        ["--orb-primary" as any]: "var(--color-primary)",
+        ["--orb-marker-strong" as any]:
+          "color-mix(in srgb, var(--color-text) 70%, transparent)",
+        ["--orb-marker-weak" as any]:
+          "color-mix(in srgb, var(--color-text) 35%, transparent)",
+        ["--orb-center" as any]:
+          "color-mix(in srgb, var(--color-text) 85%, transparent)",
+        ["--orb-date" as any]:
+          "color-mix(in srgb, var(--color-text-muted) 90%, transparent)",
       }}
     >
       <div
@@ -97,8 +83,9 @@ export function OrbitalClock() {
         <div
           className="absolute inset-2 rounded-full border shadow-xl"
           style={{
-            background: isDark ? "rgba(21,27,34,0.95)" : "rgba(255,255,255,0.95)",
-            borderColor: isDark ? "#1F2933" : "#E2E8F0",
+            background:
+              "color-mix(in srgb, var(--color-surface) 95%, transparent)",
+            borderColor: "var(--color-border)",
           }}
         >
           <div
@@ -106,9 +93,7 @@ export function OrbitalClock() {
             style={{
               borderColor: isHovered
                 ? "color-mix(in srgb, var(--orb-primary) 40%, transparent)"
-                : isDark
-                ? "rgba(255,255,255,0.05)"
-                : "rgba(0,0,0,0.05)",
+                : "color-mix(in srgb, var(--color-text) 6%, transparent)",
             }}
           />
 
@@ -145,7 +130,7 @@ export function OrbitalClock() {
             style={{
               height: "28%",
               transform: `translateX(-50%) rotate(${hourDeg}deg)`,
-              background: isDark ? "#E5E7EB" : "#0F172A",
+              background: "var(--color-text)",
             }}
           />
 
@@ -154,7 +139,7 @@ export function OrbitalClock() {
             style={{
               height: "36%",
               transform: `translateX(-50%) rotate(${minuteDeg}deg)`,
-              background: isDark ? "#CBD5E1" : "#64748B",
+              background: "var(--color-text-muted)",
             }}
           />
 

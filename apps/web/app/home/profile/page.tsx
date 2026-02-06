@@ -29,11 +29,11 @@ const ProfilePage = () => {
         duration: 0.5,
         ease: [0.16, 1, 0.3, 1],
       }}
-      className="min-h-screen bg-white dark:bg-[#181E2B] pt-4 px-4 pb-8"
+      className="min-h-screen bg-[var(--color-bg)] pt-4 px-4 pb-8"
     >
       <div className="max-w-4xl mx-auto pt-8">
         {/* Main Card */}
-        <div className="bg-gray-50 dark:bg-[#171E26] rounded-2xl shadow-lg border border-gray-200 dark:border-zinc-800 overflow-hidden">
+        <div className="bg-[var(--color-surface-elevated)] rounded-2xl shadow-lg border border-[var(--color-border)] overflow-hidden">
           <ProfileHeader
             isEditing={isEditing}
             uploadingImage={uploadingImage}

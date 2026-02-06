@@ -46,7 +46,7 @@ export function ProfileInfoSection({
     <div className="space-y-6">
       {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
           Full Name
         </label>
 
@@ -57,12 +57,12 @@ export function ProfileInfoSection({
             onChange={(e) =>
               setEditData({ ...editData, name: e.target.value })
             }
-            className="w-full px-4 py-3 bg-white dark:bg-[#1F2C3B] border border-gray-300 dark:border-zinc-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
+            className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           />
         ) : (
-          <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#1F2C3B] border border-gray-200 dark:border-zinc-800 rounded-lg">
-            <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <span className="text-gray-900 dark:text-white">
+          <div className="flex items-center gap-3 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
+            <User className="w-5 h-5 text-[var(--color-text-subtle)]" />
+            <span className="text-[var(--color-text)]">
               {profileData.name}
             </span>
           </div>
@@ -71,13 +71,13 @@ export function ProfileInfoSection({
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
           Email Address
         </label>
 
-        <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#1F2C3B] border border-gray-200 dark:border-zinc-800 rounded-lg">
-          <Mail className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          <span className="flex-1 text-gray-900 dark:text-white">
+        <div className="flex items-center gap-3 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
+          <Mail className="w-5 h-5 text-[var(--color-text-subtle)]" />
+          <span className="flex-1 text-[var(--color-text)]">
             {profileData.email}
           </span>
 
@@ -89,7 +89,7 @@ export function ProfileInfoSection({
           )}
         </div>
 
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs text-[var(--color-text-subtle)] mt-1">
           Email cannot be changed
         </p>
       </div>
@@ -97,10 +97,10 @@ export function ProfileInfoSection({
       {/* Provider + Joined */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
             Sign-in Method
           </label>
-          <div className="px-4 py-3 bg-white dark:bg-[#1F2C3B] border border-gray-200 dark:border-zinc-800 rounded-lg">
+          <div className="px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
             <span
               className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium capitalize ${getProviderBadgeColor(
                 profileData.provider,
@@ -112,12 +112,12 @@ export function ProfileInfoSection({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
             Member Since
           </label>
-          <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#1F2C3B] border border-gray-200 dark:border-zinc-800 rounded-lg">
-            <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <span className="text-gray-900 dark:text-white">
+          <div className="flex items-center gap-3 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
+            <Calendar className="w-5 h-5 text-[var(--color-text-subtle)]" />
+            <span className="text-[var(--color-text)]">
               {formatDate(profileData.joinedDate)}
             </span>
           </div>

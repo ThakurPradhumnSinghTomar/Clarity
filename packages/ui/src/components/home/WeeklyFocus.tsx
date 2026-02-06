@@ -7,7 +7,7 @@ import {ClassicLoader } from "@repo/ui";
 /* ---------------- Skeleton ---------------- */
 
 const HistogramSkeleton = () => (
-  <div className="w-full min-h-[480px] rounded-2xl border-[#475661] backdrop-blur-xl shadow-sm p-8 flex justify-center items-center">
+  <div className="w-full min-h-[480px] rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] backdrop-blur-xl shadow-sm p-8 flex justify-center items-center">
     <ClassicLoader />
   </div>
 );
@@ -84,8 +84,8 @@ export function WeeklyFocus({
     <div>
         <section className="space-y-8">
         <header>
-          <h2 className="text-2xl font-semibold dark:text-white">Weekly Focus</h2>
-          <p className="text-sm text-[#64748B] dark:text-[#9FB0C0]">
+          <h2 className="text-2xl font-semibold text-[var(--color-text)]">Weekly Focus</h2>
+          <p className="text-sm text-[var(--color-text-muted)]">
             Your actual work, not intentions.
           </p>
         </header>
@@ -93,8 +93,7 @@ export function WeeklyFocus({
         <div
           className="
             relative rounded-3xl border lg:p-8
-            bg-white border-[#E2E8F0]
-            dark:bg-[#151B22] dark:border-[#1F2933] min-h-[520px]
+            bg-[var(--color-surface)] border-[var(--color-border)] min-h-[520px]
           "
         >
           <div className="">
@@ -105,7 +104,7 @@ export function WeeklyFocus({
                     <HistogramSkeleton />
                   ) : noData ? (
                     <div>
-                      <div className="h-[460px] flex text-center items-center justify-center text-sm opacity-70 leading-loose  border rounded-2xl">
+                      <div className="h-[460px] flex text-center items-center justify-center text-sm opacity-70 leading-loose border border-[var(--color-border)] rounded-2xl">
                         No study data this week <br /> Start your study session
                         now
                       </div>
@@ -128,13 +127,12 @@ export function WeeklyFocus({
                       -translate-y-1/2 z-10
                       h-9 w-9 rounded-full border
                       flex items-center justify-center
-                      bg-white border-[#E2E8F0]
-                      dark:bg-[#1F2933] dark:border-[#1F2933] 
+                      bg-[var(--color-surface)] border-[var(--color-border)]
 
                       ${
                         stopNext
                           ? "opacity-40 cursor-not-allowed"
-                          : "hover:bg-[#F1F5F9] dark:hover:bg-[#263241] cursor-pointer"
+                          : "hover:bg-[var(--color-surface-elevated)] cursor-pointer"
                       }
                     `}
                     >
@@ -151,13 +149,12 @@ export function WeeklyFocus({
                         -translate-y-1/2
                         h-9 w-9 rounded-full border
                         flex items-center justify-center
-                        bg-white border-[#E2E8F0]
-                        dark:bg-[#1F2933] dark:border-[#1F2933] 
+                        bg-[var(--color-surface)] border-[var(--color-border)]
 
                         ${
                           histogramPage === 0
                             ? "opacity-40 cursor-not-allowed"
-                            : "hover:bg-[#F1F5F9] dark:hover:bg-[#263241] cursor-pointer"
+                            : "hover:bg-[var(--color-surface-elevated)] cursor-pointer"
                         }
                       `}
                     >
@@ -187,8 +184,8 @@ export function WeeklyFocus({
                         border transition-all cursor-pointer
                         ${
                           isActive
-                            ? "bg-[#4F6EF7] text-white border-transparent shadow-md dark:bg-[#7C9AFF] dark:text-[#0F1419]"
-                            : "bg-white/60 text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9] dark:bg-[#1F2933] dark:text-[#CBD5E1] dark:border-[#263241] dark:hover:bg-[#263241]"
+                            ? "bg-[var(--color-primary)] text-white border-transparent shadow-md"
+                            : "bg-[var(--color-surface)]/70 text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-surface-elevated)]"
                         }
                       `}
                         >
@@ -216,7 +213,7 @@ export function WeeklyFocus({
                       );
                     })}
                   </div>
-                  <div className="text-[#64748B] dark:text-[#9FB0C0] p-4 pt-4">
+                  <div className="text-[var(--color-text-muted)] p-4 pt-4">
                     <p>
                       Select above tags and check how much they contributed to
                       your studies
