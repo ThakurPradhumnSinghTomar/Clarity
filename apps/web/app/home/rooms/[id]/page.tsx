@@ -8,53 +8,76 @@ import {
   RoomHeader,
   RoomSkeleton,
   RoomStats,
+  RoomTabs,
+  EditRoomModel,
+  ConfirmationModal,
+  RoomChat,
+  type RoomTab,
+  type RoomChatMessage,
 } from "@repo/ui";
 import { useParams } from "next/navigation";
-import { EditRoomModel } from "@repo/ui";
 import { motion } from "framer-motion";
-import { RoomTabs } from "@repo/ui";
 import { useRoomData } from "@/lib/hooks/room/useRoomData";
 import { useJoinRequests } from "@/lib/hooks/room/useJoinRequests";
 import { useRoomActions } from "@/lib/hooks/room/useRoomActions";
-import { ConfirmationModal } from "@repo/ui";
 
 const RoomPage = () => {
+  // This state drives a temporary "copied" visual feedback for the invite-code copy action.
   const [copiedCode, setCopiedCode] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "members" | "leaderboard" | "pending requests"
-  >("members");
+  // This state tracks which tab content should be rendered in the room page body.
+  const [activeTab, setActiveTab] = useState<RoomTab>("members");
 
+  // This state toggles the room edit modal visibility.
   const [isRoomEditModelOpen, setIsEditModelOpen] = useState(false);
+  // This state toggles the host delete confirmation modal.
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // This state toggles the member leave confirmation modal.
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
+  // This local state stores in-memory chat messages until backend chat APIs are integrated.
+  const [chatMessages, setChatMessages] = useState<RoomChatMessage[]>([
+    {
+      id: "welcome-1",
+      senderName: "FocusFlow Bot",
+      text: "Welcome to the room chat! Share goals, blockers, and wins with your team.",
+      createdAt: new Date().toISOString(),
+      isCurrentUser: false,
+    },
+  ]);
+
+  // Route params give us the room id used by all room-specific hooks.
   const params = useParams();
   const roomId = params.id as string;
+  // This hook fetches room-level metadata and member details.
   const { roomData, members, isLoading } = useRoomData(roomId);
 
+  // Host flag controls privileged actions such as delete and edit.
   const isHost = roomData?.isHost || false;
+  // Room code is used for room-related API operations.
   const roomCode = roomData?.roomCode || null;
 
+  // This hook handles pending-request moderation actions.
   const { isProcessing, acceptRequest, rejectRequest } = useJoinRequests({
     roomId,
     roomCode,
   });
 
+  // This hook exposes side-effect actions for room deletion and leaving.
   const { deleteRoom, leaveRoom } = useRoomActions({
     roomId,
     roomCode,
     isHost,
   });
 
-
-  // Convert members to leaderboard format
+  // We transform members into the expected leaderboard UI contract.
   const leaderboardStudents = members.map((member) => ({
     name: member.name,
-    totalHours: member.studyTime / 60, // Convert minutes to hours
-    image: undefined, // You can add image URLs here if available
+    totalHours: member.studyTime / 60,
+    image: undefined,
     isFocusing: member.isFocusing,
   }));
 
+  // This handler copies invite code and resets the transient success state after a short delay.
   const handleCopyInviteCode = () => {
     navigator.clipboard.writeText(
       roomData?.roomCode || "some error in copying..",
@@ -63,11 +86,26 @@ const RoomPage = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  
+  // This handler appends a new optimistic local chat message for the current user.
+  const handleSendMessage = (message: string) => {
+    setChatMessages((previousMessages) => [
+      ...previousMessages,
+      {
+        id: crypto.randomUUID(),
+        senderName: "You",
+        text: message,
+        createdAt: new Date().toISOString(),
+        isCurrentUser: true,
+      },
+    ]);
+  };
+
+  // We render the skeleton while room data is still loading.
   if (isLoading) {
     return <RoomSkeleton />;
   }
 
+  // If the room lookup fails, we return a fallback state.
   if (!roomData) {
     return <p className="text-center mt-20">Room not found</p>;
   }
@@ -84,7 +122,7 @@ const RoomPage = () => {
         className="min-h-screen bg-[#ffffff] dark:bg-[#181E2B] py-8 px-4 sm:px-6 lg:px-8"
       >
         <div className="max-w-7xl mx-auto">
-          {/* Header Section */}
+          {/* Header contains room metadata and primary room actions. */}
           <RoomHeader
             name={roomData.name}
             description={roomData.description}
@@ -95,6 +133,7 @@ const RoomPage = () => {
             }
           />
 
+          {/* Stats surface quick room insights and invite-copy interaction. */}
           <RoomStats
             memberCount={roomData.memberCount + 1}
             totalStudyTime={roomData.totalStudyTime}
@@ -103,18 +142,20 @@ const RoomPage = () => {
             onCopy={handleCopyInviteCode}
           />
 
-          {/* Tabs */}
+          {/* Tabs expose the main functional sections for this room. */}
           <div className="mt-26">
             <RoomTabs activeTab={activeTab} onChange={setActiveTab} />
           </div>
 
-          {/* Content */}
+          {/* Content panel renders per selected tab to keep concerns separated. */}
           {activeTab === "members" ? (
             <MembersTab members={members} />
           ) : activeTab === "leaderboard" ? (
             <div className="flex justify-center ">
               <LeaderboardTab students={leaderboardStudents} />
             </div>
+          ) : activeTab === "chat" ? (
+            <RoomChat messages={chatMessages} onSendMessage={handleSendMessage} />
           ) : (
             <PendingRequestsTab
               roomData={roomData}
@@ -125,6 +166,7 @@ const RoomPage = () => {
           )}
         </div>
 
+        {/* Edit modal is mounted at page level so it can be triggered from header actions. */}
         <div className="flex justify-center items-center w-full">
           <EditRoomModel
             isOpen={isRoomEditModelOpen}
@@ -134,7 +176,7 @@ const RoomPage = () => {
         </div>
       </motion.div>
 
-      {/* Confirmation Modals */}
+      {/* Confirmation modal for host-driven room deletion action. */}
       <ConfirmationModal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
@@ -145,6 +187,7 @@ const RoomPage = () => {
         isDestructive={true}
       />
 
+      {/* Confirmation modal for member-driven room leave action. */}
       <ConfirmationModal
         isOpen={showLeaveConfirm}
         onClose={() => setShowLeaveConfirm(false)}
