@@ -38,6 +38,7 @@ model User {
   hostedRooms        Room[]              @relation("RoomHost")
   roomMemberships    RoomMember[]
   joinRequests       JoinRequest[]
+  messages Message[] 
 }
 
 model Room {
@@ -59,6 +60,8 @@ model Room {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  messages Message[]
   
   
   @@index([hostId])
@@ -146,5 +149,25 @@ model FocusSession {
   updatedAt   DateTime  @updatedAt
   
   @@index([userId, startTime])
+}
+
+model Message {
+  id String @id @default(auto()) @map("_id") @db.ObjectId //“Create an auto-generated primary key called id that maps to MongoDB’s _id and is stored as an ObjectId.”
+
+  //relations 
+  roomId String @db.ObjectId
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  senderId  String   @db.ObjectId
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([roomId, createdAt])
+  @@index([senderId])
+
+
+
 }
 
