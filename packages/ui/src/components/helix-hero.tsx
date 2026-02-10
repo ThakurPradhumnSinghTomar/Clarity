@@ -150,7 +150,7 @@ export const Hero: React.FC<HeroProps> = ({ title, description }) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1.1, ease: "easeOut" }}
         >
-          <Scene />
+          
         </motion.div>
       </div>
 
@@ -243,12 +243,12 @@ export const Hero: React.FC<HeroProps> = ({ title, description }) => {
       </div>
 
       <BlurEffect
-        className="absolute bg-gradient-to-b from-transparent to-white/20 h-1/2 md:h-1/3 w-full bottom-0"
+        className="absolute bg-linear-to-b from-transparent to-white/20 h-1/2 md:h-1/3 w-full bottom-0"
         position="bottom"
         intensity={50}
       />
       <BlurEffect
-        className="absolute bg-gradient-to-b from-white/20 to-transparent h-1/2 md:h-1/3 w-full top-0"
+        className="absolute bg-linear-to-b from-white/20 to-transparent h-1/2 md:h-1/3 w-full top-0"
         position="top"
         intensity={50}
       />
