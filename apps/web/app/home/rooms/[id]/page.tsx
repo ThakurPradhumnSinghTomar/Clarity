@@ -96,7 +96,7 @@ const RoomPage = () => {
           />
 
           <RoomStats
-            memberCount={roomData.memberCount + 1}
+            memberCount={roomData.memberCount}
             totalStudyTime={roomData.totalStudyTime}
             roomCode={roomData.roomCode}
             copiedCode={copiedCode}
