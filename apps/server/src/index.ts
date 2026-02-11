@@ -13,6 +13,7 @@ import http from "http";
 
 // Socket.IO server class
 import { Server } from "socket.io";
+import prisma from "./prismaClient.js";
 
 
 // ================================
@@ -147,21 +148,43 @@ io.on("connection", (socket) => {
   // Server broadcasts to room
   // --------------------------------
 
-  socket.on("send_message", (data) => {
+  socket.on("send_message", async (data) => {
 
-    const { roomId, message } = data;
+    const { roomId, message, senderId, senderName } = data;
 
-    console.log(
-      `Message in ${roomId}: ${message}`
-    );
+    if (!roomId || !message || !senderId) {
+      return;
+    }
 
-    // Emit message to ALL clients in room
-    io.to(roomId).emit("receive_message", {
+    try {
+      const savedMessage = await prisma.message.create({
+        data: {
+          roomId,
+          senderId,
+          content: message,
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
 
-      message,          // message text
-      socketId: socket.id, // sender socket id
-      time: new Date()  // timestamp
-    });
+      io.to(roomId).emit("receive_message", {
+        id: savedMessage.id,
+        roomId,
+        message: savedMessage.content,
+        senderId: savedMessage.senderId,
+        senderName: savedMessage.sender.name || senderName || "Unknown",
+        socketId: socket.id,
+        time: savedMessage.createdAt,
+      });
+    } catch (error) {
+      console.error("Failed to persist socket message:", error);
+    }
   });
 
 

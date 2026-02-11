@@ -88,7 +88,7 @@ roomRouter.get(
 
 
 
-roomRouter.get("/:roomId/messages", async (req, res) => {
+roomRouter.get("/:roomId/messages", authMiddleware, async (req, res) => {
 
   try {
 
@@ -133,9 +133,18 @@ roomRouter.get("/:roomId/messages", async (req, res) => {
     // 3️⃣ Send response
     // ----------------------------------------
 
+    const normalizedMessages = messages.map((item) => ({
+      id: item.id,
+      roomId: item.roomId,
+      senderId: item.senderId,
+      senderName: item.sender?.name || "Unknown",
+      message: item.content,
+      time: item.createdAt,
+    }));
+
     res.status(200).json({
       success: true,
-      messages: messages
+      messages: normalizedMessages
     });
 
   } catch (error) {

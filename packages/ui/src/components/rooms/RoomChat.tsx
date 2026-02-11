@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 // This interface describes one chat message item that will be rendered in the chat timeline.
 export type RoomChatMessage = {
   // A stable identifier is used as React's `key` when mapping messages.
   id: string;
-
-  socketId: string
+  roomId?: string;
+  senderId: string;
+  socketId?: string;
   // The display name shown next to each message bubble.
   senderName: string;
   // The plain-text body of the chat message.
@@ -15,7 +16,7 @@ export type RoomChatMessage = {
   // The message timestamp, provided as a Date object or parsable string.
   time: Date | string;
   // This flag helps the component align and style the current user's messages differently.
-  isCurrentUser: boolean;
+  isCurrentUser?: boolean;
 };
 
 // These props keep the chat component reusable and presentation-focused.
@@ -24,6 +25,7 @@ export type RoomChatProps = {
   messages: RoomChatMessage[];
   // Callback invoked when the user submits a new message.
   onSendMessage: (message: string) => void;
+  currentUserId: string;
   // Optional loading state for disabling interactions during async sends.
   isSending?: boolean;
   // Optional placeholder text for the composer input.
@@ -33,28 +35,36 @@ export type RoomChatProps = {
 export function RoomChat({
   messages,
   onSendMessage,
+  currentUserId,
   isSending = false,
   placeholder = "Write a message to your room...",
 }: RoomChatProps) {
   // Local state is scoped to the input so this component remains controlled for message history.
   const [draftMessage, setDraftMessage] = useState("");
+  const messageListRef = useRef<HTMLDivElement | null>(null);
 
   // We normalize timestamps once per render cycle so each message row can stay simple.
-  console.log("messages:", messages);
-  console.log("isArray:", Array.isArray(messages));
-  console.log(messages.map(m => m.time));
-
   const normalizedMessages = useMemo(
     () =>
       messages.map((message) => ({
         ...message,
+        isCurrentUser:
+          typeof message.isCurrentUser === "boolean"
+            ? message.isCurrentUser
+            : message.senderId === currentUserId,
         createdAtLabel: new Date(message.time).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
       })),
-    [messages],
+    [messages, currentUserId],
   );
+
+  useEffect(() => {
+    if (!messageListRef.current) return;
+
+    messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+  }, [normalizedMessages]);
 
   // This handler prevents empty submissions and delegates send behavior to the parent abstraction.
   const handleSubmitMessage = (event: FormEvent<HTMLFormElement>) => {
@@ -72,7 +82,7 @@ export function RoomChat({
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#111827] shadow-sm">
       {/* Chat feed container with a fixed height for predictable scrolling. */}
-      <div className="h-[360px] overflow-y-auto p-4 space-y-4">
+      <div ref={messageListRef} className="h-[360px] overflow-y-auto p-4 space-y-4">
         {normalizedMessages.length > 0 ? (
           normalizedMessages.map((message) => (
             <div
