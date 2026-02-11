@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   LeaderboardTab,
   MembersTab,
@@ -13,10 +13,10 @@ import {
   ConfirmationModal,
   RoomChat,
   type RoomTab,
-  type RoomChatMessage,
 } from "@repo/ui";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { useRoomData } from "@/lib/hooks/room/useRoomData";
 import { useJoinRequests } from "@/lib/hooks/room/useJoinRequests";
 import { useRoomActions } from "@/lib/hooks/room/useRoomActions";
@@ -43,8 +43,12 @@ const RoomPage = () => {
   const roomId = params.id as string;
   useJoinRoomChat(roomId);
 
-  const { messages, setMessages } = useRoomMessages({
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id || "";
+
+  const { messages } = useRoomMessages({
     roomId,
+    currentUserId,
   });
   // This hook fetches room-level metadata and member details.
   const { roomData, members, isLoading } = useRoomData(roomId);
@@ -87,9 +91,13 @@ const RoomPage = () => {
   // This handler appends a new optimistic local chat message for the current user.
   const handleSendMessage = (message: string) => {
 
+    if (!currentUserId) return;
+
     socket.emit("send_message", {
       roomId,
-      message: message
+      message,
+      senderId: currentUserId,
+      senderName: session?.user?.name || "You",
     });
   };
 
@@ -153,6 +161,7 @@ const RoomPage = () => {
             <RoomChat
               messages={messages}
               onSendMessage={handleSendMessage}
+              currentUserId={currentUserId}
             />
           ) : (
             <PendingRequestsTab

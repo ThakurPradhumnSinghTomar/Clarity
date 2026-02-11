@@ -7,9 +7,10 @@ import { RoomChatMessage } from "@repo/ui";
 
 type UseRoomMessagesProps = {
   roomId: string;
+  currentUserId?: string;
 };
 
-export function useRoomMessages({ roomId }: UseRoomMessagesProps) {
+export function useRoomMessages({ roomId, currentUserId }: UseRoomMessagesProps) {
   // -----------------------------------------
   // STATE
   // -----------------------------------------
@@ -49,15 +50,19 @@ export function useRoomMessages({ roomId }: UseRoomMessagesProps) {
           );
         }
 
-        // assuming API returns array
-        setMessages(data.messages);
+        const normalizedMessages = (data.messages || []).map((message: RoomChatMessage) => ({
+          ...message,
+          isCurrentUser: currentUserId ? message.senderId === currentUserId : false,
+        }));
+
+        setMessages(normalizedMessages);
       } catch (e) {
         console.error("Error fetching room messages:", e);
       }
     };
 
     fetchMessages();
-  }, [accessToken, roomId]);
+  }, [accessToken, roomId, currentUserId]);
 
   // -----------------------------------------
   // SOCKET LISTENER → REALTIME MESSAGES
@@ -66,7 +71,12 @@ export function useRoomMessages({ roomId }: UseRoomMessagesProps) {
     if (!roomId) return;
 
     const handleReceiveMessage = (data: RoomChatMessage) => {
-      setMessages((prev) => [...prev, data]);
+      const incoming = {
+        ...data,
+        isCurrentUser: currentUserId ? data.senderId === currentUserId : false,
+      };
+
+      setMessages((prev) => [...prev, incoming]);
     };
 
     socket.on("receive_message", handleReceiveMessage);
@@ -74,7 +84,7 @@ export function useRoomMessages({ roomId }: UseRoomMessagesProps) {
     return () => {
       socket.off("receive_message", handleReceiveMessage);
     };
-  }, [roomId]);
+  }, [roomId, currentUserId]);
 
   // -----------------------------------------
   // RETURN
