@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LeaderboardTab,
   MembersTab,
@@ -20,6 +20,8 @@ import { motion } from "framer-motion";
 import { useRoomData } from "@/lib/hooks/room/useRoomData";
 import { useJoinRequests } from "@/lib/hooks/room/useJoinRequests";
 import { useRoomActions } from "@/lib/hooks/room/useRoomActions";
+import { useJoinRoomChat, useRoomMessages } from "@/lib/hooks/sockets/useSockets";
+import { socket } from "@/lib/socket";
 
 const RoomPage = () => {
   // This state drives a temporary "copied" visual feedback for the invite-code copy action.
@@ -35,19 +37,15 @@ const RoomPage = () => {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   // This local state stores in-memory chat messages until backend chat APIs are integrated.
-  const [chatMessages, setChatMessages] = useState<RoomChatMessage[]>([
-    {
-      id: "welcome-1",
-      senderName: "FocusFlow Bot",
-      text: "Welcome to the room chat! Share goals, blockers, and wins with your team.",
-      createdAt: new Date().toISOString(),
-      isCurrentUser: false,
-    },
-  ]);
 
   // Route params give us the room id used by all room-specific hooks.
   const params = useParams();
   const roomId = params.id as string;
+  useJoinRoomChat(roomId);
+
+  const { messages, setMessages } = useRoomMessages({
+    roomId,
+  });
   // This hook fetches room-level metadata and member details.
   const { roomData, members, isLoading } = useRoomData(roomId);
 
@@ -88,17 +86,14 @@ const RoomPage = () => {
 
   // This handler appends a new optimistic local chat message for the current user.
   const handleSendMessage = (message: string) => {
-    setChatMessages((previousMessages) => [
-      ...previousMessages,
-      {
-        id: crypto.randomUUID(),
-        senderName: "You",
-        text: message,
-        createdAt: new Date().toISOString(),
-        isCurrentUser: true,
-      },
-    ]);
+
+    socket.emit("send_message", {
+      roomId,
+      message: message
+    });
   };
+
+// USEEFFECT KE ANDAR KAFI HOOKS USE NHI KRTE
 
   // We render the skeleton while room data is still loading.
   if (isLoading) {
@@ -155,7 +150,10 @@ const RoomPage = () => {
               <LeaderboardTab students={leaderboardStudents} />
             </div>
           ) : activeTab === "chat" ? (
-            <RoomChat messages={chatMessages} onSendMessage={handleSendMessage} />
+            <RoomChat
+              messages={messages}
+              onSendMessage={handleSendMessage}
+            />
           ) : (
             <PendingRequestsTab
               roomData={roomData}

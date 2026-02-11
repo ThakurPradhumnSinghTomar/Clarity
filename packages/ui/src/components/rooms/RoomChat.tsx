@@ -6,12 +6,14 @@ import { useMemo, useState, type FormEvent } from "react";
 export type RoomChatMessage = {
   // A stable identifier is used as React's `key` when mapping messages.
   id: string;
+
+  socketId: string
   // The display name shown next to each message bubble.
   senderName: string;
   // The plain-text body of the chat message.
-  text: string;
+  message: string;
   // The message timestamp, provided as a Date object or parsable string.
-  createdAt: Date | string;
+  time: Date | string;
   // This flag helps the component align and style the current user's messages differently.
   isCurrentUser: boolean;
 };
@@ -38,11 +40,15 @@ export function RoomChat({
   const [draftMessage, setDraftMessage] = useState("");
 
   // We normalize timestamps once per render cycle so each message row can stay simple.
+  console.log("messages:", messages);
+  console.log("isArray:", Array.isArray(messages));
+  console.log(messages.map(m => m.time));
+
   const normalizedMessages = useMemo(
     () =>
       messages.map((message) => ({
         ...message,
-        createdAtLabel: new Date(message.createdAt).toLocaleTimeString([], {
+        createdAtLabel: new Date(message.time).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
@@ -85,7 +91,9 @@ export function RoomChat({
                   <span className="font-semibold">{message.senderName}</span>
                   <span>{message.createdAtLabel}</span>
                 </div>
-                <p className="text-sm leading-relaxed break-words">{message.text}</p>
+                <p className="text-sm leading-relaxed break-words">
+                  {message.message}
+                </p>
               </div>
             </div>
           ))

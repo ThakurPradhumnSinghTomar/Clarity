@@ -21,6 +21,7 @@ import {
   updateRoomSchema,
   getRoomDetailsSchema,
 } from "../modules/rooms/room.schema.js";
+import prisma from "../prismaClient.js";
 
 const roomRouter = express.Router();
 
@@ -84,5 +85,71 @@ roomRouter.get(
   authMiddleware,
   getMyRoomsController
 )
+
+
+
+roomRouter.get("/:roomId/messages", async (req, res) => {
+
+  try {
+
+    // ----------------------------------------
+    // 1️⃣ Extract roomId from URL params
+    // Example: /api/room/abc123/messages
+    // ----------------------------------------
+
+    const { roomId } = req.params;
+
+
+    // ----------------------------------------
+    // 2️⃣ Fetch messages from database
+    // ----------------------------------------
+
+    const messages = await prisma.message.findMany({
+
+      // Filter → only this room’s messages
+      where: {
+        roomId: roomId
+      },
+
+      // Include sender details
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            image: true
+          }
+        }
+      },
+
+      // Sort messages oldest → newest
+      orderBy: {
+        createdAt: "asc"
+      }
+    });
+
+
+    // ----------------------------------------
+    // 3️⃣ Send response
+    // ----------------------------------------
+
+    res.status(200).json({
+      success: true,
+      messages: messages
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Error fetching messages:",
+      error
+    );
+
+    res.status(500).json({
+      success: false,
+      error: "Failed to load messages"
+    });
+  }
+});
 
 export default roomRouter;
