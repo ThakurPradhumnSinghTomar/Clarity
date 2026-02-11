@@ -105,13 +105,13 @@ const RoomPage = () => {
 
           {/* Tabs */}
           <div className="mt-26">
-            <RoomTabs activeTab={activeTab} onChange={setActiveTab} />
+            <RoomTabs activeTab={activeTab} onChange={setActiveTab} isHost={isHost} />
           </div>
 
           {/* Content */}
           {activeTab === "members" ? (
             <MembersTab members={members} />
-          ) : activeTab === "leaderboard" ? (
+          ) : activeTab === "leaderboard" || !isHost ? (
             <div className="flex justify-center ">
               <LeaderboardTab students={leaderboardStudents} />
             </div>

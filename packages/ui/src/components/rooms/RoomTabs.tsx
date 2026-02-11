@@ -5,9 +5,10 @@ type RoomTab = "members" | "leaderboard" | "pending requests";
 type RoomTabsProps = {
   activeTab: RoomTab;
   onChange: (tab: RoomTab) => void;
+  isHost?: boolean;
 };
 
-export function RoomTabs({ activeTab, onChange }: RoomTabsProps) {
+export function RoomTabs({ activeTab, onChange, isHost = false }: RoomTabsProps) {
   return (
     <div className="mb-6 border-b border-gray-300 dark:border-gray-700">
       <div className="flex gap-8">
@@ -23,11 +24,13 @@ export function RoomTabs({ activeTab, onChange }: RoomTabsProps) {
           onClick={() => onChange("leaderboard")}
         />
 
-        <TabButton
-          label="Pending requests.."
-          isActive={activeTab === "pending requests"}
-          onClick={() => onChange("pending requests")}
-        />
+        {isHost ? (
+          <TabButton
+            label="Pending requests.."
+            isActive={activeTab === "pending requests"}
+            onClick={() => onChange("pending requests")}
+          />
+        ) : null}
       </div>
     </div>
   );
