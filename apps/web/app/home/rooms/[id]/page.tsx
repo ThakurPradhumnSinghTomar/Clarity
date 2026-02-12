@@ -88,6 +88,7 @@ const RoomPage = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
+    //eofnoe
   // This handler appends a new optimistic local chat message for the current user.
   const handleSendMessage = (message: string) => {
 
