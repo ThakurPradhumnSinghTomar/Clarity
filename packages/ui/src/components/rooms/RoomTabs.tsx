@@ -11,7 +11,11 @@ type RoomTabsProps = {
   isHost?: boolean;
 };
 
-export function RoomTabs({ activeTab, onChange, isHost = false }: RoomTabsProps) {
+export function RoomTabs({
+  activeTab,
+  onChange,
+  isHost = false,
+}: RoomTabsProps) {
   return (
     <div className="mb-6 border-b border-gray-300 dark:border-gray-700">
       <div className="flex gap-8 overflow-x-auto">
@@ -25,6 +29,12 @@ export function RoomTabs({ activeTab, onChange, isHost = false }: RoomTabsProps)
           label="Leaderboard"
           isActive={activeTab === "leaderboard"}
           onClick={() => onChange("leaderboard")}
+        />
+
+        <TabButton
+          label="chat"
+          isActive={activeTab == "chat"}
+          onClick={() => onChange("chat")}
         />
 
         {isHost ? (
