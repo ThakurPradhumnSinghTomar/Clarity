@@ -1,13 +1,11 @@
 import React from "react";
 import { useTheme } from "@repo/context-providers";
-import { Divide } from "lucide-react";
 
 interface RoomCardProps {
   id: string;
   name: string;
   memberCount: number;
   focusingCount: number;
-  rank?: number;
   lastActive?: string;
   color?: string;
 }
@@ -16,20 +14,11 @@ export const RoomCard: React.FC<RoomCardProps> = ({
   name,
   memberCount,
   focusingCount,
-  rank,
   lastActive,
   color = "#7C9AFF",
 }) => {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-
-  const formatStudyTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0 && mins > 0) return `${hours}h ${mins}m`;
-    if (hours > 0) return `${hours}h`;
-    return `${mins}m`;
-  };
 
   return (
     <div
@@ -80,7 +69,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({
       {/* STATS */}
       <div className="flex items-center justify-between text-xs">
         <div style={{ color: isDark ? "#819595" : "#626b61" }}>
-          {memberCount+1} {memberCount === 1 ? "member" : "members"}
+          {memberCount} {memberCount === 1 ? "member" : "members"}
         </div>
 
         {focusingCount > 0 ? (

@@ -41,7 +41,7 @@ export function DailyFocusSection({
         "
       >
         {isLoading ? (
-          <div className="h-[240px] flex items-center justify-center">
+          <div className=" h-[240px] flex items-center justify-center">
             <ClassicLoader />
           </div>
         ) : (

@@ -138,7 +138,7 @@ const RoomPage = () => {
 
           {/* Stats surface quick room insights and invite-copy interaction. */}
           <RoomStats
-            memberCount={roomData.memberCount + 1}
+            memberCount={roomData.memberCount}
             totalStudyTime={roomData.totalStudyTime}
             roomCode={roomData.roomCode}
             copiedCode={copiedCode}
@@ -147,13 +147,13 @@ const RoomPage = () => {
 
           {/* Tabs expose the main functional sections for this room. */}
           <div className="mt-26">
-            <RoomTabs activeTab={activeTab} onChange={setActiveTab} />
+            <RoomTabs activeTab={activeTab} onChange={setActiveTab} isHost={isHost} />
           </div>
 
           {/* Content panel renders per selected tab to keep concerns separated. */}
           {activeTab === "members" ? (
             <MembersTab members={members} />
-          ) : activeTab === "leaderboard" ? (
+          ) : activeTab === "leaderboard" || !isHost ? (
             <div className="flex justify-center ">
               <LeaderboardTab students={leaderboardStudents} />
             </div>

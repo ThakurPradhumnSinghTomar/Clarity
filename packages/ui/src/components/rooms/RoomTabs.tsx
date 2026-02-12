@@ -8,9 +8,10 @@ type RoomTabsProps = {
   activeTab: RoomTab;
   // Parent callback that updates selected tab state.
   onChange: (tab: RoomTab) => void;
+  isHost?: boolean;
 };
 
-export function RoomTabs({ activeTab, onChange }: RoomTabsProps) {
+export function RoomTabs({ activeTab, onChange, isHost = false }: RoomTabsProps) {
   return (
     <div className="mb-6 border-b border-gray-300 dark:border-gray-700">
       <div className="flex gap-8 overflow-x-auto">
@@ -26,17 +27,13 @@ export function RoomTabs({ activeTab, onChange }: RoomTabsProps) {
           onClick={() => onChange("leaderboard")}
         />
 
-        <TabButton
-          label="Chat"
-          isActive={activeTab === "chat"}
-          onClick={() => onChange("chat")}
-        />
-
-        <TabButton
-          label="Pending requests.."
-          isActive={activeTab === "pending requests"}
-          onClick={() => onChange("pending requests")}
-        />
+        {isHost ? (
+          <TabButton
+            label="Pending requests.."
+            isActive={activeTab === "pending requests"}
+            onClick={() => onChange("pending requests")}
+          />
+        ) : null}
       </div>
     </div>
   );
