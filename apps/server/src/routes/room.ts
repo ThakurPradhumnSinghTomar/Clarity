@@ -98,6 +98,9 @@ roomRouter.get("/:roomId/messages", authMiddleware, async (req, res) => {
     // ----------------------------------------
 
     const { roomId } = req.params;
+    if(!roomId){
+      return res.status(201).json({"success":"false","message":"please send room Id "})
+    }
 
 
     // ----------------------------------------
