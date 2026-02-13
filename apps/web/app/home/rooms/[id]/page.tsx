@@ -20,7 +20,10 @@ import { useSession } from "next-auth/react";
 import { useRoomData } from "@/lib/hooks/room/useRoomData";
 import { useJoinRequests } from "@/lib/hooks/room/useJoinRequests";
 import { useRoomActions } from "@/lib/hooks/room/useRoomActions";
-import { useJoinRoomChat, useRoomMessages } from "@/lib/hooks/sockets/useSockets";
+import {
+  useJoinRoomChat,
+  useRoomMessages,
+} from "@/lib/hooks/sockets/useSockets";
 import { socket } from "@/lib/socket";
 
 const RoomPage = () => {
@@ -88,10 +91,9 @@ const RoomPage = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-    //eofnoe
+  //eofnoe
   // This handler appends a new optimistic local chat message for the current user.
   const handleSendMessage = (message: string) => {
-
     if (!currentUserId) return;
 
     socket.emit("send_message", {
@@ -102,7 +104,7 @@ const RoomPage = () => {
     });
   };
 
-// USEEFFECT KE ANDAR KAFI HOOKS USE NHI KRTE
+  // USEEFFECT KE ANDAR KAFI HOOKS USE NHI KRTE
 
   // We render the skeleton while room data is still loading.
   if (isLoading) {
@@ -148,14 +150,18 @@ const RoomPage = () => {
 
           {/* Tabs expose the main functional sections for this room. */}
           <div className="mt-26">
-            <RoomTabs activeTab={activeTab} onChange={setActiveTab} isHost={isHost} />
+            <RoomTabs
+              activeTab={activeTab}
+              onChange={setActiveTab}
+              isHost={isHost}
+            />
           </div>
 
           {/* Content panel renders per selected tab to keep concerns separated. */}
           {activeTab === "members" ? (
             <MembersTab members={members} />
-          ) : activeTab === "leaderboard" || !isHost ? (
-            <div className="flex justify-center ">
+          ) : activeTab === "leaderboard" ? (
+            <div className="flex justify-center">
               <LeaderboardTab students={leaderboardStudents} />
             </div>
           ) : activeTab === "chat" ? (
@@ -164,13 +170,17 @@ const RoomPage = () => {
               onSendMessage={handleSendMessage}
               currentUserId={currentUserId}
             />
-          ) : (
+          ) : activeTab === "pending requests" && isHost ? (
             <PendingRequestsTab
               roomData={roomData}
               reqProcessing={isProcessing}
               onAccept={(userId) => acceptRequest(userId)}
               onReject={(userId) => rejectRequest(userId)}
             />
+          ) : (
+            <div className="text-center text-sm opacity-60 mt-10">
+              You are not authorized to view this section.
+            </div>
           )}
         </div>
 
