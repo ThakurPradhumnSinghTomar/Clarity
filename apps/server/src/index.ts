@@ -73,9 +73,10 @@ app.use(express.json());
 // BASIC TEST ROUTE
 // ================================
 
-app.get("/", (req, res) => {
-  res.send("API running!");
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
 });
+
 
 
 // ================================
