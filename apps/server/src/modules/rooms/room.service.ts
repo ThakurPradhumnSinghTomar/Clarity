@@ -305,10 +305,7 @@ export async function getRoomDetailsService(
       name: member.user.name,
       email: member.user.email,
       avatar: member.user.image || "👤",
-      isFocusing: isUserFocusing(
-        member.user.isFocusing,
-        member.user.lastPing,
-      ),
+      isFocusing: member.user.isFocusing,
       studyTime: Math.floor(studySec / 60),
       joinedAt: member.joinedAt,
       role: member.role,
@@ -326,10 +323,7 @@ export async function getRoomDetailsService(
     name: room.host.name,
     email: room.host.email,
     avatar: room.host.image || "👑",
-    isFocusing: isUserFocusing(
-      room.host.isFocusing,
-      room.host.lastPing,
-    ),
+    isFocusing: room.host.isFocusing,
     studyTime: Math.floor(hostStudySec / 60),
     joinedAt: room.createdAt,
     role: "host",

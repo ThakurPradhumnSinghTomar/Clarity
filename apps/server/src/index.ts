@@ -22,7 +22,6 @@ import prisma from "./prismaClient.js";
 import authRouter from "./routes/auth.js";
 import userRouter from "./routes/user.js";
 import roomRouter from "./routes/room.js";
-import { boolean } from "zod";
 
 // ================================
 // CREATE EXPRESS APP
@@ -129,6 +128,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("started_focussing", async ({ userId }) => {
+    console.log("user started focussing and its state is updated")
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -140,6 +140,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("stopped_focussing", async ({ userId }) => {
+    console.log("user is stopping focussing and its state is updated")
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -205,6 +206,8 @@ io.on("connection", (socket) => {
     const userId = socket.data.userId;
 
     if (!userId) return;
+
+    console.log("user disconnected so changing its focussing state to false")
 
     try {
       await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {

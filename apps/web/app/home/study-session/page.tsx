@@ -91,30 +91,6 @@ function Clock() {
 
   /* ===================== Time updates ===================== */
 
-  useEffect(() => {
-    if (!isRunning || !session?.accessToken) return;
-
-    const handleVisibilityChange = () => {
-      pingNow();
-    };
-
-    // immediate ping on start
-    pingNow();
-
-    pingIntervalRef.current = setInterval(() => {
-      pingNow();
-    }, 60_000);
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      if (pingIntervalRef.current) {
-        clearInterval(pingIntervalRef.current);
-        pingIntervalRef.current = null;
-      }
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [isRunning, session?.accessToken]);
 
   useEffect(() => {
     if (type === "Timer" && isRunning && currentTime >= timerDuration) {
