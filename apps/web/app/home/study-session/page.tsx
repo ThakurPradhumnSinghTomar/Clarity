@@ -11,6 +11,8 @@ import {
   RestoreSessionModal,
   TimeDisplay,
 } from "@repo/ui";
+import {socket} from "@/lib/socket"
+
 
 function Clock() {
   const [isSavingSession, setIsSavingSession] = useState(false);
@@ -26,7 +28,7 @@ function Clock() {
   const [newtag, setnewtag] = useState("");
   const clockStorage = useClockPersistence();
 
-  const { data: session } = useSession();
+  
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
@@ -44,6 +46,9 @@ function Clock() {
     reset,
     hydrate,
   } = useClockEngine();
+
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id || "";
 
   useEffect(() => {
     if (!currentTime && !isRunning) return;
@@ -133,14 +138,18 @@ function Clock() {
   /* ===================== Backend ===================== */
 
   async function updateFocusingStatus(isFocusing: boolean) {
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-      body: JSON.stringify({ isFocusing }),
-    });
+
+
+    if(isFocusing){
+
+      socket.emit("started_focussing",{currentUserId})
+
+    }
+    else{
+
+      socket.emit("stopped_focussing",{currentUserId})
+
+    }
   }
 
   async function pingNow() {

@@ -15,7 +15,6 @@ import http from "http";
 import { Server } from "socket.io";
 import prisma from "./prismaClient.js";
 
-
 // ================================
 // ROUTE IMPORTS (Your existing)
 // ================================
@@ -23,14 +22,13 @@ import prisma from "./prismaClient.js";
 import authRouter from "./routes/auth.js";
 import userRouter from "./routes/user.js";
 import roomRouter from "./routes/room.js";
-
+import { boolean } from "zod";
 
 // ================================
 // CREATE EXPRESS APP
 // ================================
 
 const app = express();
-
 
 // ================================
 // CORS CONFIGURATION
@@ -39,27 +37,26 @@ const app = express();
 // Allowed frontend origins
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://rebuild-with-pradhumn.vercel.app"
+  "https://rebuild-with-pradhumn.vercel.app",
 ];
 
 // Apply CORS middleware
-app.use(cors({
-  origin: function (origin, callback) {
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin
+      // (Postman, curl, mobile apps, etc.)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
 
-    // Allow requests with no origin
-    // (Postman, curl, mobile apps, etc.)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } 
-    else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-
-  // Allow cookies / auth headers
-  credentials: true,
-}));
-
+    // Allow cookies / auth headers
+    credentials: true,
+  }),
+);
 
 // ================================
 // BODY PARSER
@@ -67,7 +64,6 @@ app.use(cors({
 
 // Allows JSON in request body
 app.use(express.json());
-
 
 // ================================
 // BASIC TEST ROUTE
@@ -77,8 +73,6 @@ app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 
-
-
 // ================================
 // API ROUTES
 // ================================
@@ -86,7 +80,6 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/room", roomRouter);
-
 
 // ================================
 // CREATE HTTP SERVER
@@ -99,20 +92,17 @@ app.use("/api/room", roomRouter);
 
 const server = http.createServer(app);
 
-
 // ================================
 // ATTACH SOCKET.IO SERVER
 // ================================
 
 const io = new Server(server, {
-
   // Socket CORS config
   cors: {
     origin: allowedOrigins,
-    credentials: true
-  }
+    credentials: true,
+  },
 });
-
 
 // ================================
 // SOCKET CONNECTION LOGIC
@@ -120,27 +110,45 @@ const io = new Server(server, {
 
 // Fires whenever a client connects
 io.on("connection", (socket) => {
-
   console.log("User connected:", socket.id);
 
-
-  // --------------------------------
-  // JOIN ROOM EVENT
-  // --------------------------------
-  // Client emits → join_room
-  // Server adds socket to that room
-  // --------------------------------
-
   socket.on("join_room", ({ roomId }) => {
-
     // Join socket.io room
     socket.join(roomId);
 
-    console.log(
-      `Socket ${socket.id} joined room ${roomId}`
-    );
+    console.log(`Socket ${socket.id} joined room ${roomId}`);
   });
 
+  socket.on("register_user", ({ userId }) => {
+    socket.join(userId);
+
+    // store mapping
+    socket.data.userId = userId;
+
+    console.log("Individual user joined:", userId);
+  });
+
+  socket.on("started_focussing", async ({ userId }) => {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        isFocusing: true,
+        userId,
+      }),
+    });
+  });
+
+  socket.on("stopped_focussing", async ({ userId }) => {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        isFocusing: false,
+        userId,
+      }),
+    });
+  });
 
   // --------------------------------
   // SEND MESSAGE EVENT
@@ -150,7 +158,6 @@ io.on("connection", (socket) => {
   // --------------------------------
 
   socket.on("send_message", async (data) => {
-
     const { roomId, message, senderId, senderName } = data;
 
     if (!roomId || !message || !senderId) {
@@ -188,24 +195,40 @@ io.on("connection", (socket) => {
     }
   });
 
-
   // --------------------------------
   // DISCONNECT EVENT
   // --------------------------------
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log("User disconnected:", socket.id);
+
+    const userId = socket.data.userId;
+
+    if (!userId) return;
+
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          focusing: false,
+          userId,
+        }),
+      });
+
+      console.log(`Focus stopped for user ${userId}`);
+    } catch (err) {
+      console.error("Failed to stop focusing on disconnect:", err);
+    }
   });
-
 });
-
 
 // ================================
 // START SERVER
 // ================================
 
 server.listen(4000, () => {
-  console.log(
-    "Server + Socket running on http://localhost:4000"
-  );
+  console.log("Server + Socket running on http://localhost:4000");
 });

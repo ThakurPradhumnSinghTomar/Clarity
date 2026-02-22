@@ -152,8 +152,6 @@ userRouter.patch("/ping", authMiddleware, pingUserController);
 
 userRouter.patch(
   "/focusing",
-  authMiddleware,
-  validateRequest(updateFocusingSchema),
   updateFocusingController,
 );
 

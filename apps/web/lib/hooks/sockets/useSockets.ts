@@ -114,3 +114,23 @@ export function useJoinRoomChat(roomId: string) {
     };
   }, [roomId]);
 }
+
+export function useRegisterUser(userId : string){
+  useEffect(()=>{
+    if(!userId){
+      return
+    }
+
+    if (socket.connected) return ;
+    if (!socket.connected) socket.connect();
+
+    socket.emit("register_user",{userId})
+    console.log("register a new user to socket:", userId);
+
+    //return runs when dependencies changes and it rerenders 
+    return ()=>{
+      socket.emit("unregister_user",{userId})
+    }
+
+  },[userId])
+}
