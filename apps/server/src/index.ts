@@ -137,6 +137,7 @@ io.on("connection", (socket) => {
         userId,
       }),
     });
+    io.emit("user_focusing_changed", { userId, isFocusing: true });
   });
 
   socket.on("stopped_focussing", async ({ userId }) => {
@@ -149,6 +150,7 @@ io.on("connection", (socket) => {
         userId,
       }),
     });
+    io.emit("user_focusing_changed", { userId, isFocusing: false });
   });
 
   // --------------------------------
@@ -216,10 +218,12 @@ io.on("connection", (socket) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          focusing: false,
+          isFocusing: false,
           userId,
         }),
       });
+
+      io.emit("user_focusing_changed", { userId, isFocusing: false });
 
       console.log(`Focus stopped for user ${userId}`);
     } catch (err) {

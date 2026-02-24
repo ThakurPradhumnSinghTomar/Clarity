@@ -99,8 +99,6 @@ export function useJoinRoomChat(roomId: string) {
   useEffect(() => {
     if (!roomId) return;
 
-    if (socket.connected) return;
-
     if (!socket.connected) {
       socket.connect();
     }

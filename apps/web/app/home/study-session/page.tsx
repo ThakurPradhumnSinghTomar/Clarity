@@ -11,8 +11,7 @@ import {
   RestoreSessionModal,
   TimeDisplay,
 } from "@repo/ui";
-import {socket} from "@/lib/socket"
-
+import { socket } from "@/lib/socket";
 
 function Clock() {
   const [isSavingSession, setIsSavingSession] = useState(false);
@@ -28,7 +27,6 @@ function Clock() {
   const [newtag, setnewtag] = useState("");
   const clockStorage = useClockPersistence();
 
-  
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
@@ -91,7 +89,6 @@ function Clock() {
 
   /* ===================== Time updates ===================== */
 
-
   useEffect(() => {
     if (type === "Timer" && isRunning && currentTime >= timerDuration) {
       handleTimerComplete();
@@ -114,17 +111,14 @@ function Clock() {
   /* ===================== Backend ===================== */
 
   async function updateFocusingStatus(isFocusing: boolean) {
-
-
-    if(isFocusing){
-
-      socket.emit("started_focussing",{currentUserId})
-
+    if (!socket.connected) {
+      socket.connect();
     }
-    else{
 
-      socket.emit("stopped_focussing",{currentUserId})
-
+    if (isFocusing) {
+      socket.emit("started_focussing", { userId: currentUserId });
+    } else {
+      socket.emit("stopped_focussing", { userId: currentUserId });
     }
   }
 
@@ -347,8 +341,6 @@ function Clock() {
           </div>
         </div>
       )}
-
-      
 
       {/* RESTORE SESSION MODAL */}
       {showRestoreModal && storedSession && (

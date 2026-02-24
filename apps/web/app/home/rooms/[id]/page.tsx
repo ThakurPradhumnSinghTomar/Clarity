@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LeaderboardTab,
   MembersTab,
@@ -54,7 +54,7 @@ const RoomPage = () => {
     currentUserId,
   });
   // This hook fetches room-level metadata and member details.
-  const { roomData, members, isLoading } = useRoomData(roomId);
+  const { roomData, members, isLoading,  reloadRoom } = useRoomData(roomId);
 
   // Host flag controls privileged actions such as delete and edit.
   const isHost = roomData?.isHost || false;
@@ -104,7 +104,19 @@ const RoomPage = () => {
     });
   };
 
-  // USEEFFECT KE ANDAR KAFI HOOKS USE NHI KRTE
+  useEffect(() => {
+  const handleFocusingChange = () => {
+    reloadRoom();
+  };
+
+  socket.on("user_focusing_changed", handleFocusingChange);
+
+  return () => {
+    socket.off("user_focusing_changed", handleFocusingChange);
+  };
+}, [reloadRoom]);
+
+  // USEEFFECT KE ANDAR KAFI HOOKS USE NHI KRTE 
 
   // We render the skeleton while room data is still loading.
   if (isLoading) {
@@ -115,6 +127,8 @@ const RoomPage = () => {
   if (!roomData) {
     return <p className="text-center mt-20">Room not found</p>;
   }
+
+  
 
   return (
     <>
