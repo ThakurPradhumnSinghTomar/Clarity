@@ -103,6 +103,30 @@ const io = new Server(server, {
   },
 });
 
+
+async function emitFocusChangeToUserRooms(userId: string, isFocusing: boolean) {
+  const rooms = await prisma.room.findMany({
+    where: {
+      OR: [
+        { hostId: userId },
+        {
+          members: {
+            some: { userId },
+          },
+        },
+      ],
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  for (const room of rooms) {
+    io.to(room.id).emit("user_focusing_changed", { userId, isFocusing });
+  }
+}
+
+
 // ================================
 // SOCKET CONNECTION LOGIC
 // ================================
@@ -137,10 +161,7 @@ io.on("connection", (socket) => {
         userId,
       }),
     });
-    for (const roomId of socket.rooms) {
-      if (roomId === socket.id || roomId === userId) continue;
-      io.to(roomId).emit("user_focusing_changed", { userId, isFocusing: true });
-    }
+    await emitFocusChangeToUserRooms(userId, true);
   });
 
   socket.on("stopped_focussing", async ({ userId }) => {
@@ -153,13 +174,7 @@ io.on("connection", (socket) => {
         userId,
       }),
     });
-    for (const roomId of socket.rooms) {
-      if (roomId === socket.id || roomId === userId) continue;
-      io.to(roomId).emit("user_focusing_changed", {
-        userId,
-        isFocusing: false,
-      });
-    }
+    await emitFocusChangeToUserRooms(userId, false);
   });
 
   // --------------------------------
@@ -232,13 +247,7 @@ io.on("connection", (socket) => {
         }),
       });
 
-      for (const roomId of socket.rooms) {
-        if (roomId === socket.id || roomId === userId) continue;
-        io.to(roomId).emit("user_focusing_changed", {
-          userId,
-          isFocusing: false,
-        });
-      }
+      await emitFocusChangeToUserRooms(userId, false);
 
       console.log(`Focus stopped for user ${userId}`);
     } catch (err) {
