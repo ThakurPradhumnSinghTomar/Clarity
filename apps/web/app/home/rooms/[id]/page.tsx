@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LeaderboardTab,
   MembersTab,
@@ -25,6 +25,40 @@ import {
   useRoomMessages,
 } from "@/lib/hooks/sockets/useSockets";
 import { socket } from "@/lib/socket";
+import { useRoomCamera } from "@/lib/hooks/sockets/useRoomCamera";
+
+
+// Reusable tile that binds a MediaStream to a <video> tag.
+// We keep this tiny because room can render multiple local/remote feeds.
+const VideoTile = ({
+  stream,
+  label,
+  muted = false,
+}: {
+  stream: MediaStream;
+  label: string;
+  muted?: boolean;
+}) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+    videoRef.current.srcObject = stream;
+  }, [stream]);
+
+  return (
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-black/90">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted={muted}
+        className="w-full aspect-video object-cover"
+      />
+      <div className="px-3 py-2 text-xs text-white/80 bg-black/50">{label}</div>
+    </div>
+  );
+};
 
 const RoomPage = () => {
   // This state drives a temporary "copied" visual feedback for the invite-code copy action.
@@ -53,6 +87,19 @@ const RoomPage = () => {
     roomId,
     currentUserId,
   });
+
+  // Camera sharing state + controls from our WebRTC hook.
+  // localStream is your own camera preview; remoteStreams are other members.
+  const {
+    isSharing,
+    startSharing,
+    stopSharing,
+    localStream,
+    remoteStreams,
+    error: cameraError,
+  } = useRoomCamera({ roomId });
+
+
   // This hook fetches room-level metadata and member details.
   const { roomData, setRoomData, members, setMembers, isLoading  } = useRoomData(roomId);
 
@@ -181,6 +228,51 @@ useEffect(() => {
             copiedCode={copiedCode}
             onCopy={handleCopyInviteCode}
           />
+
+          {/*
+            Optional in-room camera share controls.
+            Users can explicitly opt-in/out at any time while in the room.
+          */}
+          <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-[#111827]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  Focus camera sharing (low quality)
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Share your camera feed with room members while focusing. You
+                  can toggle anytime.
+                </p>
+              </div>
+              <button
+                onClick={() => (isSharing ? stopSharing() : startSharing())}
+                className="px-4 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition"
+              >
+                {isSharing ? "Turn camera off" : "Turn camera on"}
+              </button>
+            </div>
+
+            {cameraError && (
+              <p className="mt-3 text-xs text-red-500">{cameraError}</p>
+            )}
+
+            {/* Render a responsive feed grid only when at least one stream exists. */}
+            {(localStream || remoteStreams.length > 0) && (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {localStream && (
+                  <VideoTile stream={localStream} muted={true} label="You" />
+                )}
+                {remoteStreams.map((remote) => (
+                  <VideoTile
+                    key={remote.socketId}
+                    stream={remote.stream}
+                    label={`Peer ${remote.socketId.slice(0, 6)}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
 
           {/* Tabs expose the main functional sections for this room. */}
           <div className="mt-26">

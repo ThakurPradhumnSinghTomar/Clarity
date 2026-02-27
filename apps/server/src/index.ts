@@ -23,6 +23,20 @@ import authRouter from "./routes/auth.js";
 import userRouter from "./routes/user.js";
 import roomRouter from "./routes/room.js";
 
+
+
+// Shared payload shape for WebRTC signaling relays over Socket.IO.
+// Server intentionally does not inspect SDP/candidate deeply; it forwards to target peer.
+type SignalPayload = {
+  roomId: string;
+  targetSocketId: string;
+  offer?: Record<string, unknown>;
+  answer?: Record<string, unknown>;
+  candidate?: Record<string, unknown>;
+};
+
+
+
 // ================================
 // CREATE EXPRESS APP
 // ================================
@@ -254,7 +268,77 @@ io.on("connection", (socket) => {
       console.error("Failed to stop focusing on disconnect:", err);
     }
   });
+
+
+  // Camera-specific room join: returns current camera peers and notifies existing sharers.
+  socket.on("camera:join-room", ({ roomId }) => {
+    socket.join(roomId);
+
+    const roomSockets = Array.from(io.sockets.adapter.rooms.get(roomId) ?? []);
+    const peers = roomSockets.filter((id) => id !== socket.id);
+
+    socket.emit("camera:peer-list", { peers });
+    socket.to(roomId).emit("camera:peer-joined", { socketId: socket.id });
+  });
+
+  // Camera-specific leave event so peers can remove stale video tiles quickly.
+  socket.on("camera:leave-room", ({ roomId }) => {
+    socket.leave(roomId);
+    socket.to(roomId).emit("camera:peer-left", { socketId: socket.id });
+  });
+
+
+   // Relay SDP offer from caller -> target peer.
+  socket.on(
+    "webrtc:offer",
+    ({ roomId, targetSocketId, offer }: SignalPayload) => {
+      io.to(targetSocketId).emit("webrtc:offer", {
+        roomId,
+        fromSocketId: socket.id,
+        offer,
+      });
+    },
+  );
+
+  // Relay SDP answer from callee -> original caller.
+  socket.on(
+    "webrtc:answer",
+    ({ roomId, targetSocketId, answer }: SignalPayload) => {
+      io.to(targetSocketId).emit("webrtc:answer", {
+        roomId,
+        fromSocketId: socket.id,
+        answer,
+      });
+    },
+  );
+
+  // Relay trickled ICE candidates bidirectionally between peers.
+  socket.on(
+    "webrtc:ice-candidate",
+    ({ roomId, targetSocketId, candidate }: SignalPayload) => {
+      io.to(targetSocketId).emit("webrtc:ice-candidate", {
+        roomId,
+        fromSocketId: socket.id,
+        candidate,
+      });
+    },
+  );
+
+  // During disconnecting, socket.rooms still contains joined rooms; use this moment
+  // to broadcast peer-left so clients can clean up stale RTC connections promptly.
+  socket.on("disconnecting", () => {
+    for (const roomId of socket.rooms) {
+      if (roomId !== socket.id) {
+        socket.to(roomId).emit("camera:peer-left", { socketId: socket.id });
+      }
+    }
+  });
+
+  
 });
+
+
+
 
 // ================================
 // START SERVER
