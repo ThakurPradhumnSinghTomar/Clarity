@@ -128,7 +128,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("started_focussing", async ({ userId }) => {
-    console.log("user started focussing and its state is updated")
+    console.log("user started focussing and its state is updated");
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -137,11 +137,14 @@ io.on("connection", (socket) => {
         userId,
       }),
     });
-    io.emit("user_focusing_changed", { userId, isFocusing: true });
+    for (const roomId of socket.rooms) {
+      if (roomId === socket.id || roomId === userId) continue;
+      io.to(roomId).emit("user_focusing_changed", { userId, isFocusing: true });
+    }
   });
 
   socket.on("stopped_focussing", async ({ userId }) => {
-    console.log("user is stopping focussing and its state is updated")
+    console.log("user is stopping focussing and its state is updated");
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -150,7 +153,13 @@ io.on("connection", (socket) => {
         userId,
       }),
     });
-    io.emit("user_focusing_changed", { userId, isFocusing: false });
+    for (const roomId of socket.rooms) {
+      if (roomId === socket.id || roomId === userId) continue;
+      io.to(roomId).emit("user_focusing_changed", {
+        userId,
+        isFocusing: false,
+      });
+    }
   });
 
   // --------------------------------
@@ -209,7 +218,7 @@ io.on("connection", (socket) => {
 
     if (!userId) return;
 
-    console.log("user disconnected so changing its focussing state to false")
+    console.log("user disconnected so changing its focussing state to false");
 
     try {
       await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
@@ -223,7 +232,13 @@ io.on("connection", (socket) => {
         }),
       });
 
-      io.emit("user_focusing_changed", { userId, isFocusing: false });
+      for (const roomId of socket.rooms) {
+        if (roomId === socket.id || roomId === userId) continue;
+        io.to(roomId).emit("user_focusing_changed", {
+          userId,
+          isFocusing: false,
+        });
+      }
 
       console.log(`Focus stopped for user ${userId}`);
     } catch (err) {

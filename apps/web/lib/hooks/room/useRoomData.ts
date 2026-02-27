@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { RoomData, RoomMember } from "@repo/types";
 
+
 export function useRoomData(roomId: string) {
   const { data: session } = useSession();
   const accessToken = session?.accessToken;
@@ -55,5 +56,8 @@ export function useRoomData(roomId: string) {
     isLoading,
     error,
     reloadRoom: loadRoom,
+    setRoomData,
+    setMembers
   };
 }
+

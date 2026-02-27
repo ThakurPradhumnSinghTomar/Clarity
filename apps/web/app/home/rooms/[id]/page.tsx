@@ -54,7 +54,7 @@ const RoomPage = () => {
     currentUserId,
   });
   // This hook fetches room-level metadata and member details.
-  const { roomData, members, isLoading,  reloadRoom } = useRoomData(roomId);
+  const { roomData, setRoomData, members, setMembers, isLoading  } = useRoomData(roomId);
 
   // Host flag controls privileged actions such as delete and edit.
   const isHost = roomData?.isHost || false;
@@ -104,9 +104,30 @@ const RoomPage = () => {
     });
   };
 
-  useEffect(() => {
-  const handleFocusingChange = () => {
-    reloadRoom();
+useEffect(() => {
+  const handleFocusingChange = ({
+    userId,
+    isFocusing,
+  }: {
+    userId: string;
+    isFocusing: boolean;
+  }) => {
+    setMembers((prevMembers) =>
+      prevMembers.map((member) =>
+        member.userId === userId ? { ...member, isFocusing } : member,
+      ),
+    );
+
+    setRoomData((prevRoomData) => {
+      if (!prevRoomData) return prevRoomData;
+
+      return {
+        ...prevRoomData,
+        members: prevRoomData.members.map((member) =>
+          member.userId === userId ? { ...member, isFocusing } : member,
+        ),
+      };
+    });
   };
 
   socket.on("user_focusing_changed", handleFocusingChange);
@@ -114,8 +135,7 @@ const RoomPage = () => {
   return () => {
     socket.off("user_focusing_changed", handleFocusingChange);
   };
-}, [reloadRoom]);
-
+}, [setMembers, setRoomData]);
   // USEEFFECT KE ANDAR KAFI HOOKS USE NHI KRTE 
 
   // We render the skeleton while room data is still loading.
