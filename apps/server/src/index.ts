@@ -23,8 +23,8 @@ import authRouter from "./routes/auth.js";
 import userRouter from "./routes/user.js";
 import roomRouter from "./routes/room.js";
 
-
-
+// Shared payload shape for WebRTC signaling relays over Socket.IO.
+// Server intentionally does not inspect SDP/candidate deeply; it forwards to target peer.
 // Shared payload shape for WebRTC signaling relays over Socket.IO.
 // Server intentionally does not inspect SDP/candidate deeply; it forwards to target peer.
 type SignalPayload = {
@@ -35,6 +35,7 @@ type SignalPayload = {
   candidate?: Record<string, unknown>;
 };
 
+const getCameraRoomId = (roomId: string) => `camera:${roomId}`;
 
 
 // ================================
@@ -117,7 +118,6 @@ const io = new Server(server, {
   },
 });
 
-
 async function emitFocusChangeToUserRooms(userId: string, isFocusing: boolean) {
   const rooms = await prisma.room.findMany({
     where: {
@@ -139,7 +139,6 @@ async function emitFocusChangeToUserRooms(userId: string, isFocusing: boolean) {
     io.to(room.id).emit("user_focusing_changed", { userId, isFocusing });
   }
 }
-
 
 // ================================
 // SOCKET CONNECTION LOGIC
@@ -269,26 +268,28 @@ io.on("connection", (socket) => {
     }
   });
 
-
   // Camera-specific room join: returns current camera peers and notifies existing sharers.
   socket.on("camera:join-room", ({ roomId }) => {
-    socket.join(roomId);
+    const cameraRoomId = getCameraRoomId(roomId);
+    socket.join(cameraRoomId);
 
-    const roomSockets = Array.from(io.sockets.adapter.rooms.get(roomId) ?? []);
+    const roomSockets = Array.from(
+      io.sockets.adapter.rooms.get(cameraRoomId) ?? [],
+    );
     const peers = roomSockets.filter((id) => id !== socket.id);
 
     socket.emit("camera:peer-list", { peers });
-    socket.to(roomId).emit("camera:peer-joined", { socketId: socket.id });
+    socket.to(cameraRoomId).emit("camera:peer-joined", { socketId: socket.id });
   });
 
   // Camera-specific leave event so peers can remove stale video tiles quickly.
   socket.on("camera:leave-room", ({ roomId }) => {
-    socket.leave(roomId);
-    socket.to(roomId).emit("camera:peer-left", { socketId: socket.id });
+    const cameraRoomId = getCameraRoomId(roomId);
+    socket.leave(cameraRoomId);
+    socket.to(cameraRoomId).emit("camera:peer-left", { socketId: socket.id });
   });
 
-
-   // Relay SDP offer from caller -> target peer.
+  // Relay SDP offer from caller -> target peer.
   socket.on(
     "webrtc:offer",
     ({ roomId, targetSocketId, offer }: SignalPayload) => {
@@ -326,19 +327,23 @@ io.on("connection", (socket) => {
 
   // During disconnecting, socket.rooms still contains joined rooms; use this moment
   // to broadcast peer-left so clients can clean up stale RTC connections promptly.
+  // During disconnecting, socket.rooms still contains joined rooms; use this moment
+  // to broadcast peer-left so clients can clean up stale RTC connections promptly.
   socket.on("disconnecting", () => {
-    for (const roomId of socket.rooms) {
-      if (roomId !== socket.id) {
-        socket.to(roomId).emit("camera:peer-left", { socketId: socket.id });
+    for (const joinedRoomId of socket.rooms) {
+      if (joinedRoomId !== socket.id && joinedRoomId.startsWith("camera:")) {
+        socket
+          .to(joinedRoomId)
+          .emit("camera:peer-left", { socketId: socket.id });
       }
     }
   });
 
-  
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+
 });
-
-
-
 
 // ================================
 // START SERVER

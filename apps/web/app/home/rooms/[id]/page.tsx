@@ -27,7 +27,6 @@ import {
 import { socket } from "@/lib/socket";
 import { useRoomCamera } from "@/lib/hooks/sockets/useRoomCamera";
 
-
 // Reusable tile that binds a MediaStream to a <video> tag.
 // We keep this tiny because room can render multiple local/remote feeds.
 const VideoTile = ({
@@ -43,7 +42,20 @@ const VideoTile = ({
 
   useEffect(() => {
     if (!videoRef.current) return;
+
     videoRef.current.srcObject = stream;
+
+    // Some browsers keep video paused even after srcObject changes.
+    // Force a best-effort play call so remote feeds don't stay black.
+    const tryPlay = async () => {
+      try {
+        await videoRef.current?.play();
+      } catch {
+        // Ignore autoplay promise errors; user interaction (toggle) usually resolves this.
+      }
+    };
+
+    void tryPlay();
   }, [stream]);
 
   return (
@@ -53,6 +65,9 @@ const VideoTile = ({
         autoPlay
         playsInline
         muted={muted}
+        onLoadedMetadata={() => {
+          void videoRef.current?.play().catch(() => undefined);
+        }}
         className="w-full aspect-video object-cover"
       />
       <div className="px-3 py-2 text-xs text-white/80 bg-black/50">{label}</div>
@@ -99,9 +114,9 @@ const RoomPage = () => {
     error: cameraError,
   } = useRoomCamera({ roomId });
 
-
   // This hook fetches room-level metadata and member details.
-  const { roomData, setRoomData, members, setMembers, isLoading  } = useRoomData(roomId);
+  const { roomData, setRoomData, members, setMembers, isLoading } =
+    useRoomData(roomId);
 
   // Host flag controls privileged actions such as delete and edit.
   const isHost = roomData?.isHost || false;
@@ -151,39 +166,39 @@ const RoomPage = () => {
     });
   };
 
-useEffect(() => {
-  const handleFocusingChange = ({
-    userId,
-    isFocusing,
-  }: {
-    userId: string;
-    isFocusing: boolean;
-  }) => {
-    setMembers((prevMembers) =>
-      prevMembers.map((member) =>
-        member.userId === userId ? { ...member, isFocusing } : member,
-      ),
-    );
-
-    setRoomData((prevRoomData) => {
-      if (!prevRoomData) return prevRoomData;
-
-      return {
-        ...prevRoomData,
-        members: prevRoomData.members.map((member) =>
+  useEffect(() => {
+    const handleFocusingChange = ({
+      userId,
+      isFocusing,
+    }: {
+      userId: string;
+      isFocusing: boolean;
+    }) => {
+      setMembers((prevMembers) =>
+        prevMembers.map((member) =>
           member.userId === userId ? { ...member, isFocusing } : member,
         ),
-      };
-    });
-  };
+      );
 
-  socket.on("user_focusing_changed", handleFocusingChange);
+      setRoomData((prevRoomData) => {
+        if (!prevRoomData) return prevRoomData;
 
-  return () => {
-    socket.off("user_focusing_changed", handleFocusingChange);
-  };
-}, [setMembers, setRoomData]);
-  // USEEFFECT KE ANDAR KAFI HOOKS USE NHI KRTE 
+        return {
+          ...prevRoomData,
+          members: prevRoomData.members.map((member) =>
+            member.userId === userId ? { ...member, isFocusing } : member,
+          ),
+        };
+      });
+    };
+
+    socket.on("user_focusing_changed", handleFocusingChange);
+
+    return () => {
+      socket.off("user_focusing_changed", handleFocusingChange);
+    };
+  }, [setMembers, setRoomData]);
+  // USEEFFECT KE ANDAR KAFI HOOKS USE NHI KRTE
 
   // We render the skeleton while room data is still loading.
   if (isLoading) {
@@ -194,8 +209,6 @@ useEffect(() => {
   if (!roomData) {
     return <p className="text-center mt-20">Room not found</p>;
   }
-
-  
 
   return (
     <>
@@ -272,7 +285,6 @@ useEffect(() => {
               </div>
             )}
           </div>
-
 
           {/* Tabs expose the main functional sections for this room. */}
           <div className="mt-26">

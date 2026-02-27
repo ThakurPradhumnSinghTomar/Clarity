@@ -49,7 +49,6 @@ const cameraConstraints: MediaStreamConstraints = {
  * 4) Offers/answers/ICE are exchanged through socket events.
  * 5) Incoming MediaStreams are stored in `remoteStreams` for rendering.
  */
-
 export function useRoomCamera({ roomId }: UseRoomCameraProps) {
   // Whether current user actively shares their own camera.
   const [isSharing, setIsSharing] = useState(false);
@@ -93,7 +92,6 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
    * Returns existing peer connection for target socket, or creates one.
    * Also wires ICE + track handlers and injects local media tracks.
    */
-
   const createPeerConnection = useCallback(
     (targetSocketId: string) => {
       const existing = peerConnectionsRef.current.get(targetSocketId);
@@ -198,11 +196,14 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
 
     /**
      * A new camera sharer joined.
-     * Initiate one more offer toward that newly joined peer.
+     *
+     * Important: we intentionally DO NOT auto-call from existing peers here.
+     * The newly joined user receives `camera:peer-list` and initiates offers to
+     * everyone already in the room. This avoids offer glare (both sides creating
+     * offers simultaneously), which can lead to unstable/black remote playback.
      */
     const handlePeerJoined = ({ socketId }: { socketId: string }) => {
       if (!socketId || socketId === socket.id) return;
-      void callPeer(socketId);
     };
 
     /**
@@ -319,6 +320,3 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
     [error, isSharing, remoteStreams, startSharing, stopSharing],
   );
 }
-
-
-//understand this file as much in detailes as you can 
