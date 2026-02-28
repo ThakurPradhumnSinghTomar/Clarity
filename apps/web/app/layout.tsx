@@ -5,6 +5,7 @@ import { SessionProvider } from "@/lib/components/providers/session-provider";
 import { ThemeProvider } from "@repo/context-providers";
 import { ToastProvider } from "@repo/ui"; 
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -25,6 +26,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
   return (
     <html lang="en" className="h-full">
       <body

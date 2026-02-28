@@ -15,6 +15,9 @@ import { HeroSection } from "@repo/ui";
 import { useDailyFocus } from "@/lib/hooks/home/useDailyFocus";
 import { useRooms } from "@/lib/hooks/home/useRooms";
 import { useWeeklyFocus } from "@/lib/hooks/home/useWeeklyFocus";
+import { useEffect } from "react";
+import {messaging} from "@/lib/firebase"
+import { getToken } from "firebase/messaging";
 
 /* ---------------- Page ---------------- */
 
@@ -23,6 +26,25 @@ export default function Home() {
   const activity = useActivity();
   const dailyFocus = useDailyFocus();
   const rooms = useRooms();
+
+  async function requestPremission(){
+    const permission = await Notification.requestPermission()
+    if(permission == "granted"){
+      //generate token
+      const token = await getToken(messaging,{vapidKey : process.env.vapidKey})
+      //save ths token to db for a user and use it in backend for sending notifications
+      console.log("token : ",token)
+    }
+    else if(permission == "denied"){
+      alert("you denied for the notification permission buddy.. i mean seriously..")
+    } 
+  }
+
+  useEffect(()=>{
+    //get permission from user of notifications of app load
+    requestPremission()
+
+  },[])
   
 
   return (
