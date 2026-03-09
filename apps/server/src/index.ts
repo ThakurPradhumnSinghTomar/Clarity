@@ -165,6 +165,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("started_focussing", async ({ userId }) => {
+    // Ensure we can resolve this user on disconnect even if register_user
+    // was never emitted from the client.
+    socket.data.userId = userId;
     console.log("user started focussing and its state is updated");
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
       method: "PATCH",
@@ -178,6 +181,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("stopped_focussing", async ({ userId }) => {
+    // Keep the user mapping fresh for disconnect cleanup logic.
+    socket.data.userId = userId;
+
     console.log("user is stopping focussing and its state is updated");
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/focusing`, {
       method: "PATCH",
