@@ -22,6 +22,7 @@ import prisma from "./prismaClient.js";
 import authRouter from "./routes/auth.js";
 import userRouter from "./routes/user.js";
 import roomRouter from "./routes/room.js";
+import { getFirebaseMessaging } from "./firebaseAdmin.js";
 
 // Shared payload shape for WebRTC signaling relays over Socket.IO.
 // Server intentionally does not inspect SDP/candidate deeply; it forwards to target peer.
@@ -118,6 +119,164 @@ const io = new Server(server, {
   },
 });
 
+// Function to send push notifications to all members of a room
+// except the person who triggered the action (actorId)
+async function sendPushToRoomMembers({
+  roomId,
+  actorId,
+  title,
+  body,
+}: {
+  roomId: string;
+  actorId: string;
+  title: string;
+  body: string;
+}) {
+
+  // Get Firebase Cloud Messaging instance
+  // This was created in the helper file you wrote earlier
+  const messaging = getFirebaseMessaging();
+
+  // If Firebase is not configured correctly, stop execution
+  if (!messaging) return;
+
+
+  // Fetch the room information from the database using Prisma
+  const room = await prisma.room.findUnique({
+    where: { id: roomId },
+
+    // Only select the fields we actually need
+    // This improves performance and avoids unnecessary data transfer
+    select: {
+      name: true,
+
+      // Fetch the host of the room
+      host: {
+        select: { id: true, fcmTokens: true },
+      },
+
+      // Fetch all room members
+      members: {
+        select: {
+          user: {
+            select: { id: true, fcmTokens: true },
+          },
+        },
+      },
+    },
+  });
+
+  // If the room doesn't exist, exit the function
+  if (!room) return;
+
+
+  // Create a Set to store unique FCM tokens
+  // Using Set ensures we don't accidentally send
+  // multiple notifications to the same device
+  const tokens = new Set<string>();
+
+
+  // If the actor is NOT the host
+  // then send the notification to the host as well
+  if (room.host.id !== actorId) {
+
+    // Add all host device tokens to the set
+    room.host.fcmTokens.forEach((token) => tokens.add(token));
+  }
+
+
+  // Loop through all room members
+  for (const member of room.members) {
+
+    // Skip the actor (the user who triggered the action)
+    // because they shouldn't receive their own notification
+    if (member.user.id === actorId) continue;
+
+    // Add each member's device tokens to the set
+    member.user.fcmTokens.forEach((token) => tokens.add(token));
+  }
+
+
+  // If there are no tokens, there is no device to notify
+  // so we stop execution
+  if (!tokens.size) return;
+
+
+  // Send the push notification to all collected device tokens
+  const response = await messaging.sendEachForMulticast({
+
+    // Convert the Set of tokens into an array
+    tokens: Array.from(tokens),
+
+    // Notification payload
+    // This is the message that appears in the user's notification tray
+    notification: {
+      title,
+      body,
+    },
+
+    // Additional custom data payload
+    // This can be used by the app to perform actions
+    // when the notification is clicked
+    data: {
+      roomId,
+      roomName: room.name,
+    },
+  });
+
+
+  // If any notifications failed to send
+  // log the number of failures
+  if (response.failureCount > 0) {
+    console.warn(`Push notification failures: ${response.failureCount}`);
+  }
+}
+
+
+
+// Function to notify all rooms when a user starts a focus session
+async function sendFocusStartedPushToUserRooms(userId: string, userName?: string) {
+
+  // Find all rooms where the user participates
+  const rooms = await prisma.room.findMany({
+
+    where: {
+
+      // User could either be:
+      // 1) the host of the room
+      // 2) a member of the room
+      OR: [{ hostId: userId }, { members: { some: { userId } } }],
+    },
+
+    // We only need the room id
+    select: { id: true },
+  });
+
+
+  // Loop through all rooms the user belongs to
+  for (const room of rooms) {
+
+    // Send a notification to all other members of the room
+    await sendPushToRoomMembers({
+
+      // Room where the event occurred
+      roomId: room.id,
+
+      // The user who triggered the event
+      actorId: userId,
+
+      // Notification title
+      title: "Focus session started",
+
+      // Notification message body
+      // If username exists use it, otherwise fallback text
+      body: `${userName || "A member"} just started focusing`,
+    });
+  }
+}
+
+
+
 async function emitFocusChangeToUserRooms(userId: string, isFocusing: boolean) {
   const rooms = await prisma.room.findMany({
     where: {
@@ -164,7 +323,7 @@ io.on("connection", (socket) => {
     console.log("Individual user joined:", userId);
   });
 
-  socket.on("started_focussing", async ({ userId }) => {
+   socket.on("started_focussing", async ({ userId, userName }) => {
     // Ensure we can resolve this user on disconnect even if register_user
     // was never emitted from the client.
     socket.data.userId = userId;
@@ -177,6 +336,7 @@ io.on("connection", (socket) => {
         userId,
       }),
     });
+    await sendFocusStartedPushToUserRooms(userId, userName);
     await emitFocusChangeToUserRooms(userId, true);
   });
 
@@ -235,6 +395,12 @@ io.on("connection", (socket) => {
         senderName: savedMessage.sender.name || senderName || "Unknown",
         socketId: socket.id,
         time: savedMessage.createdAt,
+      });
+      await sendPushToRoomMembers({
+        roomId,
+        actorId: senderId,
+        title: `New message in room`,
+        body: `${savedMessage.sender.name || senderName || "Someone"}: ${savedMessage.content.slice(0, 80)}`,
       });
     } catch (error) {
       console.error("Failed to persist socket message:", error);

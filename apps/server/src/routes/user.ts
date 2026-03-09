@@ -26,6 +26,7 @@ import {
   getCurrentUserProfileController,
   updateUserProfileController,
   pingUserController,
+  saveFcmTokenController,
   updateFocusingController,
 } from "../modules/user/user.controller.js";
 
@@ -46,6 +47,7 @@ import {
   heatmapSchema,
   analyticsOverviewSchema,
   focusInsightsSchema,
+   saveFcmTokenSchema,
   tagIntelligenceSchema,
 } from "../modules/user/user.schema.js";
 
@@ -154,6 +156,14 @@ userRouter.patch(
   "/focusing",
   updateFocusingController,
 );
+
+userRouter.post(
+  "/fcm-token",
+  authMiddleware,
+  validateRequest(saveFcmTokenSchema),
+  saveFcmTokenController,
+);
+
 
 /* ===================== Tags ===================== */
 

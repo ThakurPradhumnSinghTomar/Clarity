@@ -41,3 +41,15 @@ export async function updateUserFocusing(
     },
   });
 }
+
+export async function saveUserFcmToken(userId: string, token: string) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      fcmTokens: {
+        push: token,
+      },
+    },
+    select: { id: true, fcmTokens: true },
+  });
+}

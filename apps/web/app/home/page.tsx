@@ -1,51 +1,98 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {LocalWeeklyFocus} from "../../lib/components/home/weeklyfocus"
+import { LocalWeeklyFocus } from "../../lib/components/home/weeklyfocus";
+
 import {
   ActivitySection,
   RoomsSection,
   CTASection,
   DailyFocusSection,
 } from "@repo/ui";
-import { useActivity } from "@/lib/hooks/home/useActivity";
 
+import { useActivity } from "@/lib/hooks/home/useActivity";
 import { transformRoomData } from "@/lib/helpfulFunctions/transformRoomData";
 import { HeroSection } from "@repo/ui";
 import { useDailyFocus } from "@/lib/hooks/home/useDailyFocus";
 import { useRooms } from "@/lib/hooks/home/useRooms";
 import { useWeeklyFocus } from "@/lib/hooks/home/useWeeklyFocus";
+
 import { useEffect } from "react";
-import {messaging} from "@/lib/firebase"
+
+import { messaging } from "@/lib/firebase";
 import { getToken } from "firebase/messaging";
+
+import { useSession } from "next-auth/react";
 
 /* ---------------- Page ---------------- */
 
 export default function Home() {
   const router = useRouter();
+
+  // Fetch activity stats
   const activity = useActivity();
+
+  // Fetch today's focus stats
   const dailyFocus = useDailyFocus();
+
+  // Fetch study rooms
   const rooms = useRooms();
 
-  async function requestPremission(){
-    const permission = await Notification.requestPermission()
-    if(permission == "granted"){
-      //generate token
-      const token = await getToken(messaging,{vapidKey : process.env.vapidKey})
-      //save ths token to db for a user and use it in backend for sending notifications
-      console.log("token : ",token)
+  // Session info from NextAuth
+  const { data: session } = useSession();
+
+
+  // Function to request notification permission
+  // and save the Firebase token to backend
+  async function requestPermissionAndSaveToken() {
+
+    // If user is not authenticated we stop
+    if (!session?.accessToken) return;
+
+    // Check if we already sent token earlier
+    const alreadySent = localStorage.getItem("fcm-token-sent");
+
+    if (alreadySent === "true") {
+      return;
     }
-    else if(permission == "denied"){
-      alert("you denied for the notification permission buddy.. i mean seriously..")
-    } 
+
+    // Ask browser permission for notifications
+    const permission = await Notification.requestPermission();
+
+    if (permission === "granted") {
+
+      // Get device/browser FCM token
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+      });
+
+      if (!token) return;
+
+      // Send token to backend
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/fcm-token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      // Save flag so we don't send token again
+      localStorage.setItem("fcm-token-sent", "true");
+    }
+
+    else if (permission === "denied") {
+      alert("You denied notification permission.");
+    }
   }
 
-  useEffect(()=>{
-    //get permission from user of notifications of app load
-    requestPremission()
 
-  },[])
-  
+  // Run this when session becomes available
+  useEffect(() => {
+    requestPermissionAndSaveToken();
+  }, [session?.accessToken]);
+
 
   return (
     <main
@@ -84,25 +131,41 @@ export default function Home() {
 }
 
 
-
 /*
 
-2️⃣ What Object.values(activityWeeks) does
-👉 Removes the keys (0,1,2...) and gives you only the arrays.
+Extra Notes
 
-3️⃣ What .flat() does (this is the key)
-👉 Flattens one level deep
+Object.values(activityWeeks)
+Removes object keys and returns only values.
 
-Meaning:
+Example
 
-[
-  [a, b, c],
-  [d, e, f]
-].flat()
-
+{
+  0: [a,b],
+  1: [c,d]
+}
 
 becomes
 
-[a, b, c, d, e, f]
+[
+  [a,b],
+  [c,d]
+]
+
+
+.flat()
+
+Flattens nested arrays one level deep.
+
+Example
+
+[
+  [a,b,c],
+  [d,e,f]
+].flat()
+
+becomes
+
+[a,b,c,d,e,f]
 
 */

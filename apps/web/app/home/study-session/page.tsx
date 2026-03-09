@@ -116,7 +116,7 @@ function Clock() {
     }
 
     if (isFocusing) {
-      socket.emit("started_focussing", { userId: currentUserId });
+       socket.emit("started_focussing", { userId: currentUserId, userName: session?.user?.name });
     } else {
       socket.emit("stopped_focussing", { userId: currentUserId });
     }

@@ -18,7 +18,7 @@ export const saveFocusSessionSchema = z.object({
     tag: z.string().optional().nullable(),
     note: z.string().optional().nullable(),
   }),
-});
+}); 
 
 /* ===================== Leaderboard ===================== */
 /* No body / params */
@@ -86,3 +86,11 @@ export const focusInsightsSchema = z.object({});
 /* ===================== Tag Intelligence ===================== */
 
 export const tagIntelligenceSchema = paginationParamSchema;
+
+/* ===================== Save Firebase Token ===================== */
+
+export const saveFcmTokenSchema = z.object({
+  body: z.object({
+    token: z.string().min(1),
+  }),
+});

@@ -22,6 +22,7 @@ model User {
   lastPing DateTime? @default(now())
   isFocusing   Boolean @default(false)
   tags String[]
+  fcmTokens String[] @default([])
   
   // OAuth fields
   provider        String?
