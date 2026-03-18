@@ -38,7 +38,6 @@ type SignalPayload = {
 
 const getCameraRoomId = (roomId: string) => `camera:${roomId}`;
 
-
 // ================================
 // CREATE EXPRESS APP
 // ================================
@@ -132,14 +131,12 @@ async function sendPushToRoomMembers({
   title: string;
   body: string;
 }) {
-
   // Get Firebase Cloud Messaging instance
   // This was created in the helper file you wrote earlier
   const messaging = getFirebaseMessaging();
 
   // If Firebase is not configured correctly, stop execution
   if (!messaging) return;
-
 
   // Fetch the room information from the database using Prisma
   const room = await prisma.room.findUnique({
@@ -169,25 +166,20 @@ async function sendPushToRoomMembers({
   // If the room doesn't exist, exit the function
   if (!room) return;
 
-
   // Create a Set to store unique FCM tokens
   // Using Set ensures we don't accidentally send
   // multiple notifications to the same device
   const tokens = new Set<string>();
 
-
   // If the actor is NOT the host
   // then send the notification to the host as well
   if (room.host.id !== actorId) {
-
     // Add all host device tokens to the set
     room.host.fcmTokens.forEach((token) => tokens.add(token));
   }
 
-
   // Loop through all room members
   for (const member of room.members) {
-
     // Skip the actor (the user who triggered the action)
     // because they shouldn't receive their own notification
     if (member.user.id === actorId) continue;
@@ -196,15 +188,12 @@ async function sendPushToRoomMembers({
     member.user.fcmTokens.forEach((token) => tokens.add(token));
   }
 
-
   // If there are no tokens, there is no device to notify
   // so we stop execution
   if (!tokens.size) return;
 
-
   // Send the push notification to all collected device tokens
   const response = await messaging.sendEachForMulticast({
-
     // Convert the Set of tokens into an array
     tokens: Array.from(tokens),
 
@@ -224,7 +213,6 @@ async function sendPushToRoomMembers({
     },
   });
 
-
   // If any notifications failed to send
   // log the number of failures
   if (response.failureCount > 0) {
@@ -232,16 +220,14 @@ async function sendPushToRoomMembers({
   }
 }
 
-
-
 // Function to notify all rooms when a user starts a focus session
-async function sendFocusStartedPushToUserRooms(userId: string, userName?: string) {
-
+async function sendFocusStartedPushToUserRooms(
+  userId: string,
+  userName?: string,
+) {
   // Find all rooms where the user participates
   const rooms = await prisma.room.findMany({
-
     where: {
-
       // User could either be:
       // 1) the host of the room
       // 2) a member of the room
@@ -252,13 +238,10 @@ async function sendFocusStartedPushToUserRooms(userId: string, userName?: string
     select: { id: true },
   });
 
-
   // Loop through all rooms the user belongs to
   for (const room of rooms) {
-
     // Send a notification to all other members of the room
     await sendPushToRoomMembers({
-
       // Room where the event occurred
       roomId: room.id,
 
@@ -274,8 +257,6 @@ async function sendFocusStartedPushToUserRooms(userId: string, userName?: string
     });
   }
 }
-
-
 
 async function emitFocusChangeToUserRooms(userId: string, isFocusing: boolean) {
   const rooms = await prisma.room.findMany({
@@ -323,7 +304,7 @@ io.on("connection", (socket) => {
     console.log("Individual user joined:", userId);
   });
 
-   socket.on("started_focussing", async ({ userId, userName }) => {
+  socket.on("started_focussing", async ({ userId, userName }) => {
     // Ensure we can resolve this user on disconnect even if register_user
     // was never emitted from the client.
     socket.data.userId = userId;
@@ -450,15 +431,19 @@ io.on("connection", (socket) => {
     );
     const peers = roomSockets.filter((id) => id !== socket.id);
 
-    socket.emit("camera:peer-list", { peers });
-    socket.to(cameraRoomId).emit("camera:peer-joined", { socketId: socket.id });
+    socket.emit("camera:peer-list", { peers, roomId });
+    socket
+      .to(cameraRoomId)
+      .emit("camera:peer-joined", { socketId: socket.id, roomId });
   });
 
   // Camera-specific leave event so peers can remove stale video tiles quickly.
   socket.on("camera:leave-room", ({ roomId }) => {
     const cameraRoomId = getCameraRoomId(roomId);
     socket.leave(cameraRoomId);
-    socket.to(cameraRoomId).emit("camera:peer-left", { socketId: socket.id });
+    socket
+      .to(cameraRoomId)
+      .emit("camera:peer-left", { socketId: socket.id, roomId });
   });
 
   // Relay SDP offer from caller -> target peer.
@@ -504,9 +489,10 @@ io.on("connection", (socket) => {
   socket.on("disconnecting", () => {
     for (const joinedRoomId of socket.rooms) {
       if (joinedRoomId !== socket.id && joinedRoomId.startsWith("camera:")) {
+        const roomId = joinedRoomId.replace("camera:", "");
         socket
           .to(joinedRoomId)
-          .emit("camera:peer-left", { socketId: socket.id });
+          .emit("camera:peer-left", { socketId: socket.id, roomId });
       }
     }
   });
@@ -514,7 +500,6 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
-
 });
 
 // ================================

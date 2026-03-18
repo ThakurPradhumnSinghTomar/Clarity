@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useClockEngine } from "@/lib/hooks/study-session/useClockEngine";
 import { useClockPersistence } from "@/lib/hooks/study-session/useClockPersistence";
@@ -12,6 +12,52 @@ import {
   TimeDisplay,
 } from "@repo/ui";
 import { socket } from "@/lib/socket";
+import { useMyRooms } from "@/lib/hooks/rooms/useMyRooms";
+import { useRoomCamera } from "@/lib/hooks/sockets/useRoomCamera";
+
+const VideoTile = ({
+  stream,
+  label,
+  muted = false,
+}: {
+  stream: MediaStream;
+  label: string;
+  muted?: boolean;
+}) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+
+    videoRef.current.srcObject = stream;
+
+    const tryPlay = async () => {
+      try {
+        await videoRef.current?.play();
+      } catch {
+        // Ignore autoplay errors.
+      }
+    };
+
+    void tryPlay();
+  }, [stream]);
+
+  return (
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-black/90">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted={muted}
+        onLoadedMetadata={() => {
+          void videoRef.current?.play().catch(() => undefined);
+        }}
+        className="w-full aspect-video object-cover"
+      />
+      <div className="px-3 py-2 text-xs text-white/80 bg-black/50">{label}</div>
+    </div>
+  );
+};
 
 function Clock() {
   const [isSavingSession, setIsSavingSession] = useState(false);
@@ -47,6 +93,19 @@ function Clock() {
 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id || "";
+
+  const { rooms } = useMyRooms();
+
+  const joinedRoomIds = useMemo(() => rooms.map((room) => room.id), [rooms]);
+
+  const {
+    isSharing,
+    startSharing,
+    stopSharing,
+    localStream,
+    remoteStreams,
+    error: cameraError,
+  } = useRoomCamera({ roomIds: joinedRoomIds });
 
   useEffect(() => {
     if (!currentTime && !isRunning) return;
@@ -108,6 +167,12 @@ function Clock() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!isRunning && isSharing) {
+      stopSharing();
+    }
+  }, [isRunning, isSharing, stopSharing]);
+
   /* ===================== Backend ===================== */
 
   async function updateFocusingStatus(isFocusing: boolean) {
@@ -116,7 +181,10 @@ function Clock() {
     }
 
     if (isFocusing) {
-       socket.emit("started_focussing", { userId: currentUserId, userName: session?.user?.name });
+      socket.emit("started_focussing", {
+        userId: currentUserId,
+        userName: session?.user?.name,
+      });
     } else {
       socket.emit("stopped_focussing", { userId: currentUserId });
     }
@@ -337,6 +405,50 @@ function Clock() {
                 You can&apos;t interact with anything else during a focus
                 session.
               </p>
+
+              <div className="mt-6 w-full rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-[#111827]">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      Focus camera sharing
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Share camera while focusing in all joined rooms.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      isSharing ? stopSharing() : void startSharing()
+                    }
+                    className="px-4 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                  >
+                    {isSharing ? "Turn camera off" : "Turn camera on"}
+                  </button>
+                </div>
+
+                {cameraError && (
+                  <p className="mt-3 text-xs text-red-500">{cameraError}</p>
+                )}
+
+                {(localStream || remoteStreams.length > 0) && (
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {localStream && (
+                      <VideoTile
+                        stream={localStream}
+                        muted={true}
+                        label="You"
+                      />
+                    )}
+                    {remoteStreams.map((remote) => (
+                      <VideoTile
+                        key={`${remote.roomId}:${remote.socketId}`}
+                        stream={remote.stream}
+                        label={`Room ${remote.roomId.slice(0, 6)} • Peer ${remote.socketId.slice(0, 6)}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
