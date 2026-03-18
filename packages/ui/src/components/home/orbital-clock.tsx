@@ -79,7 +79,7 @@ export function OrbitalClock() {
       }}
     >
       <div
-        className="relative w-60 h-60 transition-transform duration-300 ease-out"
+        className="relative h-72 w-72 transition-transform duration-300 ease-out md:h-80 md:w-80"
         style={{
           transform: `rotateX(${-mousePos.y}deg) rotateY(${mousePos.x}deg)`,
         }}

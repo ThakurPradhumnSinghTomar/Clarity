@@ -203,7 +203,12 @@ function Clock() {
   async function handleSave() {
     if (!currentTime) return;
 
+    const durationToSave = currentTime;
     setIsSavingSession(true);
+    stop();
+    reset();
+    clockStorage.clear();
+    void updateFocusingStatus(false);
 
     try {
       const res = await fetch(
@@ -215,9 +220,9 @@ function Clock() {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({
-            startTime: new Date(Date.now() - currentTime * 1000),
+            startTime: new Date(Date.now() - durationToSave * 1000),
             endTime: new Date(),
-            durationSec: currentTime,
+            durationSec: durationToSave,
             tag: selectedTag,
             note: null,
           }),
@@ -230,11 +235,8 @@ function Clock() {
       }
 
       alert(
-        `Congratulations! Focus session of ${Math.floor(currentTime / 60)} minutes saved 🎉`,
+        `Congratulations! Focus session of ${Math.floor(durationToSave / 60)} minutes saved 🎉`,
       );
-
-      reset();
-      clockStorage.clear();
     } catch (err: any) {
       console.error("Save session error:", err);
       alert(
@@ -379,8 +381,8 @@ function Clock() {
       )}
 
       {isRunning && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-[1px] pt-44">
-          <div className="w-full max-w-4xl  rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-2xl dark:border-[#1F2933] dark:bg-[#151B22]">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 py-6 backdrop-blur-[1px]">
+          <div className="w-full max-w-4xl max-h-full overflow-y-auto rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-2xl dark:border-[#1F2933] dark:bg-[#151B22]">
             <div className="flex flex-col  items-center justify-center">
               <TimeDisplay hours={hours} minutes={minutes} seconds={seconds} />
               <ControlButtons
