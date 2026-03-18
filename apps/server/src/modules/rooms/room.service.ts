@@ -1,6 +1,7 @@
 import prisma from "../../prismaClient.js";
 import { generateRoomCode } from "../../controllers/generateRandomNumber.js";
 import { isUserFocusing } from "./room.utils.js";
+import { getCurrentWeekStart } from "../../controllers/getCurrentWeekStart.js";
 
 type CreateRoomInput = {
   userId: string;
@@ -234,6 +235,8 @@ export async function getRoomDetailsService(
   roomId: string,
   userId: string,
 ) {
+  const currentWeekStart = getCurrentWeekStart(new Date());
+
   const room = await prisma.room.findUnique({
     where: { id: roomId },
     include: {
@@ -246,7 +249,7 @@ export async function getRoomDetailsService(
           lastPing: true,
           isFocusing: true,
           weeklyStudyHours: {
-            orderBy: { weekStart: "desc" },
+            where: { weekStart: currentWeekStart },
             take: 1,
             select: { totalSec: true },
           },
@@ -263,7 +266,7 @@ export async function getRoomDetailsService(
               lastPing: true,
               isFocusing: true,
               weeklyStudyHours: {
-                orderBy: { weekStart: "desc" },
+                where: { weekStart: currentWeekStart },
                 take: 1,
                 select: { totalSec: true },
               },
@@ -497,4 +500,3 @@ export async function rejectJoinRequestService(
 
   return updatedRequest;
 }
-
