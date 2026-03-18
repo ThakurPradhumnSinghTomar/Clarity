@@ -69,6 +69,7 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
    * Fully stops camera sharing and tears down all active peer connections.
    * Called on manual toggle OFF and component unmount cleanup.
    */
+  
   const stopSharing = useCallback(() => {
     // Stop local hardware capture (camera LED should turn off).
     localStreamRef.current?.getTracks().forEach((track) => track.stop());

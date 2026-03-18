@@ -12,6 +12,7 @@ import {
   TimeDisplay,
 } from "@repo/ui";
 import { socket } from "@/lib/socket";
+import { useRoomCamera } from "@/lib/hooks/sockets/useRoomCamera";
 
 function Clock() {
   const [isSavingSession, setIsSavingSession] = useState(false);
@@ -44,6 +45,7 @@ function Clock() {
     reset,
     hydrate,
   } = useClockEngine();
+
 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id || "";
