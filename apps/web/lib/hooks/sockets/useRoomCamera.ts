@@ -9,11 +9,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
  */
 type RemoteStream = {
   socketId: string;
+  roomId: string;
   stream: MediaStream;
 };
 
 type UseRoomCameraProps = {
-  roomId: string;
+  roomId?: string;
+  roomIds?: string[];
 };
 
 /**
@@ -49,7 +51,13 @@ const cameraConstraints: MediaStreamConstraints = {
  * 4) Offers/answers/ICE are exchanged through socket events.
  * 5) Incoming MediaStreams are stored in `remoteStreams` for rendering.
  */
-export function useRoomCamera({ roomId }: UseRoomCameraProps) {
+export function useRoomCamera({ roomId, roomIds }: UseRoomCameraProps) {
+  const activeRoomIds = useMemo(() => {
+    const normalized = roomIds?.length ? roomIds : roomId ? [roomId] : [];
+
+    return Array.from(new Set(normalized.filter(Boolean)));
+  }, [roomId, roomIds]);
+
   // Whether current user actively shares their own camera.
   const [isSharing, setIsSharing] = useState(false);
 
@@ -64,6 +72,9 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
 
   // Map<socketId, RTCPeerConnection> so each peer has an isolated connection.
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+
+  // Maps peer socket id -> room id where this peer is currently connected.
+  const peerRoomMapRef = useRef<Map<string, string>>(new Map());
 
   /**
    * Fully stops camera sharing and tears down all active peer connections.
@@ -84,17 +95,19 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
     setIsSharing(false);
 
     // Notify room peers that this sharer is gone.
-    if (roomId) {
-      socket.emit("camera:leave-room", { roomId });
-    }
-  }, [roomId]);
+    activeRoomIds.forEach((currentRoomId) => {
+      socket.emit("camera:leave-room", { roomId: currentRoomId });
+    });
+
+    peerRoomMapRef.current.clear();
+  }, [activeRoomIds]);
 
   /**
    * Returns existing peer connection for target socket, or creates one.
    * Also wires ICE + track handlers and injects local media tracks.
    */
   const createPeerConnection = useCallback(
-    (targetSocketId: string) => {
+    (targetSocketId: string, targetRoomId: string) => {
       const existing = peerConnectionsRef.current.get(targetSocketId);
       if (existing) {
         return existing;
@@ -106,7 +119,7 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
       peer.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit("webrtc:ice-candidate", {
-            roomId,
+            roomId: targetRoomId,
             targetSocketId,
             candidate: event.candidate,
           });
@@ -122,7 +135,11 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
           const withoutOld = prev.filter((s) => s.socketId !== targetSocketId);
           return [
             ...withoutOld,
-            { socketId: targetSocketId, stream: incomingStream },
+            {
+              socketId: targetSocketId,
+              stream: incomingStream,
+              roomId: targetRoomId,
+            },
           ];
         });
       };
@@ -133,34 +150,35 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
       });
 
       peerConnectionsRef.current.set(targetSocketId, peer);
+      peerRoomMapRef.current.set(targetSocketId, targetRoomId);
       return peer;
     },
-    [roomId],
+    [],
   );
 
   /**
    * Active dialing step: create an SDP offer and signal it to a target peer.
    */
   const callPeer = useCallback(
-    async (targetSocketId: string) => {
-      const peer = createPeerConnection(targetSocketId);
+    async (targetSocketId: string, targetRoomId: string) => {
+      const peer = createPeerConnection(targetSocketId, targetRoomId);
       const offer = await peer.createOffer();
       await peer.setLocalDescription(offer);
 
       socket.emit("webrtc:offer", {
-        roomId,
+        roomId: targetRoomId,
         targetSocketId,
         offer,
       });
     },
-    [createPeerConnection, roomId],
+    [createPeerConnection],
   );
 
   /**
    * Requests camera permission, starts local capture, and joins camera room mesh.
    */
   const startSharing = useCallback(async () => {
-    if (!roomId || isSharing) return;
+    if (activeRoomIds.length === 0 || isSharing) return;
 
     try {
       setError(null);
@@ -176,22 +194,30 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
       setIsSharing(true);
 
       // Ask server for current peers + announce ourselves to room participants.
-      socket.emit("camera:join-room", { roomId });
+      activeRoomIds.forEach((currentRoomId) => {
+        socket.emit("camera:join-room", { roomId: currentRoomId });
+      });
     } catch (e) {
       console.error("Unable to start camera sharing", e);
       setError("Camera permission denied or unavailable.");
       stopSharing();
     }
-  }, [isSharing, roomId, stopSharing]);
+  }, [activeRoomIds, isSharing, stopSharing]);
 
   useEffect(() => {
     /**
      * Existing peers currently sharing camera in room.
      * We initiate offers to each of them.
      */
-    const handlePeerList = ({ peers }: { peers: string[] }) => {
+    const handlePeerList = ({
+      peers,
+      roomId: listedRoomId,
+    }: {
+      peers: string[];
+      roomId: string;
+    }) => {
       peers.forEach((peerId) => {
-        void callPeer(peerId);
+        void callPeer(peerId, listedRoomId);
       });
     };
 
@@ -203,21 +229,38 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
      * everyone already in the room. This avoids offer glare (both sides creating
      * offers simultaneously), which can lead to unstable/black remote playback.
      */
-    const handlePeerJoined = ({ socketId }: { socketId: string }) => {
+    const handlePeerJoined = ({
+      socketId,
+      roomId: joinedRoomId,
+    }: {
+      socketId: string;
+      roomId: string;
+    }) => {
       if (!socketId || socketId === socket.id) return;
+      peerRoomMapRef.current.set(socketId, joinedRoomId);
     };
 
     /**
      * Remove peer resources + remote tile when a sharer leaves/disconnects.
      */
-    const handlePeerLeft = ({ socketId }: { socketId: string }) => {
+    const handlePeerLeft = ({
+      socketId,
+      roomId: leftRoomId,
+    }: {
+      socketId: string;
+      roomId: string;
+    }) => {
       const connection = peerConnectionsRef.current.get(socketId);
       if (connection) {
         connection.close();
         peerConnectionsRef.current.delete(socketId);
       }
+      peerRoomMapRef.current.delete(socketId);
       setRemoteStreams((prev) =>
-        prev.filter((stream) => stream.socketId !== socketId),
+        prev.filter(
+          (stream) =>
+            stream.socketId !== socketId || stream.roomId !== leftRoomId,
+        ),
       );
     };
 
@@ -234,14 +277,17 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
       // We only answer while user is actively sharing.
       if (!isSharing) return;
 
-      const peer = createPeerConnection(fromSocketId);
+      const incomingRoomId = roomId || peerRoomMapRef.current.get(fromSocketId);
+      if (!incomingRoomId) return;
+
+      const peer = createPeerConnection(fromSocketId, incomingRoomId);
       await peer.setRemoteDescription(new RTCSessionDescription(offer));
 
       const answer = await peer.createAnswer();
       await peer.setLocalDescription(answer);
 
       socket.emit("webrtc:answer", {
-        roomId,
+        roomId: incomingRoomId,
         targetSocketId: fromSocketId,
         answer,
       });
@@ -299,7 +345,7 @@ export function useRoomCamera({ roomId }: UseRoomCameraProps) {
       socket.off("webrtc:answer", handleAnswer);
       socket.off("webrtc:ice-candidate", handleIceCandidate);
     };
-  }, [callPeer, createPeerConnection, isSharing, roomId]);
+  }, [callPeer, createPeerConnection, isSharing]);
 
   // Safety net: if user navigates away, ensure camera + peers are torn down.
   useEffect(() => {
