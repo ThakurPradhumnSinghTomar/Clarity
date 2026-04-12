@@ -34,7 +34,9 @@ export default function RootLayout({
         <ThemeProvider>
           <SessionProvider>
             <ToastProvider />
-            {children}
+            <ThemeProvider>
+              {children}
+            </ThemeProvider>
           </SessionProvider>
         </ThemeProvider>
       </body>
