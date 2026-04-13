@@ -505,7 +505,8 @@ io.on("connection", (socket) => {
 // ================================
 // START SERVER
 // ================================
+const PORT = parseInt(process.env.PORT || "4000", 10);
 
-server.listen(4000, () => {
-  console.log("Server + Socket running on http://localhost:4000");
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
