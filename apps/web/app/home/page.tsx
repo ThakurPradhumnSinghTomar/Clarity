@@ -19,9 +19,8 @@ import { useWeeklyFocus } from "@/lib/hooks/home/useWeeklyFocus";
 
 import { useEffect } from "react";
 
-import { messaging } from "@/lib/firebase";
+import { getFirebaseMessaging } from "@/lib/firebase";
 import { getToken } from "firebase/messaging";
-
 import { useSession } from "next-auth/react";
 
 /* ---------------- Page ---------------- */
@@ -58,6 +57,9 @@ export default function Home() {
 
     // Ask browser permission for notifications
     const permission = await Notification.requestPermission();
+
+    const messaging = await getFirebaseMessaging();
+    if (!messaging) return;
 
     if (permission === "granted") {
 

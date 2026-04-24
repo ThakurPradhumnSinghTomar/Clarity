@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
 import { SessionProvider } from "@/lib/components/providers/session-provider";
-import { ThemeProvider } from "@/lib/components/providers/theme-provider";
+import { ThemeProvider } from "@repo/context-providers";
 import { ToastProvider } from "@repo/ui"; 
 
 
@@ -34,9 +35,7 @@ export default function RootLayout({
         <ThemeProvider>
           <SessionProvider>
             <ToastProvider />
-            <ThemeProvider>
-              {children}
-            </ThemeProvider>
+            {children}
           </SessionProvider>
         </ThemeProvider>
       </body>
