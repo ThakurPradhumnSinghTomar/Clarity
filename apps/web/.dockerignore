@@ -1,0 +1,11 @@
+.git
+dist
+.env
+.env.*
+npm-debug.log
+node_modules
+**/node_modules
+.turbo
+**/.turbo
+dist
+**/dist
