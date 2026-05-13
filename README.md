@@ -18,7 +18,8 @@ Rebuild is a student-focused productivity platform designed to help learners reb
 rebuild-with-pradhumn.vercel.app
 
 ## Demo Video
-[![Watch Demo]([https://www.youtube.com/watch?v=VIDEO_ID](https://youtu.be/IMKhFS7MJcU))]
+
+[![Watch Demo](https://img.youtube.com/vi/IMKhFS7MJcU/maxresdefault.jpg)](https://youtu.be/IMKhFS7MJcU)
 
 ---
 
