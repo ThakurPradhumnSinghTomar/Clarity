@@ -13,6 +13,19 @@ Rebuild is a student-focused productivity platform designed to help learners reb
 
 ---
 
+---
+## Live Demo
+rebuild-with-pradhumn.vercel.app
+
+## Demo Video
+[![Watch Demo](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)]([https://www.youtube.com/watch?v=VIDEO_ID](https://youtu.be/IMKhFS7MJcU))
+
+## Test Credentials
+Email: demo@example.com
+Password: demo123
+
+---
+
 ## Tech Stack
 
 * **Web app:** Next.js (App Router), TypeScript, shared UI components
