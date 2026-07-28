@@ -14,6 +14,7 @@ import {
 import { socket } from "@/lib/socket";
 import { useMyRooms } from "@/lib/hooks/rooms/useMyRooms";
 import { useRoomCamera } from "@/lib/hooks/sockets/useRoomCamera";
+import { toast } from "react-toastify";
 
 const VideoTile = ({
   stream,
@@ -90,7 +91,6 @@ function Clock() {
     reset,
     hydrate,
   } = useClockEngine();
-
 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id || "";
@@ -420,9 +420,21 @@ function Clock() {
                     </p>
                   </div>
                   <button
-                    onClick={() =>
-                      isSharing ? stopSharing() : void startSharing()
-                    }
+                    onClick={() => {
+                      if (isSharing) {
+                        stopSharing();
+                        return;
+                      }
+
+                      if (joinedRoomIds.length === 0) {
+                        toast.info(
+                          "Please create or join a group to use the camera sharing feature.",
+                        );
+                        return;
+                      }
+
+                      void startSharing();
+                    }}
                     className="px-4 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition"
                   >
                     {isSharing ? "Turn camera off" : "Turn camera on"}

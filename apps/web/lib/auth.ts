@@ -9,6 +9,8 @@ import GitHub from "next-auth/providers/github"
 import { error } from "console"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+
+  trustHost: true, // Allow NextAuth to trust requests from Docker/localhost (fixes UntrustedHost error)
   
   providers: [
     
