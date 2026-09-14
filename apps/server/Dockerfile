@@ -26,7 +26,7 @@ RUN npm install
 # Copy only backend code (not entire monorepo)
 COPY apps/server ./apps/server
 
-RUN npx prisma generate --schema=apps/server/prisma/schema.prisma --no-engine
+RUN npx prisma generate --schema=apps/server/prisma/schema.prisma 
 
 # -------- STEP 4: BUILD THE PROJECT --------
 # Runs build script (e.g., tsc + prisma generate)

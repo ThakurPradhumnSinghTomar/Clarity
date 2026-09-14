@@ -28,7 +28,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       },
       authorize: async (credentials) => {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
+        const res = await fetch(`${process.env.BACKEND_INTERNAL_URL}/api/auth/login`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json" 
@@ -87,7 +87,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Only process OAuth sign-ins (not credentials)
       if (account?.provider === "google" || account?.provider === "github") {
         try {
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+          const backendUrl = process.env.BACKEND_INTERNAL_URL;
           
           console.log("=== OAuth Sign In Attempt ===");
           console.log("Backend URL:", backendUrl);
