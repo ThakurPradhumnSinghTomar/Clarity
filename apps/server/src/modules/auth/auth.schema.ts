@@ -3,17 +3,26 @@ import { z } from "zod";
 /* ===================== Login ===================== */
 
 export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
+  body: z.object({
+    email: z.string().email(),
+    password: z.string().min(1),
+  }),
 });
 
 /* ===================== Signup ===================== */
 
 export const signupSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(6),
-  imagePath: z.string().url().optional().nullable(),
+  body: z.object({
+    name: z.string().min(1),
+    email: z.string().email(),
+    password: z.string().min(6),
+    imagePath: z
+      .string()
+      .url()
+      .optional()
+      .nullable()
+      .or(z.literal("")),
+  }),
 });
 
 /* ===================== OAuth ===================== */
@@ -27,4 +36,3 @@ export const oauthUserSchema = z.object({
     providerId: z.string().min(1, "Provider ID is required"),
   }),
 });
-
