@@ -65,7 +65,7 @@ authRouter.post("/login", validateRequest(loginSchema), async (req, res) => {
       },
     };
 
-    console.log("  - Login response:", JSON.stringify(responseData, null, 2));
+    console.log("Login successful for user:", user.id);
 
     res.status(200).json(responseData);
   } catch (error) {
@@ -147,11 +147,7 @@ authRouter.post("/signup", validateRequest(signupSchema), async (req, res) => {
       },
     };
 
-    // 🔍 DEBUG: Check response being sent
-    console.log(
-      "  - Response being sent:",
-      JSON.stringify(responseData, null, 2),
-    );
+    console.log("Signup successful for user:", newUser.id);
 
     res.status(201).json(responseData);
   } catch (error) {

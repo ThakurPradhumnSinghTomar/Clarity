@@ -1,4 +1,5 @@
 import express from "express";
+import type { NextFunction, Request, Response } from "express";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { validateRequest } from "../middleware/validateRequest.js";
 
@@ -56,6 +57,42 @@ import {
 /* ===================== Router ===================== */
 
 const userRouter = express.Router();
+
+const PASSWORD_UPDATE_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const PASSWORD_UPDATE_RATE_LIMIT_MAX_ATTEMPTS = 5;
+const passwordUpdateAttempts = new Map<
+  string,
+  { count: number; windowStart: number }
+>();
+
+function passwordUpdateRateLimit(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const key = req.user?.id || req.ip || "unknown";
+  const now = Date.now();
+  const existing = passwordUpdateAttempts.get(key);
+
+  if (
+    !existing ||
+    now - existing.windowStart > PASSWORD_UPDATE_RATE_LIMIT_WINDOW_MS
+  ) {
+    passwordUpdateAttempts.set(key, { count: 1, windowStart: now });
+    return next();
+  }
+
+  if (existing.count >= PASSWORD_UPDATE_RATE_LIMIT_MAX_ATTEMPTS) {
+    return res.status(429).json({
+      success: false,
+      message: "Too many password update attempts. Please try again later.",
+    });
+  }
+
+  existing.count += 1;
+  passwordUpdateAttempts.set(key, existing);
+  return next();
+}
 
 userRouter.get("/", (_, res) => {
   res.send("User API running!");
@@ -155,6 +192,7 @@ userRouter.patch(
 userRouter.patch(
   "/password",
   authMiddleware,
+  passwordUpdateRateLimit,
   validateRequest(updatePasswordSchema),
   updatePasswordController,
 );
