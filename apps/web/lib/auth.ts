@@ -53,6 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             name: data.name || data.user?.name,
             image: data.image || data.user?.image,
             backendToken: data.token || data.accessToken,
+            hasPassword: data.user?.hasPassword,
           }
         }
         
@@ -142,6 +143,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             user.id = data.user?.id || data.id;
             user.name = data.user?.name || user.name;
             user.image = data.user?.image || user.image;
+            user.hasPassword = data.user?.hasPassword;
             
             console.log("✅ OAuth Sign In Success");
             console.log("User ID:", user.id);
@@ -190,6 +192,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         
         // CRITICAL: Store the backend JWT token
         token.backendToken = user.backendToken;
+        token.hasPassword = user.hasPassword;
 
         console.log("=== JWT Callback - New Sign In ===");
         console.log("User ID:", token.id);
@@ -206,6 +209,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Also check session.user object
         if (session?.user?.name) token.name = session.user.name;
         if (session?.user?.image) token.image = session.user.image;
+        if (typeof session?.user?.hasPassword === "boolean") token.hasPassword = session.user.hasPassword;
         
         console.log("=== JWT Token Updated ===");
         console.log("New Name:", token.name);
@@ -238,6 +242,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (token.provider) {
           session.user.provider = token.provider as string;
         }
+        session.user.hasPassword = Boolean(token.hasPassword);
         
         // CRITICAL: Add the backend token to session
         session.accessToken = token.backendToken as string;

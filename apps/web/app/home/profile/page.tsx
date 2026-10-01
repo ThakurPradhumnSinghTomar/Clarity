@@ -19,6 +19,12 @@ const ProfilePage = () => {
     cancelEdit,
     saveProfile,
     handleImageChange,
+    passwordData,
+    setPasswordData,
+    passwordLoading,
+    passwordError,
+    passwordSuccess,
+    updatePassword,
   } = useProfile();
 
   return (
@@ -51,6 +57,12 @@ const ProfilePage = () => {
               profileData={profileData}
               editData={editData}
               setEditData={setEditData}
+              passwordData={passwordData}
+              setPasswordData={setPasswordData}
+              passwordLoading={passwordLoading}
+              passwordError={passwordError}
+              passwordSuccess={passwordSuccess}
+              onPasswordUpdate={updatePassword}
             />
           </div>
         </div>

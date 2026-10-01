@@ -42,6 +42,14 @@ export function useProfile() {
 
   const [totalFocusSessions, setTotalFocusSessions] = useState(0);
   const [totalStudySeconds, setTotalStudySeconds] = useState(0);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
 
   /* ================= FETCH PROFILE ================= */
 
@@ -86,7 +94,7 @@ export function useProfile() {
     setTotalFocusSessions(user.focusSessions.length);
 
     const seconds = user.focusSessions.reduce(
-      (acc: number, s: any) => acc + s.durationSec,
+      (acc: number, s: { durationSec: number }) => acc + s.durationSec,
       0
     );
     setTotalStudySeconds(seconds);
@@ -183,6 +191,64 @@ export function useProfile() {
     });
   };
 
+  const updatePassword = async () => {
+    if (!token) return;
+
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (!passwordData.oldPassword) {
+      setPasswordError("Old password is required");
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters long");
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/password`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          body: JSON.stringify({
+            oldPassword: passwordData.oldPassword,
+            newPassword: passwordData.newPassword,
+          }),
+        },
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update password");
+      }
+
+      setPasswordSuccess("Password updated successfully");
+      setPasswordData({
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update password";
+      setPasswordError(message);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   return {
     profileData,
     editData,
@@ -197,5 +263,11 @@ export function useProfile() {
     saveProfile,
     handleImageChange,
     removeImage,
+    passwordData,
+    setPasswordData,
+    passwordLoading,
+    passwordError,
+    passwordSuccess,
+    updatePassword,
   };
 }

@@ -14,6 +14,7 @@ declare module "next-auth" {
     user: {
       id: string  // Add custom 'id' field to user object
       provider?: string
+      hasPassword?: boolean
     } & DefaultSession["user"]  // Keep all default fields (name, email, image)
   }
 
@@ -24,6 +25,7 @@ declare module "next-auth" {
     email: string    // User's email address
     name?: string    // User's name (optional - indicated by ?)
     provider?: string
+    hasPassword?: boolean
     backendToken?: string;
     // Add more custom fields as needed (role, avatar, etc.)
   }
@@ -36,6 +38,8 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string
     provider?: string  // Add custom 'id' field to JWT
+    backendToken?: string
+    hasPassword?: boolean
     // Add more custom fields that should be in the token
   }
 }

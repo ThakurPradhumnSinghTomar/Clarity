@@ -16,6 +16,20 @@ interface ProfileInfoSectionProps {
   profileData: ProfileData;
   editData: ProfileData;
   setEditData: (data: ProfileData) => void;
+  passwordData: {
+    oldPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  };
+  setPasswordData: (data: {
+    oldPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => void;
+  passwordLoading: boolean;
+  passwordError: string;
+  passwordSuccess: string;
+  onPasswordUpdate: () => Promise<void>;
 }
 
 export function ProfileInfoSection({
@@ -23,6 +37,12 @@ export function ProfileInfoSection({
   profileData,
   editData,
   setEditData,
+  passwordData,
+  setPasswordData,
+  passwordLoading,
+  passwordError,
+  passwordSuccess,
+  onPasswordUpdate,
 }: ProfileInfoSectionProps) {
   const formatDate = (dateString: string): string =>
     new Date(dateString).toLocaleDateString("en-US", {
@@ -121,6 +141,64 @@ export function ProfileInfoSection({
               {formatDate(profileData.joinedDate)}
             </span>
           </div>
+        </div>
+      </div>
+
+      <div className="pt-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Update Password
+        </label>
+        <div className="space-y-3">
+          <input
+            type="password"
+            value={passwordData.oldPassword}
+            onChange={(e) =>
+              setPasswordData({ ...passwordData, oldPassword: e.target.value })
+            }
+            placeholder="Old password"
+            className="w-full px-4 py-3 bg-white dark:bg-[#1F2C3B] border border-gray-300 dark:border-zinc-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
+          />
+          <input
+            type="password"
+            value={passwordData.newPassword}
+            onChange={(e) =>
+              setPasswordData({ ...passwordData, newPassword: e.target.value })
+            }
+            placeholder="New password"
+            className="w-full px-4 py-3 bg-white dark:bg-[#1F2C3B] border border-gray-300 dark:border-zinc-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
+          />
+          <input
+            type="password"
+            value={passwordData.confirmPassword}
+            onChange={(e) =>
+              setPasswordData({
+                ...passwordData,
+                confirmPassword: e.target.value,
+              })
+            }
+            placeholder="Confirm new password"
+            className="w-full px-4 py-3 bg-white dark:bg-[#1F2C3B] border border-gray-300 dark:border-zinc-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
+          />
+
+          {passwordError && (
+            <p className="text-sm text-red-500 dark:text-red-400">
+              {passwordError}
+            </p>
+          )}
+          {passwordSuccess && (
+            <p className="text-sm text-green-600 dark:text-green-400">
+              {passwordSuccess}
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={onPasswordUpdate}
+            disabled={passwordLoading}
+            className="px-4 py-2 rounded-lg bg-gray-900 text-white dark:bg-white dark:text-black disabled:opacity-70"
+          >
+            {passwordLoading ? "Updating..." : "Update password"}
+          </button>
         </div>
       </div>
     </div>
