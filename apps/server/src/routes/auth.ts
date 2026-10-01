@@ -61,6 +61,7 @@ authRouter.post("/login", validateRequest(loginSchema), async (req, res) => {
         name: user.name,
         email: user.email,
         image: user.image,
+        hasPassword: Boolean(user.hashedPassword),
       },
     };
 
@@ -142,6 +143,7 @@ authRouter.post("/signup", validateRequest(signupSchema), async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         image: newUser.image, // ✅ Make sure this is image, not imagePath
+        hasPassword: Boolean(newUser.hashedPassword),
       },
     };
 
@@ -209,6 +211,7 @@ authRouter.post(
             email: user.email,
             name: user.name,
             image: user.image,
+            hasPassword: Boolean(user.hashedPassword),
           },
           message: "User updated successfully",
         });
@@ -250,6 +253,7 @@ authRouter.post(
           email: user.email,
           name: user.name,
           image: user.image,
+          hasPassword: Boolean(user.hashedPassword),
         },
         message: "User created successfully",
       });

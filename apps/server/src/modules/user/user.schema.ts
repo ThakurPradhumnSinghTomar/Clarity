@@ -41,6 +41,15 @@ export const updateUserProfileSchema = z.object({
   }),
 });
 
+/* ===================== Update Password ===================== */
+
+export const updatePasswordSchema = z.object({
+  body: z.object({
+    oldPassword: z.string().min(1).optional(),
+    newPassword: z.string().min(6),
+  }),
+});
+
 /* ===================== Ping ===================== */
 
 export const pingSchema = z.object({});

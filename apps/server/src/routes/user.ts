@@ -25,6 +25,7 @@ import {
 import {
   getCurrentUserProfileController,
   updateUserProfileController,
+  updatePasswordController,
   pingUserController,
   saveFcmTokenController,
   updateFocusingController,
@@ -49,6 +50,7 @@ import {
   focusInsightsSchema,
    saveFcmTokenSchema,
   tagIntelligenceSchema,
+  updatePasswordSchema,
 } from "../modules/user/user.schema.js";
 
 /* ===================== Router ===================== */
@@ -148,6 +150,13 @@ userRouter.patch(
   authMiddleware,
   validateRequest(updateUserProfileSchema),
   updateUserProfileController,
+);
+
+userRouter.patch(
+  "/password",
+  authMiddleware,
+  validateRequest(updatePasswordSchema),
+  updatePasswordController,
 );
 
 userRouter.patch("/ping", authMiddleware, pingUserController);
