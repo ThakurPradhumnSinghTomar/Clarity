@@ -146,63 +146,6 @@ export async function updateUserProfileController(req: Request, res: Response) {
       });
     }
 
-    export async function updatePasswordController(req: Request, res: Response) {
-      try {
-        const userId = req.user?.id;
-        if (!userId) {
-          return res.status(401).json({
-            success: false,
-            message: "Unauthorized",
-          });
-        }
-
-        const { oldPassword, newPassword } = req.body;
-        const user = await getUserPasswordData(userId);
-
-        if (!user) {
-          return res.status(404).json({
-            success: false,
-            message: "User not found",
-          });
-        }
-
-        if (user.hashedPassword) {
-          if (!oldPassword) {
-            return res.status(400).json({
-              success: false,
-              message: "Old password is required",
-            });
-          }
-
-          const isOldPasswordValid = await bcrypt.compare(
-            oldPassword,
-            user.hashedPassword,
-          );
-
-          if (!isOldPasswordValid) {
-            return res.status(401).json({
-              success: false,
-              message: "Old password is incorrect",
-            });
-          }
-        }
-
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        await updateUserPassword(userId, hashedPassword);
-
-        return res.status(200).json({
-          success: true,
-          message: "Password updated successfully",
-        });
-      } catch (error) {
-        console.error("Update password error:", error);
-        return res.status(500).json({
-          success: false,
-          message: "Failed to update password",
-        });
-      }
-    }
-
     const { name, image } = req.body;
 
     if (!name && !image) {
@@ -231,6 +174,63 @@ export async function updateUserProfileController(req: Request, res: Response) {
     return res.status(500).json({
       success: false,
       message: "Failed to update profile",
+    });
+  }
+}
+
+export async function updatePasswordController(req: Request, res: Response) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { oldPassword, newPassword } = req.body;
+    const user = await getUserPasswordData(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.hashedPassword) {
+      if (!oldPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Old password is required",
+        });
+      }
+
+      const isOldPasswordValid = await bcrypt.compare(
+        oldPassword,
+        user.hashedPassword,
+      );
+
+      if (!isOldPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: "Old password is incorrect",
+        });
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await updateUserPassword(userId, hashedPassword);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    console.error("Update password error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update password",
     });
   }
 }

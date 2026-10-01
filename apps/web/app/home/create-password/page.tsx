@@ -39,7 +39,7 @@ export default function CreatePasswordPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `******
+          Authorization: "Bearer " + session.accessToken,
         },
         body: JSON.stringify({ newPassword }),
       });
@@ -59,8 +59,9 @@ export default function CreatePasswordPage() {
 
       setSuccess("Password created successfully");
       router.push("/home");
-    } catch (err: any) {
-      setError(err.message || "Failed to set password");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to set password";
+      setError(message);
     } finally {
       setLoading(false);
     }

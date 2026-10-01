@@ -94,7 +94,7 @@ export function useProfile() {
     setTotalFocusSessions(user.focusSessions.length);
 
     const seconds = user.focusSessions.reduce(
-      (acc: number, s: any) => acc + s.durationSec,
+      (acc: number, s: { durationSec: number }) => acc + s.durationSec,
       0
     );
     setTotalStudySeconds(seconds);
@@ -220,7 +220,7 @@ export function useProfile() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `******
+            Authorization: "Bearer " + token,
           },
           body: JSON.stringify({
             oldPassword: passwordData.oldPassword,
@@ -240,8 +240,10 @@ export function useProfile() {
         newPassword: "",
         confirmPassword: "",
       });
-    } catch (error: any) {
-      setPasswordError(error.message || "Failed to update password");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update password";
+      setPasswordError(message);
     } finally {
       setPasswordLoading(false);
     }
