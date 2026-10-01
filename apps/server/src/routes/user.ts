@@ -166,8 +166,8 @@ userRouter.patch(
 
 userRouter.patch(
   "/password",
-  authMiddleware,
   passwordUpdateRateLimit,
+  authMiddleware,
   validateRequest(updatePasswordSchema),
   updatePasswordController,
 );
