@@ -8,6 +8,10 @@ import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import { error } from "console" //this is a wrong error import and a bug, fix it later 
 
+const BACKEND_URL =
+  process.env.BACKEND_INTERNAL_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
+
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
 
   trustHost: true, // Allow NextAuth to trust requests from Docker/localhost (fixes UntrustedHost error)
@@ -28,7 +32,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       },
       authorize: async (credentials) => {
-        const res = await fetch(`${process.env.BACKEND_INTERNAL_URL}/api/auth/login`, {
+        const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json" 
@@ -88,7 +92,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Only process OAuth sign-ins (not credentials)
       if (account?.provider === "google" || account?.provider === "github") {
         try {
-          const backendUrl = process.env.BACKEND_INTERNAL_URL;
+          const backendUrl = BACKEND_URL;
           
           // Prepare the payload
           const payload = {
@@ -159,7 +163,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           
           // Check if it's a network error
           if (error instanceof TypeError && error.message.includes('fetch')) {
-            console.error("🔥 NETWORK ERROR: Cannot reach backend at", process.env.NEXT_PUBLIC_BACKEND_URL);
+            console.error("🔥 NETWORK ERROR: Cannot reach backend at", BACKEND_URL);
+
             console.error("Make sure your backend is running!");
           }
           
