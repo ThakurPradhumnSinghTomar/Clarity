@@ -53,3 +53,25 @@ export async function saveUserFcmToken(userId: string, token: string) {
     select: { id: true, fcmTokens: true },
   });
 }
+
+export async function getUserPasswordData(userId: string) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      hashedPassword: true,
+    },
+  });
+}
+
+export async function updateUserPassword(userId: string, hashedPassword: string) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      hashedPassword,
+    },
+    select: {
+      id: true,
+    },
+  });
+}

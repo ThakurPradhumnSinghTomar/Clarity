@@ -2,11 +2,12 @@
 import React, { useEffect } from 'react'
 import { Header } from "@repo/ui";
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
-const layout = ({children} : { children: React.ReactNode }) => {
+const Layout = ({children} : { children: React.ReactNode }) => {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (status === "loading") {
@@ -15,8 +16,17 @@ const layout = ({children} : { children: React.ReactNode }) => {
 
     if (status === "unauthenticated") {
       router.push("/login")
+      return
     }
-  }, [status, router])
+
+    if (
+      status === "authenticated" &&
+      session?.user?.hasPassword === false &&
+      pathname !== "/home/create-password"
+    ) {
+      router.push("/home/create-password")
+    }
+  }, [status, router, session?.user?.hasPassword, pathname])
 
   if (status === "loading") {
     return (
@@ -29,6 +39,14 @@ const layout = ({children} : { children: React.ReactNode }) => {
   }
 
   if (status === "unauthenticated") {
+    return null
+  }
+
+  if (
+    status === "authenticated" &&
+    session?.user?.hasPassword === false &&
+    pathname !== "/home/create-password"
+  ) {
     return null
   }
 
@@ -48,4 +66,4 @@ const layout = ({children} : { children: React.ReactNode }) => {
   )
 }
 
-export default layout
+export default Layout

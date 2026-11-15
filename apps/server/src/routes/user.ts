@@ -1,4 +1,5 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { validateRequest } from "../middleware/validateRequest.js";
 
@@ -25,6 +26,7 @@ import {
 import {
   getCurrentUserProfileController,
   updateUserProfileController,
+  updatePasswordController,
   pingUserController,
   saveFcmTokenController,
   updateFocusingController,
@@ -49,11 +51,23 @@ import {
   focusInsightsSchema,
    saveFcmTokenSchema,
   tagIntelligenceSchema,
+  updatePasswordSchema,
 } from "../modules/user/user.schema.js";
 
 /* ===================== Router ===================== */
 
 const userRouter = express.Router();
+
+const passwordUpdateRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many password update attempts. Please try again later.",
+  },
+});
 
 userRouter.get("/", (_, res) => {
   res.send("User API running!");
@@ -148,6 +162,14 @@ userRouter.patch(
   authMiddleware,
   validateRequest(updateUserProfileSchema),
   updateUserProfileController,
+);
+
+userRouter.patch(
+  "/password",
+  passwordUpdateRateLimit,
+  authMiddleware,
+  validateRequest(updatePasswordSchema),
+  updatePasswordController,
 );
 
 userRouter.patch("/ping", authMiddleware, pingUserController);
