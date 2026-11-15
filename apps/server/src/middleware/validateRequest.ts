@@ -40,8 +40,14 @@ export const validateRequest =
     
     // Replace req.params with validated data if it exists, otherwise keep original
     req.params = validatedData.params ?? req.params;
+
+    // we are not validating the query anywhere whereas type assertion in validate function, we implemented it 
     
 
     // Call next() to pass control to the next middleware in the chain
     next();
   };
+
+  //query validation is still pending in this function 
+
+  

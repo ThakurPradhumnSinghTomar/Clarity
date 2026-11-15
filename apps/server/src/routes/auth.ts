@@ -33,11 +33,15 @@ authRouter.post("/login", validateRequest(loginSchema), async (req, res) => {
       });
     }
 
+    // OAuth-only users have no password set — reject before ever calling bcrypt
+    if (!user.hashedPassword) {
+      return res.status(401).json({
+        error: "Invalid credentials",
+      });
+    }
+
     // Compare password with hashed password
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      user.hashedPassword || "rbbfwrbrfrrrbhrbfbhrbfrbfhrbf",
-    ); //dekh le bhai, kebal type error ki vjh s y kiya h, ab jis bhi user k koi password nhi hoga, uska ye hoga😂
+    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -46,9 +50,14 @@ authRouter.post("/login", validateRequest(loginSchema), async (req, res) => {
     }
 
     // Generate JWT token
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not set in environment");
+      return res.status(500).json({ error: "Server misconfiguration" });
+    }
+
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || "your-secret-key",
+      process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
@@ -127,9 +136,14 @@ authRouter.post("/signup", validateRequest(signupSchema), async (req, res) => {
     });
 
     // Generate JWT token
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not set in environment");
+      return res.status(500).json({ error: "Server misconfiguration" });
+    }
+
     const token = jwt.sign(
       { userId: newUser.id, email: newUser.email, imagePath: imagePath },
-      process.env.JWT_SECRET || "your-secret-key",
+      process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
@@ -155,7 +169,7 @@ authRouter.post("/signup", validateRequest(signupSchema), async (req, res) => {
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({
-      error: error,
+      error: error, //dont pass raw error here as it can expose the backend and db detailes to frontend
     });
   }
 });

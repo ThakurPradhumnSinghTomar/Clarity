@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const loginSchema = z.object({
   body: z.object({
-    email: z.string().email(),
+    email: z.string().email(),  //no custom error msg
     password: z.string().min(1),
   }),
 });
@@ -14,7 +14,7 @@ export const loginSchema = z.object({
 export const signupSchema = z.object({
   body: z.object({
     name: z.string().min(1),
-    email: z.string().email(),
+    email: z.string().email(), //no custom error msg 
     password: z.string().min(6),
     imagePath: z
       .string()

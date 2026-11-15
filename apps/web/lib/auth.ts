@@ -6,7 +6,7 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
-import { error } from "console"
+import { error } from "console" //this is a wrong error import and a bug, fix it later 
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
 
@@ -52,7 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email: data.email || data.user?.email,
             name: data.name || data.user?.name,
             image: data.image || data.user?.image,
-            backendToken: data.token || data.accessToken,
+            backendToken: data.token || data.accessToken, //agr normal signin ya signup kar rhe h to yha pr user.backend token ko JWT token de diya jo backend s mila
           }
         }
         
@@ -89,14 +89,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           const backendUrl = process.env.BACKEND_INTERNAL_URL;
           
-          console.log("=== OAuth Sign In Attempt ===");
-          console.log("Backend URL:", backendUrl);
-          console.log("Provider:", account.provider);
-          console.log("Email:", user.email);
-          console.log("Name:", user.name);
-          console.log("Image:", user.image);
-          console.log("Provider Account ID:", account.providerAccountId);
-          
           // Prepare the payload
           const payload = {
             email: user.email,
@@ -106,7 +98,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             providerId: account.providerAccountId,
           };
           
-          console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+
           
           // Call your backend API to create/update user and GET THE TOKEN
           const response = await fetch(`${backendUrl}/api/auth/oauth-user`, {
@@ -117,9 +109,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             body: JSON.stringify(payload),
           });
 
-          console.log("Backend Response Status:", response.status);
-          console.log("Backend Response Status Text:", response.statusText);
-          console.log("Backend Response OK:", response.ok);
           
           // Try to parse JSON response
           let data;
@@ -138,7 +127,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           if (response.ok && data.success) {
             // ✅ Update user object with backend data
-            user.backendToken = data.token || data.accessToken;
+            user.backendToken = data.token || data.accessToken;  //agr oauth s sign in ya signup kr rhe h, to yha backend s jo JWT aaya vo user.backendToken m rakh diya 
             user.id = data.user?.id || data.id;
             user.name = data.user?.name || user.name;
             user.image = data.user?.image || user.image;
@@ -180,7 +169,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     
     // JWT CALLBACK: Store backend token in JWT
-    async jwt({ token, user, account, trigger, session }) {
+    async jwt({ token, user, account, trigger, session }) {  //this will run many times whenever we access session, after login also
       // On initial sign in, add backend token to NextAuth's token
       if (user) {
         token.id = user.id;
@@ -189,7 +178,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.image = user.image;
         
         // CRITICAL: Store the backend JWT token
-        token.backendToken = user.backendToken;
+        token.backendToken = user.backendToken; //last m aakr vo user.backend token ko as a backend token rakh liya JWT m
 
         console.log("=== JWT Callback - New Sign In ===");
         console.log("User ID:", token.id);

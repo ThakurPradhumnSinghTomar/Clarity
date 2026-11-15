@@ -44,8 +44,6 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
       email: decoded.email,
     };
 
-    //console.log("incoming request passed from middleware");
-
     next();
   } catch (err) {
     console.error("JWT verify error:", err);
