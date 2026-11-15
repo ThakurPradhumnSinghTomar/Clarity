@@ -14,7 +14,7 @@ RUN npm ci
 
 COPY apps/web ./apps/web
 
-RUN npm run build --workspace=@repo/types || true
+RUN npm run build --workspace=@repo/types 
 RUN npm run build --workspace=web
 
 
